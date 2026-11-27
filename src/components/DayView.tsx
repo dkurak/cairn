@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useApp } from "./AppProvider";
 import QuickCheck from "./QuickCheck";
+import Recap from "./Recap";
 import { ProgramWeekBanner } from "./Programs";
 import Rundown from "./Rundown";
 import RecentList from "./RecentList";
@@ -266,6 +267,7 @@ export default function DayView({ date }: { date: string }) {
           <QuickCheck date={date} disabled={isFuture} />
           {isToday ? (
             <>
+              <Recap />
               <section className="card">
                 <h2>Log something else</h2>
                 <div className="row">
@@ -273,21 +275,6 @@ export default function DayView({ date }: { date: string }) {
                   <button onClick={() => openLog({ whats: ["SKI1 Hip Strength"] })}>Log a workout</button>
                   <button onClick={() => openLog({ whats: ["Rest"], rest: true })}>Rest day</button>
                 </div>
-              </section>
-              <section className="card">
-                <h2>Recent</h2>
-                <RecentList
-                  log={log}
-                  limit={7}
-                  areas={areas}
-                  checks={checks}
-                  onLogDay={(d) => openLog({ whats: ["Rest"], rest: true, date: d })}
-                  editingId={editingId}
-                  setEditingId={setEditingId}
-                  onSave={(id, patch) => run(() => updateEntry(sb, id, patch), "Couldn't save that. Try again.").then((ok) => ok && setEditingId(null))}
-          workouts={workouts}
-                  onDelete={(id) => run(() => deleteEntry(sb, id), "Couldn't delete. Try again.")}
-                />
               </section>
             </>
           ) : (

@@ -365,3 +365,10 @@ button.danger { color: var(--bad); border-color: var(--bad-bg); background: var(
 .checks li.met .box { background: var(--good); border-color: var(--good); color: var(--surface); }
 .checks .meta { color: var(--muted); font-size: .85rem; white-space: nowrap; }
 .checks li.met .meta { color: var(--good); }
+/* recap */
+.recap { display: grid; gap: 8px; }
+.recap .top button.link { padding: 0; font-size: .85rem; }
+.recap-text { margin: 0; }
+.recap-label { font-family: var(--font-display); text-transform: uppercase; color: var(--muted); font-size: .9rem; }
+.recap-next { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.recap-link { justify-self: start; color: var(--accent); font-weight: 600; }
