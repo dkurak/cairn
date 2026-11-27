@@ -108,7 +108,10 @@ export default function Plan() {
           <h2>History</h2>
           <RecentList
             log={log}
-            limit={200}
+            limit={400}
+            areas={data.areas}
+            checks={data.checks}
+            onLogDay={(d) => openLog({ whats: ["Rest"], rest: true, date: d })}
             editingId={editingId}
             setEditingId={setEditingId}
             onSaveNotes={(id, notes) => run(() => updateEntry(sb, id, { notes: notes.slice(0, 1000) }), "Couldn't save notes. Try again.").then((ok) => ok && setEditingId(null))}

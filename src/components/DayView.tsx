@@ -211,7 +211,10 @@ export default function DayView({ date }: { date: string }) {
                 <h2>Recent</h2>
                 <RecentList
                   log={log}
-                  limit={5}
+                  limit={7}
+                  areas={areas}
+                  checks={checks}
+                  onLogDay={(d) => openLog({ whats: ["Rest"], rest: true, date: d })}
                   editingId={editingId}
                   setEditingId={setEditingId}
                   onSaveNotes={(id, notes) => run(() => updateEntry(sb, id, { notes: notes.slice(0, 1000) }), "Couldn't save notes. Try again.").then((ok) => ok && setEditingId(null))}
