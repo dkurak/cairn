@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import type { Proposal, WorkoutProposal } from "@/lib/proposals";
+import { SAVE_TARGET_NOTE, workoutSaveTarget, type Proposal, type WorkoutProposal } from "@/lib/proposals";
 import type { AppData, RundownBlock } from "@/lib/types";
 
 const rowKey = (r: [string, string, string]) => r.join("|");
@@ -10,9 +10,12 @@ function WorkoutDiff({ p, data }: { p: WorkoutProposal; data: AppData }) {
   const oldRows = new Set((base?.rundown ?? []).flatMap((b: RundownBlock) => b.rows.map(rowKey)));
   const newRows = new Set(p.blocks.flatMap((b) => b.rows.map(rowKey)));
   const removed = [...oldRows].filter((r) => !newRows.has(r)).map((r) => r.split("|"));
+  const target = workoutSaveTarget(p, data);
+  const notesChanged = !!base && (base.notes ?? "").trim() !== p.notes.trim();
   return (
     <>
-      <div className="rundown-title">{base ? `Change: ${base.name}` : "New workout"} → {p.name}</div>
+      <div className="rundown-title">{base ? `Change: ${base.name}${base.name !== p.name ? ` → ${p.name}` : ""}` : `New workout: ${p.name}`}</div>
+      <span className="note">{SAVE_TARGET_NOTE[target]}{base && base.category !== p.category ? ` Category ${base.category} → ${p.category}.` : ""}</span>
       {p.blocks.map((b, i) => (
         <div className="block" key={i}>
           {b.label && <div className="block-label">{b.label}</div>}
@@ -28,6 +31,13 @@ function WorkoutDiff({ p, data }: { p: WorkoutProposal; data: AppData }) {
           </ul>
         </div>
       ))}
+      {(notesChanged || (!base && p.notes)) && (
+        <div className="block">
+          <div className="block-label">Notes</div>
+          {notesChanged && base?.notes ? <div className="note" style={{ textDecoration: "line-through" }}>{base.notes}</div> : null}
+          <div className="note" style={notesChanged ? { background: "var(--good-bg)" } : undefined}>{p.notes || "(none)"}</div>
+        </div>
+      )}
       {removed.length > 0 && (
         <div className="block" style={{ borderLeftColor: "var(--bad)" }}>
           <div className="block-label" style={{ color: "var(--bad)" }}>Removed</div>

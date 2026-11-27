@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { loadAll, logEntries, markDone, patchState, setTravel } from "@/lib/actions";
 import { todayISO } from "@/lib/rules";
-import type { Proposal } from "@/lib/proposals";
+import { workoutSaveTarget, type Proposal } from "@/lib/proposals";
 import type { AppData, TravelInfo } from "@/lib/types";
 import LogSheet, { type SheetSpec } from "./LogSheet";
 import TravelSheet from "./TravelSheet";
@@ -75,15 +75,24 @@ export default function AppProvider({ initial, children }: { initial: AppData; c
   const saveProposal = useCallback((p: Proposal) => run(async () => {
     const { workouts, plans } = data;
     if (p.type === "workout") {
-      const base = p.base_id ? workouts.find((w) => w.id === p.base_id) : undefined;
-      if (base && base.owner_id === uid) {
-        const { error } = await sb.from("workouts").update({ name: p.name, category: p.category, rundown: p.blocks, notes: p.notes, updated_by: uid }).eq("id", base.id);
+      const target = workoutSaveTarget(p, data);
+      if (target === "update_own" || target === "update_shared") {
+        // RLS also enforces this: shared rows are admin-only
+        const { error } = await sb.from("workouts").update({ name: p.name, category: p.category, rundown: p.blocks, notes: p.notes, updated_by: uid }).eq("id", p.base_id!);
         if (error) throw error;
       } else {
         let name = p.name;
         for (let n = 2; workouts.some((w) => w.owner_id === uid && w.name === name); n++) name = `${p.name} (${n})`;
-        const { error } = await sb.from("workouts").insert({ owner_id: uid, name, category: p.category, steps: [], rundown: p.blocks, notes: p.notes, updated_by: uid });
+        const { data: row, error } = await sb.from("workouts").insert({ owner_id: uid, name, category: p.category, steps: [], rundown: p.blocks, notes: p.notes, updated_by: uid }).select("id").single();
         if (error) throw error;
+        if (target === "fork") {
+          // member changed a shared workout: point their own plans at the new private version
+          for (const pl of plans.filter((x) => x.owner_id === uid && x.items.some((i) => i.workout_ids.includes(p.base_id!)))) {
+            const items = pl.items.map((i) => ({ ...i, workout_ids: i.workout_ids.map((id) => (id === p.base_id ? row.id : id)) }));
+            const { error: e2 } = await sb.from("plans").update({ items }).eq("id", pl.id);
+            if (e2) throw e2;
+          }
+        }
       }
     } else {
       const existing = plans.find((pl) => pl.kind === p.kind);
