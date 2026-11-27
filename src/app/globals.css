@@ -329,3 +329,8 @@ button.danger { color: var(--bad); border-color: var(--bad-bg); background: var(
 .strip a.done:not(.sel) .w { color: var(--good); }
 .next.rest-today { border-color: var(--line); background: var(--bg); }
 .next.rest-today .label { color: var(--muted); }
+/* coach quick starts */
+.starters { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px 0; }
+.starters::-webkit-scrollbar { display: none; }
+.starters button { white-space: nowrap; font-size: .85rem; padding: 6px 12px; border-radius: 999px; }
+.goals .goals-text { margin: 0; white-space: pre-wrap; }

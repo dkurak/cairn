@@ -21,7 +21,12 @@ export type PlanProposal = {
   type: "plan";
   reason: string;
   kind: "home" | "travel";
+  /** workout_ids may hold "new:<name>" for a workout in new_workouts */
   items: PlanItem[];
+  /** new workouts designed for this plan, saved together with it */
+  new_workouts?: WorkoutProposal[];
+  /** ids of earlier chat cards for those workouts, marked saved along with the plan */
+  bundled_from?: string[];
 };
 export type Proposal = WorkoutProposal | PlanProposal;
 

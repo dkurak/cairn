@@ -96,7 +96,7 @@ export type CoachRow = {
   created_at: string;
 };
 
-export type Profile = { id: string; display_name: string; role: "admin" | "member" };
+export type Profile = { id: string; display_name: string; role: "admin" | "member"; goals?: string; goals_updated_at?: string | null };
 
 export type AppData = {
   profile: Profile;

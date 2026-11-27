@@ -31,6 +31,9 @@ export async function loadAll(sb: SupabaseClient, userId: string): Promise<AppDa
     workoutRows = (r.data ?? []).map((w) => ({ ...w, version: 1, updated_at: "" })) as AppData["workouts"];
   }
   if (exports.error) console.warn("garmin_exports unavailable (apply migration 0005)", exports.error.message);
+  // goals need migration 0006; without it the coach just doesn't know them yet
+  const goals = await sb.from("profiles").select("goals, goals_updated_at").eq("id", userId).single();
+  if (!goals.error && goals.data) Object.assign(profile.data as object, goals.data);
   return {
     profile: profile.data as AppData["profile"],
     workouts: workoutRows ?? [],
@@ -150,6 +153,12 @@ export async function updateEntry(sb: SupabaseClient, id: string, patch: Partial
   const { error } = await sb.from("log_entries").update(patch).eq("id", id);
   if (error) throw error;
 }
+/** Save the person's training goals (needs migration 0006). */
+export async function setGoals(sb: SupabaseClient, userId: string, goals: string) {
+  const { error } = await sb.from("profiles").update({ goals: goals.trim().slice(0, 1500), goals_updated_at: new Date().toISOString() }).eq("id", userId);
+  if (error) throw new Error(/goals/.test(error.message) ? "Goals need a database update (migration 0006) first." : error.message);
+}
+
 export async function deleteEntry(sb: SupabaseClient, id: string) {
   const { error } = await sb.from("log_entries").delete().eq("id", id);
   if (error) throw error;

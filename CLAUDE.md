@@ -45,7 +45,7 @@ Owner/admin: Dave. Other users (family, friends) can sign up and log their own w
 - Every log entry can be edited later (notes at minimum).
 
 ## Data model (Supabase)
-- `profiles` (id = auth.users.id, display_name, role: 'admin' | 'member', created_at)
+- `profiles` (id = auth.users.id, display_name, role: 'admin' | 'member', goals text + goals_updated_at (0006, set by the coach's set_goals), created_at)
 - `workouts` (id, name, category, owner_id null = shared library, steps jsonb (Garmin), rundown jsonb (display), notes, version, change_note, updated_at, updated_by)
 - `workout_versions` (snapshot per version, written by trigger; restore from the Library) and `garmin_exports` (user_id, workout_id, version last downloaded for the watch)
 - `plans` (id, owner_id, name, kind: 'home' | 'travel' | 'calm', items jsonb: [{key, day, title, workout_ids[], kind: 'workout'|'tour'|'rest', note}])
@@ -61,6 +61,7 @@ Owner/admin: Dave. Other users (family, friends) can sign up and log their own w
 - Daily hip check, tour green light, week list, travel toggle, calm/build toggle
 - Log sheet (multi-workout, pain 0-10 in one row, feel, vert for tours, notes), recent list with edit/delete, pain trend chart
 - Workout library (view any workout)
+- Coach check-ins: `src/lib/review.ts` digests the last 5/14/28 days (focus split, pain, feel, tours) into the prompt; `review_training` for other windows. Check-ins answer: last 5 days / vs your goals / next. Weekly programs come back as one plan card with any new workouts bundled in.
 - Coach chat: `/api/chat` calls Claude with the user's context (plan, up next details, last ~25 log entries, rules) and tools: log_session, hip_check, set_phase, set_travel, skip_up_next, start_next_week. Key in `ANTHROPIC_API_KEY` (server only).
 
 ### Phase 2 - editing

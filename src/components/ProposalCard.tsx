@@ -51,12 +51,12 @@ function WorkoutDiff({ p, data }: { p: WorkoutProposal; data: AppData }) {
 
 export default function ProposalCard({ proposal, data, status = "open", onSave, onStatus }: { proposal: Proposal; data: AppData; status?: "open" | "saved" | "discarded" | null; onSave: (p: Proposal) => Promise<boolean>; onStatus?: (s: "saved" | "discarded") => void }) {
   const [state, setState] = useState<"open" | "saving" | "saved" | "discarded" | "error">(status ?? "open");
-  const wName = (id: string) => data.workouts.find((w) => w.id === id)?.name ?? "?";
+  const wName = (id: string) => (id.startsWith("new:") ? `${id.slice(4)} (new)` : data.workouts.find((w) => w.id === id)?.name ?? "?");
   const oldPlan = proposal.type === "plan" ? data.plans.find((pl) => pl.kind === proposal.kind) : undefined;
 
   return (
     <div className="msg ai" style={{ maxWidth: "100%", border: "1px solid var(--line)", display: "grid", gap: 8 }}>
-      <strong>{proposal.type === "workout" ? "Suggested workout" : `Suggested ${proposal.kind === "travel" ? "travel" : "weekly"} plan`}</strong>
+      <strong>{proposal.type === "workout" ? "Suggested workout" : `Suggested ${proposal.kind === "travel" ? "travel" : "weekly"} plan${proposal.new_workouts?.length ? ` + ${proposal.new_workouts.length} new workout${proposal.new_workouts.length > 1 ? "s" : ""}` : ""}`}</strong>
       {proposal.reason && <span className="note">{proposal.reason}</span>}
       {proposal.type === "workout" ? (
         <WorkoutDiff p={proposal} data={data} />
@@ -67,6 +67,12 @@ export default function ProposalCard({ proposal, data, status = "open", onSave, 
               <li key={it.key}><span className="ex">{it.day} · {it.title}</span><span className="sr" /><span className="tip">{it.workout_ids.map(wName).join(" + ") || (it.kind === "rest" ? "Rest" : "")}{it.note ? ` - ${it.note}` : ""}</span></li>
             ))}
           </ul>
+          {proposal.new_workouts?.map((w) => (
+            <details key={w.name} className="block">
+              <summary className="block-label">New: {w.name}</summary>
+              <WorkoutDiff p={w} data={data} />
+            </details>
+          ))}
           {oldPlan?.items.length ? <span className="note">Replaces: {oldPlan.items.map((i) => `${i.day} ${i.title}`).join(", ")}. Progress this week resets.</span> : null}
         </>
       )}

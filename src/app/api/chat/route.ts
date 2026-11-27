@@ -1,14 +1,15 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { addPainArea, loadAll, logEntries, markDone, savePainCheck, setPhase, setTravel, skipUpNext, startNextWeek, clampPain } from "@/lib/actions";
+import { addPainArea, loadAll, setGoals, logEntries, markDone, savePainCheck, setPhase, setTravel, skipUpNext, startNextWeek, clampPain } from "@/lib/actions";
 import { activePlan, checksFor, doneMap, itemWorkoutIds, primaryArea, sortedLog, todayISO, tours, upNext } from "@/lib/rules";
-import type { Proposal } from "@/lib/proposals";
+import type { Proposal, WorkoutProposal } from "@/lib/proposals";
+import { digest, digestLine } from "@/lib/review";
 import { isGarminExercise, patchSteps, type GarminHint, type GarminStep } from "@/lib/garmin/steps";
 import { watchStatus } from "@/lib/garmin/status";
 import { FEELS, PAIN_SCALE, type AppData, type Feel, type PlanItem } from "@/lib/types";
 
-export const maxDuration = 60;
+export const maxDuration = 300; // building a week with new workouts can take a while
 
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-5-5";
 const anthropic = new Anthropic(); // reads ANTHROPIC_API_KEY (server only)
@@ -53,7 +54,8 @@ function systemPrompt(data: AppData) {
   }));
   const touring = !!plan?.items.some((i) => i.kind === "tour") || tours(data.log).length > 0;
   const today = todayISO();
-  return `You are the Cairn coach, the assistant inside ${profile.display_name}'s workout log. Be brief, casual and practical (1-3 short sentences or bullets). Use "-" never em dashes. You are not a doctor.
+  return `You are the Cairn coach, the assistant inside ${profile.display_name}'s workout log. Casual and practical. Use "-" never em dashes. You are not a doctor.
+Length: logging and quick answers 1-3 short lines. Check-ins, reviews and new programs can run longer (up to ~15 short lines), using **bold** section labels and "- " bullets.
 Today is ${today} (${new Date().toLocaleDateString("en-US", { weekday: "long" })}).
 Cairn covers all training (strength, full body, travel, surf prep, rehab). Working out supports being outside.
 Pain rule: keep pain at 3/10 or less during anything. Scale: ${PAIN_SCALE}.
@@ -66,15 +68,24 @@ Travel info: ${state.travel ? JSON.stringify(state.travel_info) : "not traveling
 Phase: ${state.phase}. Week ${state.week}. Done: ${JSON.stringify(doneMap(state))}.
 Up next: ${n.type === "item" || n.type === "calm" ? `${n.item.key} ${n.item.title}` : n.type === "empty" ? "no plan yet" : "week complete"}. Details: ${JSON.stringify(upNextWorkouts)}
 Recent log (newest first): ${JSON.stringify(recent)}
+Goals: ${profile.goals ? `"${profile.goals}" (set ${profile.goals_updated_at?.slice(0, 10) ?? "earlier"})` : "NOT SET YET - infer them from the log and ask them to confirm."}
+Training summary:
+- ${[5, 14, 28].map((d) => digestLine(digest(data, d))).join("\n- ")}
 
 How to work:
 - Reports of something done or a pain number: call the matching tool, then confirm in one line. If a number is missing, log what you have and ask for it. Never invent numbers.
 - When they mention pain somewhere new, call add_pain_area, then ask for today's 0-10 (call pain_check once they answer). Ask how it's trending when it helps.
-- Workouts: answer questions about any workout from the library above - never guess its content. To change one, call propose_workout with base_workout set to its exact name and the FULL new rundown: copy every row you are not changing word for word (same exercise, sets_reps and tip text, same block labels and order) so the diff only shows real changes. Keep its notes unless the change is to the notes. Use save_as 'copy' only when they want a separate variant. For a brand new workout, omit base_workout. The person sees a diff card and taps Save; nothing saves until they do, so never say it's saved. Base changes on their pain trend and log. To change the weekly plan, call propose_plan_change with workouts that already exist; if one is new, propose it first. Keep proposals small and explain why in one line.
+- Workouts: answer questions about any workout from the library above - never guess its content. To change one, call propose_workout with base_workout set to its exact name and the FULL new rundown: copy every row you are not changing word for word (same exercise, sets_reps and tip text, same block labels and order) so the diff only shows real changes. Keep its notes unless the change is to the notes. Use save_as 'copy' only when they want a separate variant. For a brand new workout, omit base_workout. The person sees a diff card and taps Save; nothing saves until they do, so never say it's saved. Base changes on their pain trend and log. To change the weekly plan, call propose_plan_change (new workouts proposed in this conversation can be named and are bundled in). Explain why in one line.
 - Garmin: workouts run on their watch from .fit files they download in the Library ("Update watch"). Each workout shows its version and what the watch has. After a saved change, remind them once to update the watch. If propose_workout returns garmin_warnings, mention the important ones in a few words.
 - ${plan?.items.length ? "" : "They have no plan yet: ask 2-3 short questions (goal, pain areas, equipment, days per week), then propose a starter week."}
 - Travel: when they say they're traveling (gear: gym or bodyweight, jog yes/no, return date), call propose_plan_change with kind 'travel'. Bodyweight: use TRV1-TRV3 style workouts that exist. Gym: you can use CC/EZ2/EZ1 from the library. Jogging: add an easy run item with no workouts (e.g. title 'Easy run 20-30 min', note pace/RPE, keep pain <= 3). Size the number of items to the trip length when known. TRV4 Drive Reset is for drive/flight days. Mention the return date in your reply.
 - Plan items with no workouts (like an easy run or a rest day) are fine: describe them in title and note.
+- Goals: when they tell you what they're training for (or confirm your guess), call set_goals with a short summary in their words (sport/event and date, priorities, limits like the hip, days per week, equipment). Update it when things change. Use the goals in every review and plan.
+- Check-ins ("how am I doing", "check in", "review my week", the start of a new week, or after they describe what they've been doing): use the training summary (call review_training for other windows or more detail) and answer in three parts:
+  **Last 5 days** - what they actually did: sessions, the focus split (strength / ski prep / circuits / easy / tours), pain and feel, gaps or streaks. Specific, with names and numbers.
+  **vs your goals** - if goals are set, say plainly where it lines up and where it doesn't (e.g. no strength in 10 days, intensity piling up while hip pain rises, too little easy work). If goals aren't set, say what the pattern suggests ("Looks like you're building toward touring with hip-safe strength - is that right?") and ask them to confirm.
+  **Next** - 2-3 concrete suggestions tied to their plan and library, and offer to turn them into a plan card. End with at most one question.
+- Building a program from a description ("3 strength days, 2 easy, a tour Saturday", "more upper body this week"): if one or two things that change the plan are missing (days available, equipment, time per session), ask them first in one message. Otherwise build it: prefer workouts already in the library; create new ones with propose_workout only when nothing fits (full rundown, hip swaps in tips); then call propose_plan_change once with the whole week. You can name the new workouts you just proposed in the plan - they are bundled into one card and saved together. Say in 2-4 lines how the week serves their goals and their pain rule.
 - Red flags (pain at rest or at night, catching or clicking deep in a joint, numbness, limping that won't settle) -> suggest PT or sports med.`;
 }
 
@@ -140,7 +151,7 @@ const TOOLS: Anthropic.Tool[] = [
   },
   {
     name: "propose_plan_change",
-    description: "Suggest a replacement weekly plan (home or travel). Shows a card; nothing is saved until the person taps Save. Every workout named must already exist in their library or be saved first. Give the FULL plan.",
+    description: "Suggest a replacement weekly plan (home or travel). Shows one card; nothing is saved until the person taps Save. Workouts must be library names, or names of new workouts you proposed with propose_workout in this conversation (those get bundled into this card and saved with it). Give the FULL plan.",
     input_schema: {
       type: "object",
       properties: {
@@ -163,6 +174,16 @@ const TOOLS: Anthropic.Tool[] = [
       },
       required: ["kind", "reason", "items"],
     },
+  },
+  {
+    name: "set_goals",
+    description: "Save what they are training for, in a few sentences (event/season and date, priorities, limits, days per week, equipment). Replaces the previous goals. Only after they state or confirm them.",
+    input_schema: { type: "object", properties: { goals: { type: "string" } }, required: ["goals"] },
+  },
+  {
+    name: "review_training",
+    description: "Detailed training summary for the last N days (sessions with dates, focus split, tours and vert, pain, feel, pain-area checks, notes). Use for check-ins beyond what the summary shows.",
+    input_schema: { type: "object", properties: { days: { type: "integer", minimum: 1, maximum: 180 } }, required: ["days"] },
   },
   {
     name: "set_phase",
@@ -261,22 +282,48 @@ export async function POST(req: Request) {
         proposals.push({ type: "workout", reason: String(i.reason ?? "").slice(0, 300), base_id: base?.id ?? null, mode: i.save_as === "copy" ? "copy" : "update", name: String(i.name || base?.name || "").slice(0, 60), category: String(i.category || base?.category || "CUSTOM").slice(0, 12).toUpperCase(), notes: String(typeof i.notes === "string" ? i.notes : base?.notes ?? "").slice(0, 1000), blocks, steps: garmin.steps, garmin_warnings });
         return { ok: true, note: "Shown to the person as a card. It is NOT saved until they tap Save. Once saved, the Library shows 'Update watch' for it.", ...(garmin_warnings.length ? { garmin_warnings } : {}) };
       }
+      case "set_goals": {
+        await setGoals(sb, userId!, String(i.goals ?? ""));
+        actions.push("Goals saved");
+        return { ok: true };
+      }
+      case "review_training": {
+        const days = Math.max(1, Math.min(180, Number(i.days) || 7));
+        return digest(data, days);
+      }
       case "propose_plan_change": {
         const items: PlanItem[] = [];
         const missing: string[] = [];
-        (Array.isArray(i.items) ? i.items : []).slice(0, 14).forEach((it: any, idx: number) => {
-          const ids = (Array.isArray(it.workouts) ? it.workouts : []).map((n: string) => {
-            const w = data.workouts.find((x) => x.name === n);
-            if (!w) missing.push(n);
-            return w?.id ?? "";
-          }).filter(Boolean);
+        const bundled: WorkoutProposal[] = [];
+        const bundledFrom: string[] = []; // earlier cards (open) that this plan now includes
+        const findNew = async (n: string) => {
+          const here = proposals.find((p): p is WorkoutProposal => p.type === "workout" && !p.base_id && p.name.toLowerCase() === n.toLowerCase());
+          if (here) return { p: here, msgId: null as string | null };
+          const { data: open } = await sb.from("coach_messages").select("id, proposal").eq("user_id", userId!).eq("proposal_status", "open").not("proposal", "is", null).order("created_at", { ascending: false }).limit(30);
+          const row = (open ?? []).find((r: any) => r.proposal?.type === "workout" && !r.proposal.base_id && String(r.proposal.name).toLowerCase() === n.toLowerCase());
+          return row ? { p: row.proposal as WorkoutProposal, msgId: row.id as string } : null;
+        };
+        const rawItems = (Array.isArray(i.items) ? i.items : []).slice(0, 14);
+        for (const [idx, it] of rawItems.entries() as IterableIterator<[number, any]>) {
+          const ids: string[] = [];
+          for (const n of (Array.isArray(it.workouts) ? it.workouts : []) as string[]) {
+            const w = data.workouts.find((x) => x.name === n) ?? data.workouts.find((x) => x.name.toLowerCase() === String(n).toLowerCase());
+            if (w) { ids.push(w.id); continue; }
+            const nw = await findNew(String(n));
+            if (!nw) { missing.push(n); continue; }
+            if (!bundled.includes(nw.p)) bundled.push(nw.p);
+            if (nw.msgId && !bundledFrom.includes(nw.msgId)) bundledFrom.push(nw.msgId);
+            ids.push(`new:${nw.p.name}`);
+          }
           const kind = it.kind === "tour" || it.kind === "rest" ? it.kind : "workout";
           items.push({ key: `p${idx + 1}`, day: String(it.day ?? "").slice(0, 20), title: String(it.title ?? "").slice(0, 80), workout_ids: ids, kind, note: String(it.note ?? "").slice(0, 300) });
-        });
-        if (missing.length) return { ok: false, reason: `These workouts don't exist yet: ${[...new Set(missing)].join(", ")}. Propose them with propose_workout first (or use existing names).` };
+        }
+        if (missing.length) return { ok: false, reason: `These workouts don't exist yet: ${[...new Set(missing)].join(", ")}. Propose each with propose_workout first (no base_workout), then name it here.` };
         if (!items.length) return { ok: false, reason: "need at least one item" };
-        proposals.push({ type: "plan", reason: String(i.reason ?? "").slice(0, 300), kind: i.kind === "travel" ? "travel" : "home", items });
-        return { ok: true, note: "Shown to the person as a card. It is NOT saved until they tap Save." };
+        // the bundled workouts live on the plan card now, not as separate cards
+        for (const b of bundled) { const k = proposals.indexOf(b); if (k >= 0) proposals.splice(k, 1); }
+        proposals.push({ type: "plan", reason: String(i.reason ?? "").slice(0, 300), kind: i.kind === "travel" ? "travel" : "home", items, ...(bundled.length ? { new_workouts: bundled, bundled_from: bundledFrom } : {}) });
+        return { ok: true, note: `Shown to the person as one card${bundled.length ? ` with ${bundled.length} new workout(s) bundled in` : ""}. It is NOT saved until they tap Save.` };
       }
       case "set_phase":
         await setPhase(sb, data.state, i.phase === "build" ? "build" : "calm");
@@ -303,17 +350,17 @@ export async function POST(req: Request) {
   const messages: Anthropic.MessageParam[] = history.map((m) => ({ role: m.role, content: m.content }));
   try {
     let text = "";
-    for (let turn = 0; turn < 6; turn++) {
+    for (let turn = 0; turn < 8; turn++) {
       const res = await anthropic.messages.create({
         model: MODEL,
-        max_tokens: 2000,
+        max_tokens: 16000,
         system: [
           { type: "text", text: libraryText(data), cache_control: { type: "ephemeral" } },
           { type: "text", text: systemPrompt(data) },
         ],
         tools: TOOLS,
         messages,
-        output_config: { effort: "low" },
+        output_config: { effort: "medium" },
       });
       if (res.stop_reason === "refusal") return NextResponse.json({ rows: [{ id: `r${Date.now()}`, role: "assistant", content: "I can't help with that one.", proposal: null, proposal_status: null, created_at: stamp(1) }] });
       text = res.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("\n").trim();

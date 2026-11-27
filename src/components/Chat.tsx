@@ -16,7 +16,14 @@ function Rich({ text }: { text: string }) {
   return <>{out}</>;
 }
 
-const INTRO = 'Tell me what you did or how something feels and I\'ll log it. Try: "did SKI1, pain 2, felt good", "my low back is sore", or "what should I do today?"';
+const INTRO = 'Tell me what you did or how something feels and I\'ll log it. Or describe the week you want and I\'ll build it, or ask for a check-in on how your training lines up with your goals.';
+
+// one tap to the bigger coaching asks
+const STARTERS: { label: string; text: string; send: boolean }[] = [
+  { label: "Check in on my last 5 days", text: "Check in on my last 5 days - what have I been working on, and does it line up with my goals?", send: true },
+  { label: "Plan my week", text: "Plan my week. Here's what I want to do: ", send: false },
+  { label: "My goals", text: "Here's what I'm training for: ", send: false },
+];
 
 export default function Chat() {
   const { data, sb, uid, outbox, clearOutbox, saveProposal, coachOpen } = useApp();
@@ -76,13 +83,22 @@ export default function Chat() {
         <div className="msg ai">{INTRO}</div>
         {rows.map((m) =>
           m.proposal ? (
-            <ProposalCard key={m.id} proposal={m.proposal} data={data} status={m.proposal_status} onSave={saveProposal} onStatus={(s) => setStatus(m.id, s)} />
+            <ProposalCard key={`${m.id}:${m.proposal_status}`} proposal={m.proposal} data={data} status={m.proposal_status} onSave={saveProposal} onStatus={(s) => {
+              void setStatus(m.id, s);
+              // a saved plan also saved the workout cards it bundled
+              if (s === "saved" && m.proposal?.type === "plan") m.proposal.bundled_from?.forEach((id) => void setStatus(id, "saved"));
+            }} />
           ) : (
             <div key={m.id} className={`msg ${m.role === "user" ? "me" : m.role === "act" ? "act" : "ai"}`}>{m.role === "assistant" ? <Rich text={m.content} /> : m.content}</div>
           ),
         )}
         {busy && <div className="msg ai">Thinking…</div>}
         {error && <div className="msg ai" role="alert">{error}</div>}
+      </div>
+      <div className="starters" role="group" aria-label="Ask the coach">
+        {STARTERS.map((st) => (
+          <button key={st.label} type="button" disabled={busy} onClick={() => (st.send ? void send(st.text) : (setText(st.text), inputRef.current?.focus()))}>{st.label}</button>
+        ))}
       </div>
       <form className="chat-form" onSubmit={(e) => { e.preventDefault(); const t = text; setText(""); void send(t); }}>
         <input ref={inputRef} value={text} onChange={(e) => setText(e.target.value)} autoComplete="off" placeholder="Did SKI1, pain 3…" aria-label="Message the coach" />

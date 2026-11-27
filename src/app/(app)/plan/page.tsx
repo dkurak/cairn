@@ -31,6 +31,17 @@ export default function Plan() {
         </div>
       </div>
 
+      {tab === "upcoming" && (
+        <section className="card goals">
+          <div className="top"><h2>Goals</h2>{data.profile.goals_updated_at ? <small>Updated {fmt(data.profile.goals_updated_at.slice(0, 10))}</small> : null}</div>
+          {data.profile.goals ? <p className="goals-text">{data.profile.goals}</p> : <span className="empty">No goals yet. Tell the coach what you&apos;re training for and it&apos;ll check your weeks against it.</span>}
+          <div className="row">
+            <button className="primary" onClick={() => askCoach("Check in on my last 5 days - what have I been working on, and does it line up with my goals?")}>Check in</button>
+            <button onClick={() => askCoach(data.profile.goals ? "My goals have changed: " : "Here's what I'm training for: ", false)}>{data.profile.goals ? "Update goals" : "Set goals"}</button>
+          </div>
+        </section>
+      )}
+
       {tab === "upcoming" ? (
         <div className="two">
           <section className="card">
