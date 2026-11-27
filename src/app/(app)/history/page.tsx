@@ -11,11 +11,11 @@ const md = (iso: string) => { const [y, m, d] = iso.split("-").map(Number); retu
 
 export default function History() {
   const { data, sb, today, run, askCoach, openLog } = useApp();
-  const [range, setRange] = useState<RangeKey>("12w");
+  const [range, setRange] = useState<RangeKey>("4w");
   const [editingId, setEditingId] = useState<string | null>(null);
   const st = useMemo(() => computeStats(data, range, today), [data, range, today]);
   const primary = primaryArea(data.areas);
-  const periodLabel = range === "all" ? "all time" : `${st.win.weeks} weeks`;
+  const periodLabel = range === "max" ? `since ${md(st.win.start)}` : st.win.clamped ? `since ${md(st.win.start)}` : `${st.win.weeks} weeks`;
 
   const sessionDelta = st.prevSessions ? st.sessions.length - st.prevSessions.length : null;
   const inWin = sortedLog(data.log).filter((e) => e.date >= st.win.start && e.date <= st.win.end);
@@ -32,6 +32,10 @@ export default function History() {
         </div>
       </div>
 
+      {st.win.clamped && (
+        <p className="note" style={{ margin: 0 }}>Tracking started {md(st.win.start)}, so that&apos;s where this view begins. It fills out as you keep logging.</p>
+      )}
+
       {!hasData && (
         <section className="card">
           <span className="empty">Nothing in this range yet. Log a session or a check-in and it will show up here.</span>
@@ -43,7 +47,7 @@ export default function History() {
           label={`Sessions · ${periodLabel}`}
           value={String(st.sessions.length)}
           sub={st.weekly.length ? `${(st.sessions.length / st.weekly.length).toFixed(1)} per week` : undefined}
-          delta={sessionDelta == null ? null : { text: `${sessionDelta > 0 ? "+" : ""}${sessionDelta} vs previous ${st.win.weeks} weeks`, dir: sessionDelta > 0 ? "up" : sessionDelta < 0 ? "down" : "flat", good: null }}
+          delta={sessionDelta == null ? null : { text: `${sessionDelta > 0 ? "+" : ""}${sessionDelta} vs the ${st.win.weeks} weeks before`, dir: sessionDelta > 0 ? "up" : sessionDelta < 0 ? "down" : "flat", good: null }}
         />
         <StatTile label="Active days" value={String(st.activeDays)} sub={`of ${st.totalDays} days`} />
         <StatTile
@@ -62,12 +66,12 @@ export default function History() {
       <div className="grid2">
         <section className="card">
           <h2>Sessions per week</h2>
-          <WeeklyBars weekly={st.weekly} currentStart={weekStart(today)} />
+          <WeeklyBars weekly={st.weekly} currentStart={weekStart(today)} from={st.win.start} />
           <details>
             <summary className="meta" style={{ cursor: "pointer" }}>View as table</summary>
             <table style={{ width: "100%", fontSize: ".85rem", borderCollapse: "collapse", marginTop: 6 }}>
               <thead><tr><th align="left">Week of</th><th align="right">Sessions</th></tr></thead>
-              <tbody>{[...st.weekly].reverse().map((w) => <tr key={w.start} style={{ borderTop: "1px solid var(--line)" }}><td>{md(w.start)}</td><td align="right">{w.count}</td></tr>)}</tbody>
+              <tbody>{[...st.weekly].reverse().map((w) => <tr key={w.start} style={{ borderTop: "1px solid var(--line)" }}><td>{md(w.start < st.win.start ? st.win.start : w.start)}</td><td align="right">{w.count}</td></tr>)}</tbody>
             </table>
           </details>
         </section>
@@ -143,7 +147,8 @@ export default function History() {
           onLogDay={(d) => openLog({ whats: ["Rest"], rest: true, date: d })}
           editingId={editingId}
           setEditingId={setEditingId}
-          onSaveNotes={(id, notes) => run(() => updateEntry(sb, id, { notes: notes.slice(0, 1000) }), "Couldn't save notes. Try again.").then((ok) => ok && setEditingId(null))}
+          onSave={(id, patch) => run(() => updateEntry(sb, id, patch), "Couldn't save that. Try again.").then((ok) => ok && setEditingId(null))}
+          workouts={data.workouts}
           onDelete={(id) => run(() => deleteEntry(sb, id), "Couldn't delete. Try again.")}
         />
       </section>

@@ -6,7 +6,9 @@ import QuickCheck from "./QuickCheck";
 import Rundown from "./Rundown";
 import RecentList from "./RecentList";
 import Collapsible from "./Collapsible";
+import FeelPill, { VertPill } from "./FeelPill";
 import { deleteEntry, setPhase, skipUpNext, startNextWeek, updateEntry } from "@/lib/actions";
+import { firstTrackedDay } from "@/lib/stats";
 import { activePlan, addDays, checksFor, greenLight, itemWorkoutIds, painClass, primaryArea, projectedItems, sortedLog, tours, upNext } from "@/lib/rules";
 
 const parse = (iso: string) => { const [y, m, d] = iso.split("-").map(Number); return new Date(y, m - 1, d); };
@@ -39,10 +41,25 @@ export default function DayView({ date }: { date: string }) {
   const plannedItem = isFuture ? projected[offsetOf(date) - 1] : undefined;
   const entriesOn = (d: string) => sortedLog(log).filter((e) => e.date === d);
   const dayEntries = entriesOn(date);
+  const firstDay = firstTrackedDay(data);
+  const tracked = (d: string) => !!firstDay && d >= firstDay; // days before the first tracked day are just empty
 
+  type Kind = "workout" | "tour" | "rest" | "none";
+  /** what kind of day: drives the caption and the tile styling */
+  const kindOf = (d: string): Kind => {
+    if (d === today) return next.type === "item" || next.type === "calm" ? (next.item.kind === "rest" ? "rest" : next.item.kind === "tour" ? "tour" : "workout") : "none";
+    if (d < today) {
+      const es = entriesOn(d);
+      if (es.some((e) => e.kind === "tour")) return "tour";
+      if (es.some((e) => e.kind === "workout")) return "workout";
+      return tracked(d) ? "rest" : "none"; // rest entries and untracked-gap days are rest days
+    }
+    const it = projected[offsetOf(d) - 1];
+    return it ? (it.kind === "rest" ? "rest" : it.kind === "tour" ? "tour" : "workout") : "none";
+  };
   const caption = (d: string) => {
     if (d === today) return todayTitle ? first(todayTitle) : "-";
-    if (d < today) { const e = entriesOn(d).find((x) => x.kind !== "rest"); return e ? first(e.what) : entriesOn(d).length ? "Rest" : "-"; }
+    if (d < today) { const e = entriesOn(d).find((x) => x.kind !== "rest"); return e ? first(e.what) : kindOf(d) === "rest" ? "Rest" : "-"; }
     const it = projected[offsetOf(d) - 1];
     return it ? first(it.title) : "-";
   };
@@ -86,7 +103,7 @@ export default function DayView({ date }: { date: string }) {
 
       <nav className="strip" ref={stripRef} aria-label="Days">
         {window7.map((d) => (
-          <Link key={d} href={hrefFor(d)} className={`${d === date ? "sel" : ""} ${d === today ? "istoday" : ""} ${d < today ? "past" : ""}`} aria-current={d === date ? "date" : undefined}>
+          <Link key={d} href={hrefFor(d)} className={`${d === date ? "sel" : ""} ${d === today ? "istoday" : ""} ${d < today ? "past" : ""} k-${kindOf(d)}`} aria-current={d === date ? "date" : undefined}>
             <span className="d">{d === today ? "Today" : dow(d)}</span>
             <span className="dn">{parse(d).getDate()}</span>
             <span className="w">{caption(d)}</span>
@@ -147,11 +164,11 @@ export default function DayView({ date }: { date: string }) {
               <div className="label" style={{ color: "var(--muted)" }}>Done · {dow(date)} {md(date)}</div>
               {dayEntries.length ? (
                 <>
-                  <div className="title">{dayEntries.map((e) => e.what).join(" + ")}</div>
+                  <div className="title" style={dayEntries.every((e) => e.kind === "rest") ? { color: "var(--muted)" } : undefined}>{dayEntries.map((e) => e.what).join(" + ")}</div>
                   <ul className="list">
                     {dayEntries.map((e) => (
                       <li key={e.id}>
-                        <span><strong>{e.what}</strong>{e.vert_ft ? ` · ${e.vert_ft.toLocaleString()} ft` : ""}<br /><span className="meta">{[e.feel, e.notes].filter(Boolean).join(" · ")}</span></span>
+                        <span><span className="entry-head"><strong>{e.what}</strong><VertPill ft={e.vert_ft} /></span><span className="meta feelrow"><FeelPill feel={e.feel} />{e.notes ? <span>{e.notes}</span> : null}</span></span>
                         <span><Chip p={e.pain_during} /><Chip p={e.pain_next_am} label="AM" /></span>
                       </li>
                     ))}
@@ -159,10 +176,17 @@ export default function DayView({ date }: { date: string }) {
                   {loggedWorkouts.length > 0 && <Collapsible>{loggedWorkouts.map((w, i) => <Rundown key={i} workout={w} />)}</Collapsible>}
                 </>
               ) : (
-                <>
-                  <div className="title">Nothing logged</div>
-                  <div className="note">Rest day, or you didn&apos;t log it. You can add it now.</div>
-                </>
+                tracked(date) ? (
+                  <>
+                    <div className="title" style={{ color: "var(--muted)" }}>Rest day</div>
+                    <div className="note">Nothing logged, so it counts as a rest day. Did something? Add it below.</div>
+                  </>
+                ) : (
+                  <>
+                    <div className="title" style={{ color: "var(--muted)" }}>Before tracking</div>
+                    <div className="note">You hadn&apos;t started logging yet. You can still add something for this day.</div>
+                  </>
+                )
               )}
               <div className="row">
                 <button className="primary" onClick={() => openLog({ whats: ["SKI1 Hip Strength"], date })}>Log something for this day</button>
@@ -217,7 +241,8 @@ export default function DayView({ date }: { date: string }) {
                   onLogDay={(d) => openLog({ whats: ["Rest"], rest: true, date: d })}
                   editingId={editingId}
                   setEditingId={setEditingId}
-                  onSaveNotes={(id, notes) => run(() => updateEntry(sb, id, { notes: notes.slice(0, 1000) }), "Couldn't save notes. Try again.").then((ok) => ok && setEditingId(null))}
+                  onSave={(id, patch) => run(() => updateEntry(sb, id, patch), "Couldn't save that. Try again.").then((ok) => ok && setEditingId(null))}
+          workouts={workouts}
                   onDelete={(id) => run(() => deleteEntry(sb, id), "Couldn't delete. Try again.")}
                 />
               </section>
@@ -231,7 +256,8 @@ export default function DayView({ date }: { date: string }) {
                   limit={20}
                   editingId={editingId}
                   setEditingId={setEditingId}
-                  onSaveNotes={(id, notes) => run(() => updateEntry(sb, id, { notes: notes.slice(0, 1000) }), "Couldn't save notes. Try again.").then((ok) => ok && setEditingId(null))}
+                  onSave={(id, patch) => run(() => updateEntry(sb, id, patch), "Couldn't save that. Try again.").then((ok) => ok && setEditingId(null))}
+          workouts={workouts}
                   onDelete={(id) => run(() => deleteEntry(sb, id), "Couldn't delete. Try again.")}
                 />
               ) : <span className="empty">{isFuture ? "Nothing to note yet." : "No notes for this day. Tap an entry to add one."}</span>}

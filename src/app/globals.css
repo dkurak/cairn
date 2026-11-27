@@ -284,3 +284,31 @@ svg.viz path[fill="none"] { vector-effect: non-scaling-stroke; }
   .content { transition: margin-left .2s ease-out; }
   .shell-body.menu-open .content { margin-left: 260px; }
 }
+
+/* ---------- type styling: rest days recede, tours stand out ---------- */
+.strip a.k-rest:not(.sel) { background: var(--bg); border-style: dashed; }
+.strip a.k-rest:not(.sel) .w, .strip a.k-rest:not(.sel) .dn { color: var(--muted); font-weight: 600; }
+.strip a.k-none:not(.sel) { background: transparent; opacity: .55; }
+.strip a.k-tour:not(.sel) { border-color: var(--accent); }
+.strip a.k-tour:not(.sel) .w { color: var(--accent); }
+.strip a.sel .w, .strip a.sel .dn { color: var(--accent-ink); }
+.log .item.kind-rest strong, .log .item.kind-rest .meta, .log .item.kind-rest .entry { color: var(--muted); }
+.log .item.kind-rest strong { font-weight: 600; }
+.log .item.kind-tour strong { color: var(--accent); }
+
+/* ---------- feeling + vert pills ---------- */
+.entry-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.feelrow { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.chip.n { background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
+.chip.pill-rough { background: var(--bad-bg); color: var(--bad); }
+.chip.pill-ok { background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
+.chip.pill-good { background: var(--good-bg); color: var(--good); }
+.chip.pill-great { background: var(--good); color: var(--surface); }
+/* rest rows: whole row grey, a notch lighter than a workout */
+.log .item.kind-rest .entry-head strong { color: var(--muted); font-weight: 600; }
+
+/* ---------- entry editor ---------- */
+.log .editor { grid-column: 1 / -1; display: grid; gap: 12px; padding: 10px 0 4px; }
+.pills.pain11 { display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 4px; }
+.pills.pain11 button { min-width: 0; padding: 10px 0; border-radius: 8px; }
+button.danger { color: var(--bad); border-color: var(--bad-bg); background: var(--bad-bg); }

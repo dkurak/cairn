@@ -114,7 +114,8 @@ export default function Plan() {
             onLogDay={(d) => openLog({ whats: ["Rest"], rest: true, date: d })}
             editingId={editingId}
             setEditingId={setEditingId}
-            onSaveNotes={(id, notes) => run(() => updateEntry(sb, id, { notes: notes.slice(0, 1000) }), "Couldn't save notes. Try again.").then((ok) => ok && setEditingId(null))}
+            onSave={(id, patch) => run(() => updateEntry(sb, id, patch), "Couldn't save that. Try again.").then((ok) => ok && setEditingId(null))}
+          workouts={workouts}
             onDelete={(id) => run(() => deleteEntry(sb, id), "Couldn't delete. Try again.")}
           />
         </section>

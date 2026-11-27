@@ -9,16 +9,16 @@ import { activePlan, doneMap, nextInCycle, planOf, primaryArea, todayISO, upNext
 export const clampPain = (n: unknown) => Math.max(0, Math.min(10, Math.round(Number(n))));
 
 export async function loadAll(sb: SupabaseClient, userId: string): Promise<AppData> {
-  const since = new Date(Date.now() - 180 * 86400000).toISOString().slice(0, 10);
+  const since = new Date(Date.now() - 1900 * 86400000).toISOString().slice(0, 10);
   const [profile, workouts, plans, state, log, areas, checks, checkins] = await Promise.all([
     sb.from("profiles").select("id, display_name, role").eq("id", userId).single(),
     sb.from("workouts").select("id, name, category, owner_id, rundown, notes").order("name"),
     sb.from("plans").select("id, owner_id, name, kind, items"),
     sb.from("plan_state").select("*").eq("user_id", userId).single(),
-    sb.from("log_entries").select("*").eq("user_id", userId).order("date", { ascending: false }).order("created_at", { ascending: false }).limit(300),
+    sb.from("log_entries").select("*").eq("user_id", userId).order("date", { ascending: false }).order("created_at", { ascending: false }).limit(2000),
     sb.from("pain_areas").select("id, user_id, name, is_primary, active").eq("user_id", userId).order("created_at"),
-    sb.from("pain_checks").select("id, area_id, date, pain, note").eq("user_id", userId).gte("date", since),
-    sb.from("daily_checkins").select("date, feel").eq("user_id", userId).gte("date", since),
+    sb.from("pain_checks").select("id, area_id, date, pain, note").eq("user_id", userId).gte("date", since).limit(5000),
+    sb.from("daily_checkins").select("date, feel").eq("user_id", userId).gte("date", since).limit(1000),
   ]);
   for (const r of [profile, workouts, plans, state, log, areas, checks, checkins]) if (r.error) throw r.error;
   return {
@@ -135,7 +135,7 @@ export async function skipUpNext(sb: SupabaseClient, data: AppData) {
 export const startNextWeek = (sb: SupabaseClient, s: PlanState) =>
   s.travel ? patchState(sb, s.user_id, { travel_done: {} }) : patchState(sb, s.user_id, { done: {}, week: (s.week || 1) + 1 });
 
-export async function updateEntry(sb: SupabaseClient, id: string, patch: Partial<Pick<LogEntry, "notes" | "pain_during" | "pain_next_am" | "feel" | "vert_ft" | "date">>) {
+export async function updateEntry(sb: SupabaseClient, id: string, patch: Partial<Pick<LogEntry, "what" | "kind" | "workout_id" | "notes" | "pain_during" | "pain_next_am" | "feel" | "vert_ft" | "date">>) {
   const { error } = await sb.from("log_entries").update(patch).eq("id", id);
   if (error) throw error;
 }

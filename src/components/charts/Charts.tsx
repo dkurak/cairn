@@ -2,6 +2,7 @@
 import { useTip, TipBubble } from "./Tip";
 import type { WeekBucket, Window } from "@/lib/stats";
 import { addDays } from "@/lib/rules";
+import { weekStart } from "@/lib/stats";
 
 const parse = (iso: string) => { const [y, m, d] = iso.split("-").map(Number); return new Date(y, m - 1, d, 12); };
 const md = (iso: string) => parse(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
@@ -27,13 +28,15 @@ export function StatTile({ label, value, sub, delta }: {
 }
 
 /* ---------- sessions per week (columns) ---------- */
-export function WeeklyBars({ weekly, currentStart }: { weekly: WeekBucket[]; currentStart: string }) {
+export function WeeklyBars({ weekly, currentStart, from }: { weekly: WeekBucket[]; currentStart: string; from: string }) {
+  // the first column is a partial week: label it with the day tracking began, not the Monday before
+  const shown = (d: string) => (d < from ? from : d);
   const { ref, tip, show, showAtEl, hide } = useTip();
   const W = 560, H = 190, L = 26, R = 6, T = 14, B = 26;
   const max = Math.max(4, ...weekly.map((w) => w.count));
   const top = max % 2 && max > 4 ? max + 1 : max;
   const slot = (W - L - R) / weekly.length;
-  const bw = Math.max(6, Math.min(34, slot - 4)); // 2px+ surface gap between columns
+  const bw = Math.max(6, Math.min(48, slot - 4)); // 2px+ surface gap between columns
   const y = (v: number) => T + (1 - v / top) * (H - T - B);
   const every = Math.ceil(weekly.length / 8);
   const best = weekly.reduce((m, w) => (w.count > m.count ? w : m), weekly[0]);
@@ -54,14 +57,14 @@ export function WeeklyBars({ weekly, currentStart }: { weekly: WeekBucket[]; cur
             <g key={w.start}>
               {w.count > 0 && (
                 <path d={bar(x, w.count)} fill="var(--accent)" opacity={isNow ? 1 : 0.78} tabIndex={0}
-                  aria-label={`Week of ${md(w.start)}: ${w.count} sessions`}
-                  onMouseEnter={(e) => showAtEl(e.currentTarget, `Week of ${md(w.start)} · ${w.count} session${w.count === 1 ? "" : "s"}`)}
-                  onFocus={(e) => showAtEl(e.currentTarget, `Week of ${md(w.start)} · ${w.count} session${w.count === 1 ? "" : "s"}`)}
-                  onClick={(e) => showAtEl(e.currentTarget, `Week of ${md(w.start)} · ${w.count} · ${w.names.slice(0, 3).join(", ")}${w.names.length > 3 ? "…" : ""}`)}
+                  aria-label={`Week of ${md(shown(w.start))}: ${w.count} sessions`}
+                  onMouseEnter={(e) => showAtEl(e.currentTarget, `Week of ${md(shown(w.start))} · ${w.count} session${w.count === 1 ? "" : "s"}`)}
+                  onFocus={(e) => showAtEl(e.currentTarget, `Week of ${md(shown(w.start))} · ${w.count} session${w.count === 1 ? "" : "s"}`)}
+                  onClick={(e) => showAtEl(e.currentTarget, `Week of ${md(shown(w.start))} · ${w.count} · ${w.names.slice(0, 3).join(", ")}${w.names.length > 3 ? "…" : ""}`)}
                   onMouseLeave={hide} onBlur={hide} />
               )}
               {w.count > 0 && (w === best || isNow) && <text x={x + bw / 2} y={y(w.count) - 4} textAnchor="middle" style={{ fill: "var(--ink)", fontWeight: 700 }}>{w.count}</text>}
-              {i % every === 0 && <text x={x + bw / 2} y={H - 8} textAnchor="middle">{md(w.start)}</text>}
+              {i % every === 0 && <text x={x + bw / 2} y={H - 8} textAnchor="middle">{md(shown(w.start))}</text>}
             </g>
           );
         })}
@@ -119,7 +122,7 @@ export function PainTrend({ win, sessions, checks, checkLabel }: { win: Window; 
         {S.map((p, i) => <circle key={"s" + i} cx={x(p.date)} cy={y(p.p)} r="6" fill="var(--s1)" stroke="var(--surface)" strokeWidth="2" onMouseEnter={(e) => show(e, `${md(p.date)} · during session ${p.p}/10`)} onClick={(e) => show(e, `${md(p.date)} · during session ${p.p}/10`)} onMouseLeave={hide} />)}
         {last(C) && <text x={x(last(C).date) + 8} y={y(last(C).p) - 6} style={{ fill: "var(--ink)", fontWeight: 700 }}>{last(C).p}</text>}
         {last(S) && <text x={x(last(S).date) + 8} y={y(last(S).p) + 14} style={{ fill: "var(--ink)", fontWeight: 700 }}>{last(S).p}</text>}
-        {ticks.map((d, i) => <text key={d} x={x(d)} y={H - 8} textAnchor={i === 0 ? "start" : i === ticks.length - 1 ? "end" : "middle"}>{md(d)}</text>)}
+        {ticks.map((d, i) => <text key={i} x={x(d)} y={H - 8} textAnchor={i === 0 ? "start" : i === ticks.length - 1 ? "end" : "middle"}>{md(d)}</text>)}
       </svg>
       <TipBubble tip={tip} />
       <details style={{ marginTop: 6 }}>
@@ -140,16 +143,17 @@ export function PainTrend({ win, sessions, checks, checkLabel }: { win: Window; 
 /* ---------- activity heatmap (weeks x weekdays) ---------- */
 export function Heatmap({ win, perDay, today }: { win: Window; perDay: Map<string, string[]>; today: string }) {
   const { ref, tip, show, hide } = useTip();
-  const cell = 14, gap = 3, left = 26, top = 16;
-  const W = left + win.weeks * (cell + gap), H = top + 7 * (cell + gap);
+  const cell = win.buckets <= 8 ? 28 : win.buckets <= 20 ? 18 : 14, gap = win.buckets <= 8 ? 5 : 3, left = 30, top = 18;
+  const W = left + win.buckets * (cell + gap), H = top + 7 * (cell + gap);
   const level = (n: number) => (n === 0 ? "var(--bg)" : `color-mix(in srgb, var(--accent) ${n === 1 ? 38 : n === 2 ? 68 : 100}%, var(--surface))`);
   const days = ["Mon", "", "Wed", "", "Fri", "", ""];
-  const cols = Array.from({ length: win.weeks }, (_, w) => Array.from({ length: 7 }, (_, d) => addDays(win.start, w * 7 + d)));
+  const gridStart = weekStart(win.start);
+  const cols = Array.from({ length: win.buckets }, (_, w) => Array.from({ length: 7 }, (_, d) => addDays(gridStart, w * 7 + d)));
   let lastMonth = "";
   return (
-    <div ref={ref} style={{ position: "relative", maxWidth: W * 1.6 }}>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Sessions per day">
-        {days.map((d, i) => d && <text key={i} x={left - 5} y={top + i * (cell + gap) + cell - 2} textAnchor="end">{d}</text>)}
+    <div ref={ref} style={{ position: "relative", maxWidth: W }}>
+      <svg className="viz" viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Sessions per day">
+        {days.map((d, i) => d && <text key={i} x={left - 5} y={top + i * (cell + gap) + cell / 2 + 4} textAnchor="end">{d}</text>)}
         {cols.map((col, w) => {
           const m = parse(col[0]).toLocaleDateString(undefined, { month: "short" });
           const showM = m !== lastMonth; lastMonth = m;
@@ -157,7 +161,7 @@ export function Heatmap({ win, perDay, today }: { win: Window; perDay: Map<strin
             <g key={w}>
               {showM && <text x={left + w * (cell + gap)} y={10}>{m}</text>}
               {col.map((d, i) => {
-                if (d > today) return null;
+                if (d > today || d < win.start) return null; // nothing before the first tracked day
                 const names = perDay.get(d) ?? [];
                 const label = `${parse(d).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })} · ${names.length ? names.join(", ") : "no session"}`;
                 return <rect key={d} x={left + w * (cell + gap)} y={top + i * (cell + gap)} width={cell} height={cell} rx="3" fill={level(names.length)} stroke={names.length ? "none" : "var(--line)"} strokeWidth=".6"

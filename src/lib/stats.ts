@@ -1,12 +1,12 @@
 import type { AppData, LogEntry, PainArea, PainCheck, Workout } from "./types";
 import { addDays } from "./rules";
 
-export type RangeKey = "4w" | "12w" | "26w" | "all";
+export type RangeKey = "4w" | "13w" | "52w" | "max";
 export const RANGES: { key: RangeKey; label: string; weeks: number }[] = [
   { key: "4w", label: "4 weeks", weeks: 4 },
-  { key: "12w", label: "12 weeks", weeks: 12 },
-  { key: "26w", label: "6 months", weeks: 26 },
-  { key: "all", label: "All", weeks: 52 },
+  { key: "13w", label: "Quarter", weeks: 13 },
+  { key: "52w", label: "Year", weeks: 52 },
+  { key: "max", label: "Max", weeks: 0 }, // everything since the first tracked day
 ];
 
 const parse = (iso: string) => { const [y, m, d] = iso.split("-").map(Number); return new Date(y, m - 1, d, 12); };
@@ -34,17 +34,33 @@ export function categoryOf(e: LogEntry, workouts: Workout[]): string {
 }
 export const categoryLabel = (c: string) => CATEGORY_LABEL[c] ?? c;
 
-export type Window = { start: string; end: string; weeks: number };
-export function windowFor(range: RangeKey, today: string, log: LogEntry[]): Window {
-  const wk = RANGES.find((r) => r.key === range)!.weeks;
-  let weeks = wk;
-  if (range === "all") {
-    const first = log.filter(isSession).map((e) => e.date).sort()[0];
-    if (first) weeks = Math.min(52, Math.max(4, Math.ceil((+parse(today) - +parse(weekStart(first))) / (7 * 86400000)) + 1));
-    else weeks = 4;
+export type Window = {
+  start: string;       // first day shown: never earlier than the first tracked day
+  end: string;
+  weeks: number;       // nominal length of the range (4 / 13 / 52)
+  buckets: number;     // Monday-aligned week columns from `start` to `end`
+  clamped: boolean;    // true when tracking began inside the range
+  rangeStart: string;  // where the range would start if we had the data
+};
+
+/** The first day anything was tracked: a session, a pain check or a daily check-in. */
+export function firstTrackedDay(data: AppData): string | null {
+  const days = [...data.log.map((e) => e.date), ...data.checks.map((c) => c.date), ...data.checkins.map((c) => c.date)];
+  return days.length ? days.reduce((m, d) => (d < m ? d : m)) : null;
+}
+
+export function windowFor(range: RangeKey, today: string, first: string | null): Window {
+  if (range === "max") {
+    const start = first ?? today;
+    const buckets = Math.round((+parse(weekStart(today)) - +parse(weekStart(start))) / (7 * 86400000)) + 1;
+    return { start, end: today, weeks: Math.max(1, Math.ceil((+parse(today) - +parse(start)) / (7 * 86400000))), buckets, clamped: false, rangeStart: start };
   }
-  const start = addDays(weekStart(today), -7 * (weeks - 1));
-  return { start, end: today, weeks };
+  const weeks = RANGES.find((r) => r.key === range)!.weeks;
+  const rangeStart = addDays(today, -(weeks * 7 - 1));
+  const clamped = !!first && first > rangeStart;
+  const start = clamped ? (first as string) : rangeStart;
+  const buckets = Math.round((+parse(weekStart(today)) - +parse(weekStart(start))) / (7 * 86400000)) + 1;
+  return { start, end: today, weeks, buckets, clamped, rangeStart };
 }
 
 export type WeekBucket = { start: string; count: number; names: string[] };
@@ -69,17 +85,18 @@ export type Stats = {
 
 export function computeStats(data: AppData, range: RangeKey, today: string): Stats {
   const { log, workouts } = data;
-  const win = windowFor(range, today, log);
+  const first = firstTrackedDay(data);
+  const win = windowFor(range, today, first);
   const inWin = (e: LogEntry) => e.date >= win.start && e.date <= win.end;
   const sessions = log.filter((e) => isSession(e) && inWin(e));
 
-  // previous period of the same length (for deltas); only meaningful if we have data that far back
-  const prevStart = addDays(win.start, -7 * win.weeks);
-  const prevAll = log.filter((e) => isSession(e) && e.date >= prevStart && e.date < win.start);
-  const earliest = log.map((e) => e.date).sort()[0];
-  const prevSessions = range !== "all" && earliest && earliest <= prevStart ? prevAll : null;
+  // previous period of the same length (for deltas): only when tracking started before it began
+  const prevStart = addDays(win.rangeStart, -7 * win.weeks);
+  const prevSessions = first && first <= prevStart
+    ? log.filter((e) => isSession(e) && e.date >= prevStart && e.date < win.rangeStart)
+    : null;
 
-  const weekly: WeekBucket[] = Array.from({ length: win.weeks }, (_, i) => ({ start: addDays(win.start, 7 * i), count: 0, names: [] }));
+  const weekly: WeekBucket[] = Array.from({ length: win.buckets }, (_, i) => ({ start: addDays(weekStart(win.start), 7 * i), count: 0, names: [] }));
   const perDay = new Map<string, string[]>();
   for (const e of sessions) {
     const b = weekly.find((w) => w.start === weekStart(e.date));
