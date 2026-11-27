@@ -4,7 +4,7 @@ import { useApp } from "@/components/AppProvider";
 import Programs, { ProgramWeekBanner } from "@/components/Programs";
 import RecentList from "@/components/RecentList";
 import { deleteEntry, setPhase, startNextWeek, updateEntry } from "@/lib/actions";
-import { activePlan, doneMap, upNext } from "@/lib/rules";
+import { activePlan, doneMap, greenLight, upNext } from "@/lib/rules";
 
 const fmt = (iso: string) => {
   const [y, m, d] = iso.split("-").map(Number);
@@ -80,6 +80,11 @@ export default function Plan() {
           </section>
 
           <div style={{ display: "grid", gap: 14, alignContent: "start" }}>
+            {(() => {
+              // always findable here; Today only shows it when a tour is close
+              const gl = state.travel ? null : greenLight(state, data.log, !!plan?.items.some((i) => i.kind === "tour"));
+              return gl ? <div className={`banner ${gl.tone}`}><span className="note" style={{ color: "inherit" }}>Next tour</span><strong>{gl.title}</strong><span>{gl.body}</span></div> : null;
+            })()}
             <section className="card">
               <h2>Where are you training?</h2>
               {state.travel ? (

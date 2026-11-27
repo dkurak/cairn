@@ -83,7 +83,10 @@ export default function DayView({ date }: { date: string }) {
   }, [date]);
 
   const touring = !!plan?.items.some((i) => i.kind === "tour");
-  const gl = isToday ? greenLight(state, log, touring) : null;
+  // the tour green light only matters when a tour is close: up next today, or in the next 2 days (never while traveling)
+  const soon = [...(!doneToday && (next.type === "item" || next.type === "calm") ? [next.item] : []), ...upcoming.slice(0, 2)];
+  const tourSoon = !state.travel && soon.some((i) => i.kind === "tour");
+  const gl = isToday && tourSoon ? greenLight(state, log, touring) : null;
   const primary = primaryArea(areas);
   const lastTour = tours(log)[0];
   const afterTourHint = isToday && primary && lastTour && lastTour.pain_next_am == null && lastTour.date < today && !checksFor(checks, primary.id).some((c) => c.date === today)
