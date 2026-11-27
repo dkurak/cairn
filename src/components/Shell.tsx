@@ -34,7 +34,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
             <button aria-pressed={!state.travel} onClick={() => state.travel && run(() => setTravel(sb, state, false))}>At home</button>
             <button aria-pressed={state.travel} onClick={() => !state.travel && openTravel()}>Traveling</button>
           </div>
-          <button className="link" onClick={async () => { await sb.auth.signOut(); location.href = "/login"; }}>Sign out</button>
+          <Link href="/account" aria-label="Account">Account</Link>
         </div>
       </header>
       {status && <div className="status" role="status" style={{ padding: "8px 16px" }}>{status}</div>}
