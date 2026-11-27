@@ -322,3 +322,8 @@ button.danger { color: var(--bad); border-color: var(--bad-bg); background: var(
 .history li:last-child { border-bottom: none; }
 .history-note { color: var(--muted); }
 .history-body { display: grid; gap: 8px; padding: 0 0 10px; }
+/* done for the day */
+.next.done-today { border-color: var(--good); background: var(--good-bg); }
+.next.done-today .label { color: var(--good); }
+.strip a.done:not(.sel) { border-color: var(--good); background: var(--good-bg); }
+.strip a.done:not(.sel) .w { color: var(--good); }
