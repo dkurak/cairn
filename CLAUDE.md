@@ -63,7 +63,7 @@ Owner/admin: Dave. Other users (family, friends) can sign up and log their own w
 - Log sheet (multi-workout, pain 0-10 in one row, feel, vert for tours, notes), recent list with edit/delete, pain trend chart
 - Workout library (view any workout)
 - Coach check-ins: `src/lib/review.ts` digests the last 5/14/28 days (focus split, pain, feel, tours) into the prompt; `review_training` for other windows. Check-ins answer: last 5 days / vs your goals / next. Weekly programs come back as one plan card with any new workouts bundled in.
-- Goal programs: the coach interviews (when, how long, days/week, minutes, variety, rest, equipment, limits), then `propose_program` + week 1 in one card. The active program drives the weekly plan; each new program week the app prompts "Build this week". Plan page lists the active program (phase bar, countdown) and the bank.
+- Goal programs: the coach interviews (when, how long, days/week, minutes, variety, rest, equipment, limits), then `propose_program` + week 1 in one card. The active program drives the weekly plan; each new program week the app prompts "Build this week". Plan page lists the active program (phase bar, countdown) and the bank. Pivots go through `propose_program_update` (only changed fields, before/after card, progress carries on; `src/lib/programInput.ts`).
 - Coach chat: `/api/chat` calls Claude with the user's context (plan, up next details, last ~25 log entries, rules) and tools: log_session, hip_check, set_phase, set_travel, skip_up_next, start_next_week. Key in `ANTHROPIC_API_KEY` (server only).
 
 ### Phase 2 - editing

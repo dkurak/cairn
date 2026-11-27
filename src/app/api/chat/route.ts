@@ -6,9 +6,10 @@ import { activePlan, checksFor, doneMap, itemWorkoutIds, primaryArea, sortedLog,
 import type { PlanProposal, ProgramProposal, Proposal, WorkoutProposal } from "@/lib/proposals";
 import { digest, digestLine } from "@/lib/review";
 import { activeProgram, needsNewWeek, programLine, programPosition } from "@/lib/programs";
+import { parseCriteria, parsePhases, parsePrefs, programChanges } from "@/lib/programInput";
 import { isGarminExercise, patchSteps, type GarminHint, type GarminStep } from "@/lib/garmin/steps";
 import { watchStatus } from "@/lib/garmin/status";
-import { FEELS, PAIN_SCALE, type AppData, type Criterion, type Feel, type PlanItem, type ProgramPhase, type ProgramStatus } from "@/lib/types";
+import { FEELS, PAIN_SCALE, type AppData, type Feel, type PlanItem, type ProgramStatus } from "@/lib/types";
 
 export const maxDuration = 300; // building a week with new workouts can take a while
 
@@ -103,6 +104,7 @@ How to work:
   rehab or anything that's done when the body says so (kind "milestone"): no fixed end. Set criteria the app can check from their log, e.g. pain_streak (daily checks of the area <= 1 for 7 days in a row), sessions (4 sessions with pain <= 2 in the last 10 days), tour (a short tour with pain <= 3 during and 0 next morning) - plus manual ones if needed. target_date is only a hoped-for date. Phases run in order and the last one holds until the checks are met, e.g. Calm (settle, isometrics) > Load (strength back, pain <= 2) > Return (short tour, then normal plan). An injury mid-program: offer a rehab milestone that pauses the current program and resumes it when done.
   Phase weeks must add up to the program length. With activate true, also build week 1 in the same turn (propose_workout for anything new, then propose_plan_change) - it's bundled into the program card. Keep their pain rule and hip swaps in every phase.
 - Running a program: each new week, build that week's plan from the active program's current phase, their log and pain trend, with propose_plan_change (it's tied to the program week automatically). Progress loads week to week, ease off when pain or feel says so, and say in a line what changed vs last week. Check-ins report against the active program too (week, phase, on track or not). To switch, pause, finish or restart a program, call set_program_status. If an event date has passed, ask how it went and offer to mark it done.
+- Pivots: when plans change mid-program (new date, a check is wrong or too easy, phases need stretching, fewer days a week, a manual check is now met), call propose_program_update with ONLY the fields that change - don't start a new program for an adjustment. Phases and criteria are full lists when you send them; preferences merge. Progress (start date, current week, checks so far) carries on. Say in one line why. If the change also affects this week, follow with propose_plan_change.
 - Finishing a milestone: when the program line says ALL MET, tell them and offer to call it done. They can also call it done early - it's their call; say plainly which checks are still unproven (e.g. "hip's been 0-1 for 3 days, the usual bar is 7 plus a clean short tour") and let them decide. When done, ask in a few words how it went (save as outcome), then offer to resume the program it paused and, if they're in the calm phase, to switch to build.
 - Building a week from a description ("3 strength days, 2 easy, a tour Saturday", "more upper body this week"): if one or two things that change the plan are missing (days available, equipment, time per session), ask them first in one message. Otherwise build it: prefer workouts already in the library; create new ones with propose_workout only when nothing fits (full rundown, hip swaps in tips); then call propose_plan_change once with the whole week. You can name the new workouts you just proposed in the plan - they are bundled into one card and saved together. Say in 2-4 lines how the week serves their goals and their pain rule.
 - Red flags (pain at rest or at night, catching or clicking deep in a joint, numbness, limping that won't settle) -> suggest PT or sports med.`;
@@ -234,6 +236,28 @@ const TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "propose_program_update",
+    description: "Change a saved program in place (shows a before/after card; nothing saves until they tap Save). Send only the fields that change. phases and criteria replace the whole list; preferences merge (a key set to \"\" removes it). Progress carries on.",
+    input_schema: {
+      type: "object",
+      properties: {
+        program: { type: "string", description: "Title of the saved program to change" },
+        reason: { type: "string", description: "One line on why" },
+        title: { type: "string" },
+        goal: { type: "string" },
+        kind: { type: "string", enum: ["event", "ongoing", "milestone"] },
+        target_date: { type: "string", description: "YYYY-MM-DD, or empty to clear" },
+        weeks: { type: "integer" },
+        days_per_week: { type: "integer" },
+        phases: { type: "array", items: { type: "object", properties: { name: { type: "string" }, weeks: { type: "integer" }, focus: { type: "string" } }, required: ["name", "weeks", "focus"] } },
+        criteria: { type: "array", description: "Full list, same shape as propose_program. A manual check can carry met: true.", items: { type: "object", properties: { kind: { type: "string", enum: ["pain_streak", "sessions", "tour", "manual"] }, label: { type: "string" }, max: { type: "integer" }, days: { type: "integer" }, area: { type: "string" }, max_pain: { type: "integer" }, count: { type: "integer" }, min_vert: { type: "integer" }, met: { type: "boolean" } }, required: ["kind", "label"] } },
+        preferences: { type: "object", properties: { session_minutes: { type: "integer" }, variety: { type: "string" }, rest_days: { type: "string" }, equipment: { type: "string" }, limits: { type: "string" } } },
+        notes: { type: "string" },
+      },
+      required: ["program", "reason"],
+    },
+  },
+  {
     name: "set_program_status",
     description: "Start, pause, finish or shelve a saved program by title. Starting one pauses the current active program. With done, pass outcome (how it went, in their words).",
     input_schema: { type: "object", properties: { title: { type: "string" }, status: { type: "string", enum: ["active", "paused", "done", "idea"] }, outcome: { type: "string" } }, required: ["title", "status"] },
@@ -348,26 +372,18 @@ export async function POST(req: Request) {
       case "propose_program": {
         const today = todayISO();
         const kind = i.kind === "event" ? "event" : i.kind === "milestone" ? "milestone" : "ongoing";
-        const num = (v: unknown, lo: number, hi: number, d: number) => Math.max(lo, Math.min(hi, Math.round(Number(v ?? d)) || d));
-        const criteria: Criterion[] = (Array.isArray(i.criteria) ? i.criteria : []).slice(0, 6).map((c: any): Criterion => {
-          const label = String(c?.label ?? "").slice(0, 80);
-          if (c?.kind === "pain_streak") return { kind: "pain_streak", label, max: num(c.max, 0, 10, 1), days: num(c.days, 1, 60, 7), ...(c.area ? { area: String(c.area).slice(0, 40) } : {}) };
-          if (c?.kind === "sessions") return { kind: "sessions", label, max_pain: num(c.max_pain, 0, 10, 2), count: num(c.count, 1, 30, 4), days: num(c.days, 1, 60, 10) };
-          if (c?.kind === "tour") return { kind: "tour", label, max_pain: num(c.max_pain, 0, 10, 3), ...(c.min_vert ? { min_vert: num(c.min_vert, 0, 20000, 0) } : {}) };
-          return { kind: "manual", label };
-        });
+        const criteria = parseCriteria(i.criteria);
         if (kind === "milestone" && !criteria.length) return { ok: false, reason: "A milestone needs criteria - how will we know it's done?" };
         const target = typeof i.target_date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(i.target_date) ? i.target_date : null;
         if (kind === "event" && !target) return { ok: false, reason: "An event program needs target_date (YYYY-MM-DD). Ask for the date if you don't have it." };
         if (target && target < today) return { ok: false, reason: "That date has passed." };
-        const phases: ProgramPhase[] = (Array.isArray(i.phases) ? i.phases : []).slice(0, 8).map((x: any) => ({ name: String(x?.name ?? "").slice(0, 24), weeks: Math.max(1, Math.min(52, Math.round(Number(x?.weeks) || 1))), focus: String(x?.focus ?? "").slice(0, 200) }));
+        const phases = parsePhases(i.phases);
         if (!phases.length) return { ok: false, reason: "Give at least one phase." };
         const sum = phases.reduce((a, x) => a + x.weeks, 0);
         const toDate = target && kind === "event" ? Math.max(1, Math.ceil((Math.round((+new Date(target + "T12:00:00") - +new Date(today + "T12:00:00")) / 86400000) + 1) / 7)) : null;
         const weeks = Number.isInteger(i.weeks) ? Math.max(1, Math.min(52, Number(i.weeks))) : toDate ?? (kind === "event" ? sum : null);
         if (i.activate && toDate && Math.abs(sum - toDate) > 1) return { ok: false, reason: `Starting now, there are ${toDate} weeks until ${target}, but the phases add up to ${sum}. Adjust the phase weeks.` };
-        const prefIn = (i.preferences ?? {}) as Record<string, unknown>;
-        const preferences = Object.fromEntries(["session_minutes", "variety", "rest_days", "equipment", "limits"].filter((k) => prefIn[k] != null && prefIn[k] !== "").map((k) => [k, k === "session_minutes" ? Number(prefIn[k]) : String(prefIn[k]).slice(0, 200)]));
+        const preferences = parsePrefs(i.preferences);
         const prog: ProgramProposal = {
           type: "program", reason: String(i.reason ?? "").slice(0, 300), title: String(i.title ?? "").slice(0, 60), goal: String(i.goal ?? "").slice(0, 600),
           kind, target_date: target, criteria, weeks: kind === "milestone" ? null : weeks, days_per_week: Number.isInteger(i.days_per_week) ? Number(i.days_per_week) : null, phases, preferences,
@@ -378,6 +394,19 @@ export async function POST(req: Request) {
         if (wk >= 0) { prog.first_week = { ...(proposals[wk] as PlanProposal), program_week: 1 }; proposals.splice(wk, 1); }
         proposals.push(prog);
         return { ok: true, note: `Shown as a program card${prog.first_week ? " with week 1 bundled in" : prog.activate ? ". Now build week 1 with propose_plan_change (it gets bundled into the card)" : ""}. Nothing is saved until they tap it.` };
+      }
+      case "propose_program_update": {
+        const name = String(i.program ?? "").toLowerCase();
+        const prog = data.programs.find((p) => p.title.toLowerCase() === name) ?? data.programs.find((p) => p.title.toLowerCase().includes(name));
+        if (!prog) return { ok: false, reason: `No program called "${i.program}". Saved: ${data.programs.map((p) => p.title).join(", ") || "none"}.` };
+        const fields = Object.fromEntries(Object.entries(i).filter(([k]) => k !== "program" && k !== "reason"));
+        const ch = programChanges(prog, fields, todayISO());
+        if ("error" in ch) return { ok: false, reason: ch.error };
+        // a second update to the same program in this turn replaces the first
+        const prev = proposals.findIndex((p) => p.type === "program_update" && p.program_id === prog.id);
+        if (prev >= 0) proposals.splice(prev, 1);
+        proposals.push({ type: "program_update", reason: String(i.reason ?? "").slice(0, 300), program_id: prog.id, title: prog.title, ...ch });
+        return { ok: true, changes: Object.keys(ch.after), note: "Shown as a before/after card. Nothing is saved until they tap Save." };
       }
       case "set_program_status": {
         const name = String(i.title ?? "").toLowerCase();

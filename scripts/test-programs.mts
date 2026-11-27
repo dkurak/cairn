@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 import { effectivePhases, evaluateCriteria, needsNewWeek, positionLabel, programPosition, programWeeks } from "../src/lib/programs.ts";
 import type { Program } from "../src/lib/types.ts";
+import { programChanges } from "../src/lib/programInput.ts";
 
 const base: Program = {
   id: "p1", user_id: "u", title: "Jan 18 big day", goal: "", kind: "event", target_date: "2027-01-18", start_date: "2026-11-27",
@@ -94,5 +95,33 @@ test("milestones have no end week and don't go 'over'; last phase holds", () => 
   const p = programPosition(rehab, "2027-01-10");
   assert.deepEqual([p.totalWeeks, p.over, p.phase], [null, false, "Return"]);
   assert.equal(positionLabel(rehab, programPosition(rehab, "2026-11-27"), { met: 1, total: 3 }), "Week 1 · Calm · 1 of 3 checks met · aiming for Dec 15");
+});
+test("update: only real changes, before and after", () => {
+  const r = programChanges(rehab, { target_date: "2026-12-20", days_per_week: 4, title: "Hip rehab" }, "2026-11-27");
+  assert.ok(!("error" in r));
+  if (!("error" in r)) {
+    assert.deepEqual(Object.keys(r.after).sort(), ["target_date"]); // days_per_week and title were already those values
+    assert.deepEqual([r.before.target_date, r.after.target_date], ["2026-12-15", "2026-12-20"]);
+  }
+});
+test("update: swap the tour check for a bigger one, keep the others", () => {
+  const crit = [rehab.criteria[0], rehab.criteria[1], { kind: "tour", label: "Clean 1,500 ft tour", max_pain: 3, min_vert: 1500 }];
+  const r = programChanges(rehab, { criteria: crit }, "2026-11-27");
+  if ("error" in r) throw new Error(r.error);
+  assert.equal(r.after.criteria?.[2].kind === "tour" && r.after.criteria[2].min_vert, 1500);
+});
+test("update: preferences merge, empty string clears a key", () => {
+  const p = { ...rehab, preferences: { session_minutes: 25, rest_days: "Fri" } };
+  const r = programChanges(p, { preferences: { session_minutes: 40, rest_days: "" } }, "2026-11-27");
+  if ("error" in r) throw new Error(r.error);
+  assert.deepEqual(r.after.preferences, { session_minutes: 40 });
+});
+test("update: guards", () => {
+  assert.ok("error" in programChanges(rehab, { criteria: [] }, "2026-11-27")); // milestone needs checks
+  assert.ok("error" in programChanges(base, { target_date: "2026-11-01" }, "2026-11-27")); // past event date
+  assert.ok("error" in programChanges(base, { target_date: "" }, "2026-11-27")); // event without a date
+  assert.ok("error" in programChanges(base, { days_per_week: 4 }, "2026-11-27")); // nothing changes
+  const toMilestone = programChanges(base, { kind: "milestone", criteria: [{ kind: "manual", label: "Feels ready" }] }, "2026-11-27");
+  assert.ok(!("error" in toMilestone) && toMilestone.after.kind === "milestone");
 });
 console.log(`${n} passed`);

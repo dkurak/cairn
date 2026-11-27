@@ -1,5 +1,6 @@
 import type { AppData, Criterion, PlanItem, ProgramPhase, ProgramPrefs, RundownBlock } from "./types";
 import type { GarminStep } from "./garmin/steps";
+import type { ProgramFields } from "./programInput";
 
 // Things the coach suggests. Nothing is saved until the person taps Save in the app.
 export type WorkoutProposal = {
@@ -49,7 +50,16 @@ export type ProgramProposal = {
   /** week 1, saved as the weekly plan when the program starts now */
   first_week?: PlanProposal;
 };
-export type Proposal = WorkoutProposal | PlanProposal | ProgramProposal;
+/** A change to a saved program: only the fields that change, before and after. Progress (start date, week) carries on. */
+export type ProgramUpdateProposal = {
+  type: "program_update";
+  reason: string;
+  program_id: string;
+  title: string; // the program's title when proposed, for the card
+  before: Partial<ProgramFields>;
+  after: Partial<ProgramFields>;
+};
+export type Proposal = WorkoutProposal | PlanProposal | ProgramProposal | ProgramUpdateProposal;
 
 /**
  * Where a workout proposal lands when saved.

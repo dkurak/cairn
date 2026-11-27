@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import { SAVE_TARGET_NOTE, workoutSaveTarget, type PlanProposal, type ProgramProposal, type Proposal, type WorkoutProposal } from "@/lib/proposals";
+import { SAVE_TARGET_NOTE, workoutSaveTarget, type PlanProposal, type ProgramProposal, type ProgramUpdateProposal, type Proposal, type WorkoutProposal } from "@/lib/proposals";
+import type { Criterion, Program, ProgramPrefs } from "@/lib/types";
 import { effectivePhases, fmtDate } from "@/lib/programs";
 import PhaseBar from "./PhaseBar";
 import type { AppData, RundownBlock } from "@/lib/types";
@@ -106,6 +107,66 @@ function ProgramBody({ p, data }: { p: ProgramProposal; data: AppData }) {
   );
 }
 
+const PREF_LABEL: Record<string, string> = { session_minutes: "Session", variety: "Variety", rest_days: "Rest", equipment: "Equipment", limits: "Limits" };
+const prefText = (p?: ProgramPrefs | null) =>
+  Object.entries(p ?? {}).filter(([, v]) => v).map(([k, v]) => `${PREF_LABEL[k] ?? k}: ${k === "session_minutes" ? `${v} min` : v}`).join(" · ") || "-";
+const critKey = (c: Criterion) => JSON.stringify({ ...c, met: undefined });
+
+function ProgramUpdateBody({ p, data }: { p: ProgramUpdateProposal; data: AppData }) {
+  const prog = data.programs.find((x) => x.id === p.program_id);
+  const b = p.before, a = p.after;
+  const val = (k: string, v: unknown): string => {
+    if (v == null || v === "") return "-";
+    if (k === "target_date") return fmtDate(String(v));
+    if (k === "weeks") return `${v} weeks`;
+    if (k === "days_per_week") return `${v} days/week`;
+    if (k === "kind") return v === "milestone" ? "done when checks are met" : String(v);
+    return String(v);
+  };
+  const LABEL: Record<string, string> = { title: "Name", goal: "Goal", kind: "Type", target_date: "Date", weeks: "Length", days_per_week: "Days", notes: "Notes" };
+  const simple = (Object.keys(a) as (keyof typeof a)[]).filter((k) => k in LABEL);
+  const asProgram = (over: Partial<Program>): Program => ({ ...(prog as Program), ...over });
+  return (
+    <>
+      <div className="rundown-title">Change: {p.title}{a.title ? ` → ${a.title}` : ""}</div>
+      {!prog && <span className="note">This program isn&apos;t in your list any more.</span>}
+      {simple.length > 0 && (
+        <ul className="rundown">
+          {simple.map((k) => (
+            <li key={k}><span className="ex">{LABEL[k]}</span><span className="sr" /><span className="tip"><s>{val(k, b[k])}</s> → <strong>{val(k, a[k])}</strong></span></li>
+          ))}
+        </ul>
+      )}
+      {a.phases && prog && (
+        <div className="block">
+          <div className="block-label">Phases</div>
+          <span className="note">Before</span>
+          <PhaseBar phases={effectivePhases(asProgram({}))} />
+          <span className="note">After</span>
+          <PhaseBar phases={effectivePhases(asProgram({ ...a } as Partial<Program>))} />
+          <ul className="rundown">{a.phases.map((ph, i) => <li key={i}><span className="ex">{ph.name}</span><span className="sr">{ph.weeks} wk</span><span className="tip">{ph.focus}</span></li>)}</ul>
+        </div>
+      )}
+      {a.criteria && (
+        <div className="block">
+          <div className="block-label">Done when</div>
+          <ul className="checks">
+            {a.criteria.map((c, i) => {
+              const added = !(b.criteria ?? []).some((x) => critKey(x) === critKey(c));
+              return <li key={i} className={c.kind === "manual" && c.met ? "met" : ""}><span className="box" aria-hidden="true">{c.kind === "manual" && c.met ? "✓" : ""}</span><span>{added ? <strong>+ {c.label}</strong> : c.label}</span><span className="meta">{added ? "new" : ""}</span></li>;
+            })}
+            {(b.criteria ?? []).filter((c) => !a.criteria!.some((x) => critKey(x) === critKey(c))).map((c, i) => (
+              <li key={`r${i}`} style={{ color: "var(--muted)" }}><span className="box" aria-hidden="true" /><s>{c.label}</s><span className="meta">removed</span></li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {a.preferences && <span className="note"><s>{prefText(b.preferences)}</s><br />→ {prefText(a.preferences)}</span>}
+      <span className="note">Your start date and progress carry on.</span>
+    </>
+  );
+}
+
 export default function ProposalCard({ proposal, data, status = "open", onSave, onStatus }: { proposal: Proposal; data: AppData; status?: "open" | "saved" | "discarded" | null; onSave: (p: Proposal) => Promise<boolean>; onStatus?: (s: "saved" | "discarded") => void }) {
   const [state, setState] = useState<"open" | "saving" | "saved" | "discarded" | "error">(status ?? "open");
   const oldPlan = proposal.type === "plan" ? data.plans.find((pl) => pl.kind === proposal.kind) : undefined;
@@ -113,6 +174,7 @@ export default function ProposalCard({ proposal, data, status = "open", onSave, 
   const heading =
     proposal.type === "workout" ? "Suggested workout"
     : proposal.type === "program" ? "Suggested program"
+    : proposal.type === "program_update" ? "Suggested program change"
     : `Suggested ${proposal.kind === "travel" ? "travel" : "weekly"} plan${proposal.program_week ? ` · program week ${proposal.program_week}` : ""}${nNew ? ` + ${nNew} new workout${nNew > 1 ? "s" : ""}` : ""}`;
 
   return (
@@ -123,6 +185,8 @@ export default function ProposalCard({ proposal, data, status = "open", onSave, 
         <WorkoutDiff p={proposal} data={data} />
       ) : proposal.type === "program" ? (
         <ProgramBody p={proposal} data={data} />
+      ) : proposal.type === "program_update" ? (
+        <ProgramUpdateBody p={proposal} data={data} />
       ) : (
         <>
           <PlanBody p={proposal} data={data} />

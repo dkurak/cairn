@@ -116,6 +116,9 @@ export default function AppProvider({ initial, children }: { initial: AppData; c
       }
     } else if (p.type === "plan") {
       await savePlan(p);
+    } else if (p.type === "program_update") {
+      // in place: start date and progress are untouched
+      await writeRow(sb, "programs", { ...p.after }, p.program_id).catch((e) => { throw programError(e); });
     } else {
       // a goal program: one active at a time, so starting this one pauses the current one
       const today = todayISO();
