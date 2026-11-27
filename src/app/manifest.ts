@@ -1,0 +1,14 @@
+import type { MetadataRoute } from "next";
+
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    name: "Cairn",
+    short_name: "Cairn",
+    description: "Workout log and coach",
+    start_url: "/",
+    display: "standalone",
+    background_color: "#eef2f4",
+    theme_color: "#1d6a86",
+    icons: [{ src: "/icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" }],
+  };
+}
