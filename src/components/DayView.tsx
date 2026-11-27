@@ -3,12 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useApp } from "./AppProvider";
 import QuickCheck from "./QuickCheck";
+import { ProgramWeekBanner } from "./Programs";
 import Rundown from "./Rundown";
 import RecentList from "./RecentList";
 import Collapsible from "./Collapsible";
 import FeelPill, { VertPill } from "./FeelPill";
 import { deleteEntry, setPhase, skipUpNext, startNextWeek, updateEntry } from "@/lib/actions";
 import { firstTrackedDay } from "@/lib/stats";
+import { activeProgram } from "@/lib/programs";
 import { activePlan, addDays, checksFor, greenLight, itemWorkoutIds, painClass, primaryArea, projectedItems, sortedLog, tours, upNext } from "@/lib/rules";
 
 const parse = (iso: string) => { const [y, m, d] = iso.split("-").map(Number); return new Date(y, m - 1, d); };
@@ -32,7 +34,9 @@ export default function DayView({ date }: { date: string }) {
   const wById = (id: string) => workouts.find((w) => w.id === id);
 
   const next = upNext(data);
+  const prog = activeProgram(data);
   const plan = activePlan(data);
+  const programTag = prog && plan?.program_id === prog.id && plan.program_week ? ` · ${prog.title} wk ${plan.program_week}` : "";
   const projected = projectedItems(data);
   const hasItem = next.type === "calm" || next.type === "item";
   const todayWorkouts = hasItem ? itemWorkoutIds(next.item, workouts, log).map(wById) : [];
@@ -165,7 +169,7 @@ export default function DayView({ date }: { date: string }) {
               )}
               {next.type === "item" && (
                 <>
-                  <div className="label">Up next · {next.item.day}{state.travel ? " · travel mode" : ""}</div>
+                  <div className="label">Up next · {next.item.day}{state.travel ? " · travel mode" : programTag}</div>
                   <div className="title">{todayTitle}</div>
                   <div className="note">{next.item.note}</div>
                   <div className="row">
@@ -250,6 +254,7 @@ export default function DayView({ date }: { date: string }) {
             </section>
           )}
 
+          {isToday && <ProgramWeekBanner />}
           {gl && <div className={`banner ${gl.tone}`}><strong>{gl.title}</strong><span>{gl.body}</span></div>}
         </div>
 

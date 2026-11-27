@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useApp } from "@/components/AppProvider";
+import Programs, { ProgramWeekBanner } from "@/components/Programs";
 import RecentList from "@/components/RecentList";
 import { deleteEntry, setPhase, startNextWeek, updateEntry } from "@/lib/actions";
 import { activePlan, doneMap, upNext } from "@/lib/rules";
@@ -30,6 +31,9 @@ export default function Plan() {
           <button aria-pressed={tab === "past"} onClick={() => setTab("past")}>Past</button>
         </div>
       </div>
+
+      {tab === "upcoming" && <ProgramWeekBanner />}
+      {tab === "upcoming" && <Programs />}
 
       {tab === "upcoming" && (
         <section className="card goals">

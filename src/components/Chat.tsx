@@ -104,7 +104,8 @@ export default function Chat() {
             <ProposalCard key={`${m.id}:${m.proposal_status}`} proposal={m.proposal} data={data} status={m.proposal_status} onSave={saveProposal} onStatus={(s) => {
               void setStatus(m.id, s);
               // a saved plan also saved the workout cards it bundled
-              if (s === "saved" && m.proposal?.type === "plan") m.proposal.bundled_from?.forEach((id) => void setStatus(id, "saved"));
+              const plan = m.proposal?.type === "plan" ? m.proposal : m.proposal?.type === "program" ? m.proposal.first_week : undefined;
+              if (s === "saved") plan?.bundled_from?.forEach((id) => void setStatus(id, "saved"));
             }} />
           ) : (
             <div key={m.id} className={`msg ${m.role === "user" ? "me" : m.role === "act" ? "act" : "ai"}`}>{m.role === "assistant" ? <Rich text={m.content} /> : m.content}</div>

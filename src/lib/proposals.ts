@@ -1,4 +1,4 @@
-import type { AppData, PlanItem, RundownBlock } from "./types";
+import type { AppData, PlanItem, ProgramPhase, ProgramPrefs, RundownBlock } from "./types";
 import type { GarminStep } from "./garmin/steps";
 
 // Things the coach suggests. Nothing is saved until the person taps Save in the app.
@@ -27,8 +27,28 @@ export type PlanProposal = {
   new_workouts?: WorkoutProposal[];
   /** ids of earlier chat cards for those workouts, marked saved along with the plan */
   bundled_from?: string[];
+  /** the program week this plan is for (null = not part of a program) */
+  program_id?: string | null;
+  program_week?: number | null;
 };
-export type Proposal = WorkoutProposal | PlanProposal;
+export type ProgramProposal = {
+  type: "program";
+  reason: string;
+  title: string;
+  goal: string;
+  kind: "event" | "ongoing";
+  target_date: string | null;
+  weeks: number | null;
+  days_per_week: number | null;
+  phases: ProgramPhase[];
+  preferences: ProgramPrefs;
+  notes: string;
+  /** start it now (pauses the current one) or keep it in the bank */
+  activate: boolean;
+  /** week 1, saved as the weekly plan when the program starts now */
+  first_week?: PlanProposal;
+};
+export type Proposal = WorkoutProposal | PlanProposal | ProgramProposal;
 
 /**
  * Where a workout proposal lands when saved.

@@ -9,7 +9,9 @@
     "typecheck": "tsc --noEmit",
     "seed": "tsx --env-file=.env.local scripts/seed.mts",
     "garmin:pull": "tsx --env-file=.env.local scripts/garmin-pull.mts",
-    "test:garmin": "tsx scripts/test-garmin.mts"
+    "test:garmin": "tsx scripts/test-garmin.mts",
+    "test:programs": "tsx scripts/test-programs.mts",
+    "test": "tsx scripts/test-garmin.mts && tsx scripts/test-programs.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.14.0",

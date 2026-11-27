@@ -51,6 +51,30 @@ export type Plan = {
   name: string;
   kind: PlanKind;
   items: PlanItem[];
+  /** the goal program week this plan was written for (migration 0007) */
+  program_id?: string | null;
+  program_week?: number | null;
+};
+
+export type ProgramPhase = { name: string; weeks: number; focus: string };
+export type ProgramPrefs = { session_minutes?: number; variety?: string; rest_days?: string; equipment?: string; limits?: string };
+export type ProgramStatus = "idea" | "active" | "paused" | "done";
+export type Program = {
+  id: string;
+  user_id: string;
+  title: string;
+  goal: string;
+  kind: "event" | "ongoing";
+  target_date: string | null;
+  start_date: string | null;
+  weeks: number | null;
+  days_per_week: number | null;
+  status: ProgramStatus;
+  phases: ProgramPhase[];
+  preferences: ProgramPrefs;
+  notes: string;
+  created_at: string;
+  updated_at: string;
 };
 
 export type TravelInfo = { gear?: "gym" | "bodyweight"; jog?: boolean; returns?: string };
@@ -108,6 +132,7 @@ export type AppData = {
   checks: PainCheck[];
   checkins: DailyCheckin[];
   exports: GarminExport[];
+  programs: Program[];
 };
 
 export const PAIN_SCALE =

@@ -13,7 +13,7 @@ export async function loadAll(sb: SupabaseClient, userId: string): Promise<AppDa
   const [profile, workouts, plans, state, log, areas, checks, checkins, exports] = await Promise.all([
     sb.from("profiles").select("id, display_name, role").eq("id", userId).single(),
     sb.from("workouts").select("id, name, category, owner_id, rundown, notes, version, updated_at").order("name"),
-    sb.from("plans").select("id, owner_id, name, kind, items"),
+    sb.from("plans").select("*"), // * so program_id/program_week (0007) come along when they exist
     sb.from("plan_state").select("*").eq("user_id", userId).single(),
     sb.from("log_entries").select("*").eq("user_id", userId).order("date", { ascending: false }).order("created_at", { ascending: false }).limit(2000),
     sb.from("pain_areas").select("id, user_id, name, is_primary, active").eq("user_id", userId).order("created_at"),
@@ -33,6 +33,8 @@ export async function loadAll(sb: SupabaseClient, userId: string): Promise<AppDa
   if (exports.error) console.warn("garmin_exports unavailable (apply migration 0005)", exports.error.message);
   // goals need migration 0006; without it the coach just doesn't know them yet
   const goals = await sb.from("profiles").select("goals, goals_updated_at").eq("id", userId).single();
+  // goal programs need migration 0007
+  const programs = await sb.from("programs").select("*").eq("user_id", userId).order("created_at", { ascending: false });
   if (!goals.error && goals.data) Object.assign(profile.data as object, goals.data);
   return {
     profile: profile.data as AppData["profile"],
@@ -44,6 +46,7 @@ export async function loadAll(sb: SupabaseClient, userId: string): Promise<AppDa
     checks: checks.data as AppData["checks"],
     checkins: checkins.data as AppData["checkins"],
     exports: (exports.error ? [] : exports.data) as AppData["exports"],
+    programs: (programs.error ? [] : programs.data ?? []) as AppData["programs"],
   };
 }
 

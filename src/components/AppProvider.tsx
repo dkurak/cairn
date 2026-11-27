@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { loadAll, logEntries, markDone, patchState, setTravel } from "@/lib/actions";
 import { todayISO } from "@/lib/rules";
-import { workoutSaveTarget, type Proposal } from "@/lib/proposals";
+import { workoutSaveTarget, type PlanProposal, type Proposal } from "@/lib/proposals";
 import type { AppData, TravelInfo } from "@/lib/types";
 import LogSheet, { type SheetSpec } from "./LogSheet";
 import TravelSheet from "./TravelSheet";
@@ -37,14 +37,26 @@ export const useApp = () => {
   return c;
 };
 
-/** Workout writes include change_note (migration 0005). Before that migration, retry without it. */
-async function writeWorkout(sb: SupabaseClient, row: Record<string, unknown>, id?: string) {
-  const go = (r: Record<string, unknown>) => (id ? sb.from("workouts").update(r).eq("id", id).select("id").single() : sb.from("workouts").insert(r).select("id").single());
-  let res = await go(row);
-  if (res.error && /change_note/.test(res.error.message)) { const { change_note: _, ...rest } = row; res = await go(rest); }
-  if (res.error) throw res.error;
-  return res.data as { id: string };
+/**
+ * Insert or update a row. Newer columns (change_note from 0005, program_id/program_week from 0007) may not
+ * exist yet if a migration hasn't run: drop the column the database complains about and try again.
+ */
+async function writeRow(sb: SupabaseClient, table: string, row: Record<string, unknown>, id?: string) {
+  let r = { ...row };
+  for (let tries = 0; tries < 4; tries++) {
+    const res = await (id ? sb.from(table).update(r).eq("id", id).select("id").single() : sb.from(table).insert(r).select("id").single());
+    if (!res.error) return res.data as { id: string };
+    const col = res.error.message.match(/'(\w+)' column|column "?(?:\w+\.)?(\w+)"? does not exist/);
+    const name = col?.[1] ?? col?.[2];
+    if (!name || !(name in r)) throw res.error;
+    const { [name]: _, ...rest } = r;
+    r = rest;
+  }
+  throw new Error(`Couldn't save to ${table}`);
 }
+const programError = (e: { message?: string }) =>
+  new Error(/programs|program_id/.test(e?.message ?? "") ? "Goal programs need a database update (migration 0007) first." : e?.message ?? "Couldn't save");
+const writeWorkout = (sb: SupabaseClient, row: Record<string, unknown>, id?: string) => writeRow(sb, "workouts", row, id);
 
 export default function AppProvider({ initial, children }: { initial: AppData; children: React.ReactNode }) {
   const sb = useMemo(() => createClient(), []);
@@ -63,8 +75,9 @@ export default function AppProvider({ initial, children }: { initial: AppData; c
       await fn();
       setData(await loadAll(sb, uid));
       return true;
-    } catch {
-      setStatus(fail);
+    } catch (e) {
+      // a missing database update is worth saying plainly
+      setStatus(e instanceof Error && /migration/.test(e.message) ? e.message : fail);
       return false;
     }
   }, [sb, uid]);
@@ -101,7 +114,23 @@ export default function AppProvider({ initial, children }: { initial: AppData; c
           }
         }
       }
+    } else if (p.type === "plan") {
+      await savePlan(p);
     } else {
+      // a goal program: one active at a time, so starting this one pauses the current one
+      const today = todayISO();
+      if (p.activate) {
+        const { error } = await sb.from("programs").update({ status: "paused" }).eq("user_id", uid).eq("status", "active");
+        if (error) throw programError(error);
+      }
+      const row = await writeRow(sb, "programs", {
+        user_id: uid, title: p.title, goal: p.goal, kind: p.kind, target_date: p.target_date, weeks: p.weeks, days_per_week: p.days_per_week,
+        phases: p.phases, preferences: p.preferences, notes: p.notes, status: p.activate ? "active" : "idea", start_date: p.activate ? today : null,
+      }).catch((e) => { throw programError(e); });
+      if (p.activate && p.first_week) await savePlan({ ...p.first_week, program_id: row.id, program_week: 1 });
+    }
+
+    async function savePlan(p: PlanProposal) {
       // workouts designed for this plan get saved first (as this person's own), then the plan points at them
       const newIds = new Map<string, string>();
       for (const w of p.new_workouts ?? []) {
@@ -111,17 +140,12 @@ export default function AppProvider({ initial, children }: { initial: AppData; c
         newIds.set(`new:${w.name}`, row.id);
       }
       const items = p.items.map((it) => ({ ...it, workout_ids: it.workout_ids.map((id) => newIds.get(id) ?? id).filter((id) => !id.startsWith("new:")) }));
+      const link = p.kind === "home" ? { program_id: p.program_id ?? null, program_week: p.program_week ?? null } : {};
       const existing = plans.find((pl) => pl.kind === p.kind);
-      let planId = existing?.id;
-      if (existing) {
-        const { error } = await sb.from("plans").update({ items }).eq("id", existing.id);
-        if (error) throw error;
-      } else {
-        const { data: row, error } = await sb.from("plans").insert({ owner_id: uid, name: p.kind === "travel" ? "Travel" : "My week", kind: p.kind, items }).select("id").single();
-        if (error) throw error;
-        planId = row.id;
-      }
-      await patchState(sb, uid, p.kind === "home" ? { active_home_plan_id: planId, done: {} } : { active_travel_plan_id: planId, travel_done: {} });
+      const row = existing
+        ? await writeRow(sb, "plans", { items, ...link }, existing.id)
+        : await writeRow(sb, "plans", { owner_id: uid, name: p.kind === "travel" ? "Travel" : "My week", kind: p.kind, items, ...link });
+      await patchState(sb, uid, p.kind === "home" ? { active_home_plan_id: row.id, done: {} } : { active_travel_plan_id: row.id, travel_done: {} });
     }
   }), [data, run, sb, uid]);
 

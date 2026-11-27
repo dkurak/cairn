@@ -3,11 +3,12 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { addPainArea, loadAll, setGoals, logEntries, markDone, savePainCheck, setPhase, setTravel, skipUpNext, startNextWeek, clampPain } from "@/lib/actions";
 import { activePlan, checksFor, doneMap, itemWorkoutIds, primaryArea, sortedLog, todayISO, tours, upNext } from "@/lib/rules";
-import type { Proposal, WorkoutProposal } from "@/lib/proposals";
+import type { PlanProposal, ProgramProposal, Proposal, WorkoutProposal } from "@/lib/proposals";
 import { digest, digestLine } from "@/lib/review";
+import { activeProgram, needsNewWeek, programLine, programPosition } from "@/lib/programs";
 import { isGarminExercise, patchSteps, type GarminHint, type GarminStep } from "@/lib/garmin/steps";
 import { watchStatus } from "@/lib/garmin/status";
-import { FEELS, PAIN_SCALE, type AppData, type Feel, type PlanItem } from "@/lib/types";
+import { FEELS, PAIN_SCALE, type AppData, type Feel, type PlanItem, type ProgramPhase, type ProgramStatus } from "@/lib/types";
 
 export const maxDuration = 300; // building a week with new workouts can take a while
 
@@ -69,6 +70,14 @@ Phase: ${state.phase}. Week ${state.week}. Done: ${JSON.stringify(doneMap(state)
 Up next: ${n.type === "item" || n.type === "calm" ? `${n.item.key} ${n.item.title}` : n.type === "empty" ? "no plan yet" : "week complete"}. Details: ${JSON.stringify(upNextWorkouts)}
 Recent log (newest first): ${JSON.stringify(recent)}
 Goals: ${profile.goals ? `"${profile.goals}" (set ${profile.goals_updated_at?.slice(0, 10) ?? "earlier"})` : "NOT SET YET - infer them from the log and ask them to confirm."}
+Goal programs (one active drives the weekly plan; the rest are a bank): ${data.programs.length ? "\n- " + data.programs.map((p) => programLine(p)).join("\n- ") : "none yet"}
+${(() => {
+  const ap = activeProgram(data);
+  const hp = data.plans.find((x) => x.kind === "home");
+  if (!ap) return "No active program.";
+  const due = needsNewWeek(data, hp);
+  return `Home plan is ${hp?.program_id === ap.id ? `week ${hp.program_week} of "${ap.title}"` : `not written for "${ap.title}"`}.${due ? ` It's now week ${due.pos.week} (${due.pos.phase ?? "-"}): offer to build this week's plan.` : ""}`;
+})()}
 Training summary:
 - ${[5, 14, 28].map((d) => digestLine(digest(data, d))).join("\n- ")}
 
@@ -85,7 +94,15 @@ How to work:
   **Last 5 days** - what they actually did: sessions, the focus split (strength / ski prep / circuits / easy / tours), pain and feel, gaps or streaks. Specific, with names and numbers.
   **vs your goals** - if goals are set, say plainly where it lines up and where it doesn't (e.g. no strength in 10 days, intensity piling up while hip pain rises, too little easy work). If goals aren't set, say what the pattern suggests ("Looks like you're building toward touring with hip-safe strength - is that right?") and ask them to confirm.
   **Next** - 2-3 concrete suggestions tied to their plan and library, and offer to turn them into a plan card. End with at most one question.
-- Building a program from a description ("3 strength days, 2 easy, a tour Saturday", "more upper body this week"): if one or two things that change the plan are missing (days available, equipment, time per session), ask them first in one message. Otherwise build it: prefer workouts already in the library; create new ones with propose_workout only when nothing fits (full rundown, hip swaps in tips); then call propose_plan_change once with the whole week. You can name the new workouts you just proposed in the plan - they are bundled into one card and saved together. Say in 2-4 lines how the week serves their goals and their pain rule.
+- Goal programs: when they name something to get ready for or work toward ("big ski day Jan 18", "beach next month, swim long distances", "ski all day anytime", "add a few pounds of muscle", "raise my max squat"), set up a program. First ask, in ONE short message, only what you can't infer: when is it (or is it ongoing), how many weeks they want to train for it, days per week and minutes per session, how much variety they want vs repeating sessions, rest days, where/equipment (pool access for swimming, gym or home), and anything that hurts. Then call propose_program with phases that fit the goal and its date:
+  event with a date: base > build > peak > taper (taper the last 5-10 days, volume down, intensity kept); multi-day/long events need back-to-back long days in build.
+  ski all day / general readiness (ongoing): a repeating 3-4 week cycle of leg endurance, hip and core strength, uphill aerobic work and one easier week.
+  strength (e.g. max squat): 3 progressive weeks + 1 deload, repeated, test in the last week; small jumps (2.5-5%), hip pain rule overrides the numbers.
+  muscle gain: 8-12 weeks, 3-5 days, 6-12 reps near failure, progressive volume, deload every 4th week; mention eating a bit more and protein, briefly (not a dietitian).
+  swimming distance: technique + aerobic base, then longer continuous swims; open-water safety note if it's the ocean.
+  Phase weeks must add up to the program length. With activate true, also build week 1 in the same turn (propose_workout for anything new, then propose_plan_change) - it's bundled into the program card. Keep their pain rule and hip swaps in every phase.
+- Running a program: each new week, build that week's plan from the active program's current phase, their log and pain trend, with propose_plan_change (it's tied to the program week automatically). Progress loads week to week, ease off when pain or feel says so, and say in a line what changed vs last week. Check-ins report against the active program too (week, phase, on track or not). To switch, pause, finish or restart a program, call set_program_status. If an event date has passed, ask how it went and offer to mark it done.
+- Building a week from a description ("3 strength days, 2 easy, a tour Saturday", "more upper body this week"): if one or two things that change the plan are missing (days available, equipment, time per session), ask them first in one message. Otherwise build it: prefer workouts already in the library; create new ones with propose_workout only when nothing fits (full rundown, hip swaps in tips); then call propose_plan_change once with the whole week. You can name the new workouts you just proposed in the plan - they are bundled into one card and saved together. Say in 2-4 lines how the week serves their goals and their pain rule.
 - Red flags (pain at rest or at night, catching or clicking deep in a joint, numbness, limping that won't settle) -> suggest PT or sports med.`;
 }
 
@@ -174,6 +191,32 @@ const TOOLS: Anthropic.Tool[] = [
       },
       required: ["kind", "reason", "items"],
     },
+  },
+  {
+    name: "propose_program",
+    description: "Suggest a goal program (shows a card; nothing saves until they tap Start/Save). Ask the setup questions first. With activate true, also propose week 1 (propose_workout for new ones, then propose_plan_change) in the same turn - it's bundled into this card.",
+    input_schema: {
+      type: "object",
+      properties: {
+        title: { type: "string", description: "Short, e.g. 'Jan 18 big ski day', 'Ski all day', 'Beach swim', 'Squat 1.5x BW'" },
+        goal: { type: "string", description: "What they want, in their words, plus how you'll measure it" },
+        kind: { type: "string", enum: ["event", "ongoing"] },
+        target_date: { type: "string", description: "YYYY-MM-DD, events only" },
+        weeks: { type: "integer", minimum: 1, maximum: 52, description: "Program length. For an event starting now, weeks until the date." },
+        days_per_week: { type: "integer", minimum: 1, maximum: 7 },
+        phases: { type: "array", items: { type: "object", properties: { name: { type: "string" }, weeks: { type: "integer", minimum: 1 }, focus: { type: "string" } }, required: ["name", "weeks", "focus"] } },
+        preferences: { type: "object", properties: { session_minutes: { type: "integer" }, variety: { type: "string" }, rest_days: { type: "string" }, equipment: { type: "string" }, limits: { type: "string" } } },
+        notes: { type: "string" },
+        activate: { type: "boolean", description: "true = start now (pauses the current active program); false = keep in the bank" },
+        reason: { type: "string", description: "One line on why this shape fits them" },
+      },
+      required: ["title", "goal", "kind", "phases", "activate", "reason"],
+    },
+  },
+  {
+    name: "set_program_status",
+    description: "Start, pause, finish or shelve a saved program by title. Starting one pauses the current active program.",
+    input_schema: { type: "object", properties: { title: { type: "string" }, status: { type: "string", enum: ["active", "paused", "done", "idea"] } }, required: ["title", "status"] },
   },
   {
     name: "set_goals",
@@ -282,6 +325,43 @@ export async function POST(req: Request) {
         proposals.push({ type: "workout", reason: String(i.reason ?? "").slice(0, 300), base_id: base?.id ?? null, mode: i.save_as === "copy" ? "copy" : "update", name: String(i.name || base?.name || "").slice(0, 60), category: String(i.category || base?.category || "CUSTOM").slice(0, 12).toUpperCase(), notes: String(typeof i.notes === "string" ? i.notes : base?.notes ?? "").slice(0, 1000), blocks, steps: garmin.steps, garmin_warnings });
         return { ok: true, note: "Shown to the person as a card. It is NOT saved until they tap Save. Once saved, the Library shows 'Update watch' for it.", ...(garmin_warnings.length ? { garmin_warnings } : {}) };
       }
+      case "propose_program": {
+        const today = todayISO();
+        const kind = i.kind === "event" ? "event" : "ongoing";
+        const target = typeof i.target_date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(i.target_date) ? i.target_date : null;
+        if (kind === "event" && !target) return { ok: false, reason: "An event program needs target_date (YYYY-MM-DD). Ask for the date if you don't have it." };
+        if (target && target < today) return { ok: false, reason: "That date has passed." };
+        const phases: ProgramPhase[] = (Array.isArray(i.phases) ? i.phases : []).slice(0, 8).map((x: any) => ({ name: String(x?.name ?? "").slice(0, 24), weeks: Math.max(1, Math.min(52, Math.round(Number(x?.weeks) || 1))), focus: String(x?.focus ?? "").slice(0, 200) }));
+        if (!phases.length) return { ok: false, reason: "Give at least one phase." };
+        const sum = phases.reduce((a, x) => a + x.weeks, 0);
+        const toDate = target ? Math.max(1, Math.ceil((Math.round((+new Date(target + "T12:00:00") - +new Date(today + "T12:00:00")) / 86400000) + 1) / 7)) : null;
+        const weeks = Number.isInteger(i.weeks) ? Math.max(1, Math.min(52, Number(i.weeks))) : toDate ?? (kind === "event" ? sum : null);
+        if (i.activate && toDate && Math.abs(sum - toDate) > 1) return { ok: false, reason: `Starting now, there are ${toDate} weeks until ${target}, but the phases add up to ${sum}. Adjust the phase weeks.` };
+        const prefIn = (i.preferences ?? {}) as Record<string, unknown>;
+        const preferences = Object.fromEntries(["session_minutes", "variety", "rest_days", "equipment", "limits"].filter((k) => prefIn[k] != null && prefIn[k] !== "").map((k) => [k, k === "session_minutes" ? Number(prefIn[k]) : String(prefIn[k]).slice(0, 200)]));
+        const prog: ProgramProposal = {
+          type: "program", reason: String(i.reason ?? "").slice(0, 300), title: String(i.title ?? "").slice(0, 60), goal: String(i.goal ?? "").slice(0, 600),
+          kind, target_date: target, weeks, days_per_week: Number.isInteger(i.days_per_week) ? Number(i.days_per_week) : null, phases, preferences,
+          notes: String(i.notes ?? "").slice(0, 600), activate: !!i.activate,
+        };
+        // week 1 proposed earlier in this turn? fold it in
+        const wk = prog.activate ? proposals.findIndex((p) => p.type === "plan" && p.kind === "home") : -1;
+        if (wk >= 0) { prog.first_week = { ...(proposals[wk] as PlanProposal), program_week: 1 }; proposals.splice(wk, 1); }
+        proposals.push(prog);
+        return { ok: true, note: `Shown as a program card${prog.first_week ? " with week 1 bundled in" : prog.activate ? ". Now build week 1 with propose_plan_change (it gets bundled into the card)" : ""}. Nothing is saved until they tap it.` };
+      }
+      case "set_program_status": {
+        const name = String(i.title ?? "").toLowerCase();
+        const prog = data.programs.find((p) => p.title.toLowerCase() === name) ?? data.programs.find((p) => p.title.toLowerCase().includes(name));
+        if (!prog) return { ok: false, reason: `No program called "${i.title}". Saved: ${data.programs.map((p) => p.title).join(", ") || "none"}.` };
+        const status = (["active", "paused", "done", "idea"].includes(String(i.status)) ? i.status : "paused") as ProgramStatus;
+        if (status === "active") await sb.from("programs").update({ status: "paused" }).eq("user_id", userId!).eq("status", "active").neq("id", prog.id);
+        const restart = status === "active" && (!prog.start_date || prog.status === "done" || prog.status === "idea");
+        const { error } = await sb.from("programs").update({ status, ...(restart ? { start_date: todayISO() } : {}) }).eq("id", prog.id);
+        if (error) throw error;
+        actions.push(`${prog.title}: ${status === "active" ? "started" : status}`);
+        return { ok: true, ...(status === "active" ? { week: programPosition({ ...prog, status, start_date: restart ? todayISO() : prog.start_date }).week, note: "Offer to build this week's plan for it." } : {}) };
+      }
       case "set_goals": {
         await setGoals(sb, userId!, String(i.goals ?? ""));
         actions.push("Goals saved");
@@ -322,8 +402,19 @@ export async function POST(req: Request) {
         if (!items.length) return { ok: false, reason: "need at least one item" };
         // the bundled workouts live on the plan card now, not as separate cards
         for (const b of bundled) { const k = proposals.indexOf(b); if (k >= 0) proposals.splice(k, 1); }
-        proposals.push({ type: "plan", reason: String(i.reason ?? "").slice(0, 300), kind: i.kind === "travel" ? "travel" : "home", items, ...(bundled.length ? { new_workouts: bundled, bundled_from: bundledFrom } : {}) });
-        return { ok: true, note: `Shown to the person as one card${bundled.length ? ` with ${bundled.length} new workout(s) bundled in` : ""}. It is NOT saved until they tap Save.` };
+        const planKind = i.kind === "travel" ? "travel" : "home";
+        const plan: PlanProposal = { type: "plan", reason: String(i.reason ?? "").slice(0, 300), kind: planKind, items, ...(bundled.length ? { new_workouts: bundled, bundled_from: bundledFrom } : {}) };
+        // week 1 of a program proposed in this turn: it rides on the program card
+        const prog = planKind === "home" ? proposals.find((p): p is ProgramProposal => p.type === "program" && p.activate && !p.first_week) : undefined;
+        if (prog) {
+          prog.first_week = { ...plan, program_week: 1 };
+          return { ok: true, note: `Bundled into the "${prog.title}" program card as week 1. Nothing is saved until they tap Start.` };
+        }
+        // otherwise a home plan belongs to the active program's current week
+        const ap = planKind === "home" ? activeProgram(data) : undefined;
+        if (ap) { plan.program_id = ap.id; plan.program_week = programPosition(ap).week; }
+        proposals.push(plan);
+        return { ok: true, note: `Shown to the person as one card${bundled.length ? ` with ${bundled.length} new workout(s) bundled in` : ""}${ap ? ` (week ${plan.program_week} of "${ap.title}")` : ""}. It is NOT saved until they tap Save.` };
       }
       case "set_phase":
         await setPhase(sb, data.state, i.phase === "build" ? "build" : "calm");
