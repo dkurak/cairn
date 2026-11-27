@@ -59,14 +59,24 @@ export type Plan = {
 export type ProgramPhase = { name: string; weeks: number; focus: string };
 export type ProgramPrefs = { session_minutes?: number; variety?: string; rest_days?: string; equipment?: string; limits?: string };
 export type ProgramStatus = "idea" | "active" | "paused" | "done";
+/** Milestone checks the app can evaluate from the log (or mark by hand). */
+export type Criterion =
+  | { kind: "pain_streak"; label: string; max: number; days: number; area?: string } // daily checks <= max, N days in a row
+  | { kind: "sessions"; label: string; max_pain: number; count: number; days: number } // N sessions with pain <= max in the last D days
+  | { kind: "tour"; label: string; max_pain: number; min_vert?: number } // a tour since the start, pain <= max and 0 next morning
+  | { kind: "manual"; label: string; met?: boolean };
 export type Program = {
   id: string;
   user_id: string;
   title: string;
   goal: string;
-  kind: "event" | "ongoing";
+  kind: "event" | "ongoing" | "milestone";
   target_date: string | null;
   start_date: string | null;
+  criteria: Criterion[];
+  resumes_id: string | null;
+  completed_at: string | null;
+  outcome: string;
   weeks: number | null;
   days_per_week: number | null;
   status: ProgramStatus;

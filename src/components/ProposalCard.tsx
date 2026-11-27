@@ -73,13 +73,13 @@ function PlanBody({ p, data }: { p: PlanProposal; data: AppData }) {
 function ProgramBody({ p, data }: { p: ProgramProposal; data: AppData }) {
   const active = data.programs.find((x) => x.status === "active");
   const prefs = Object.entries(p.preferences ?? {}).filter(([, v]) => v);
-  const shown = p.activate ? effectivePhases({ ...p, id: "", user_id: "", status: "idea", start_date: null, created_at: "", updated_at: "" }) : p.phases;
+  const shown = p.activate ? effectivePhases({ ...p, id: "", user_id: "", status: "idea", start_date: null, created_at: "", updated_at: "", resumes_id: null, completed_at: null, outcome: "" }) : p.phases;
   const label: Record<string, string> = { session_minutes: "Session", variety: "Variety", rest_days: "Rest", equipment: "Equipment", limits: "Limits" };
   return (
     <>
       <div className="rundown-title">{p.title}</div>
       <span className="note">
-        {p.kind === "event" && p.target_date ? `Event ${fmtDate(p.target_date)}` : "Ongoing"}
+        {p.kind === "event" && p.target_date ? `Event ${fmtDate(p.target_date)}` : p.kind === "milestone" ? `Done when the checks are met${p.target_date ? ` · aiming for ${fmtDate(p.target_date)}` : ""}` : "Ongoing"}
         {p.weeks ? ` · ${p.weeks} weeks` : ""}{p.days_per_week ? ` · ${p.days_per_week} days/week` : ""}
       </span>
       {p.goal && <span>{p.goal}</span>}
@@ -87,6 +87,11 @@ function ProgramBody({ p, data }: { p: ProgramProposal; data: AppData }) {
       <ul className="rundown">
         {shown.map((ph, i) => <li key={i}><span className="ex">{ph.name}</span><span className="sr">{ph.weeks} wk</span><span className="tip">{ph.focus}</span></li>)}
       </ul>
+      {p.criteria?.length > 0 && (
+        <ul className="checks" aria-label="Done when">
+          {p.criteria.map((c, i) => <li key={i}><span className="box" aria-hidden="true" /><span>{c.label}</span><span className="meta">{c.kind === "manual" ? "you decide" : "tracked"}</span></li>)}
+        </ul>
+      )}
       {prefs.length > 0 && <span className="note">{prefs.map(([k, v]) => `${label[k] ?? k}: ${k === "session_minutes" ? `${v} min` : v}`).join(" · ")}</span>}
       {p.first_week && p.activate && (
         <details className="block" open>

@@ -1,4 +1,4 @@
-import type { AppData, PlanItem, ProgramPhase, ProgramPrefs, RundownBlock } from "./types";
+import type { AppData, Criterion, PlanItem, ProgramPhase, ProgramPrefs, RundownBlock } from "./types";
 import type { GarminStep } from "./garmin/steps";
 
 // Things the coach suggests. Nothing is saved until the person taps Save in the app.
@@ -36,8 +36,9 @@ export type ProgramProposal = {
   reason: string;
   title: string;
   goal: string;
-  kind: "event" | "ongoing";
+  kind: "event" | "ongoing" | "milestone";
   target_date: string | null;
+  criteria: Criterion[];
   weeks: number | null;
   days_per_week: number | null;
   phases: ProgramPhase[];

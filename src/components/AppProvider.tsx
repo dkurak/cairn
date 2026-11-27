@@ -119,12 +119,13 @@ export default function AppProvider({ initial, children }: { initial: AppData; c
     } else {
       // a goal program: one active at a time, so starting this one pauses the current one
       const today = todayISO();
-      if (p.activate) {
-        const { error } = await sb.from("programs").update({ status: "paused" }).eq("user_id", uid).eq("status", "active");
+      const current = data.programs.find((x) => x.status === "active");
+      if (p.activate && current) {
+        const { error } = await sb.from("programs").update({ status: "paused" }).eq("id", current.id);
         if (error) throw programError(error);
       }
       const row = await writeRow(sb, "programs", {
-        user_id: uid, title: p.title, goal: p.goal, kind: p.kind, target_date: p.target_date, weeks: p.weeks, days_per_week: p.days_per_week,
+        user_id: uid, title: p.title, goal: p.goal, kind: p.kind, target_date: p.target_date, criteria: p.criteria ?? [], resumes_id: p.activate ? current?.id ?? null : null, weeks: p.weeks, days_per_week: p.days_per_week,
         phases: p.phases, preferences: p.preferences, notes: p.notes, status: p.activate ? "active" : "idea", start_date: p.activate ? today : null,
       }).catch((e) => { throw programError(e); });
       if (p.activate && p.first_week) await savePlan({ ...p.first_week, program_id: row.id, program_week: 1 });

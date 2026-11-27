@@ -8,7 +8,7 @@ import { digest, digestLine } from "@/lib/review";
 import { activeProgram, needsNewWeek, programLine, programPosition } from "@/lib/programs";
 import { isGarminExercise, patchSteps, type GarminHint, type GarminStep } from "@/lib/garmin/steps";
 import { watchStatus } from "@/lib/garmin/status";
-import { FEELS, PAIN_SCALE, type AppData, type Feel, type PlanItem, type ProgramPhase, type ProgramStatus } from "@/lib/types";
+import { FEELS, PAIN_SCALE, type AppData, type Criterion, type Feel, type PlanItem, type ProgramPhase, type ProgramStatus } from "@/lib/types";
 
 export const maxDuration = 300; // building a week with new workouts can take a while
 
@@ -70,7 +70,7 @@ Phase: ${state.phase}. Week ${state.week}. Done: ${JSON.stringify(doneMap(state)
 Up next: ${n.type === "item" || n.type === "calm" ? `${n.item.key} ${n.item.title}` : n.type === "empty" ? "no plan yet" : "week complete"}. Details: ${JSON.stringify(upNextWorkouts)}
 Recent log (newest first): ${JSON.stringify(recent)}
 Goals: ${profile.goals ? `"${profile.goals}" (set ${profile.goals_updated_at?.slice(0, 10) ?? "earlier"})` : "NOT SET YET - infer them from the log and ask them to confirm."}
-Goal programs (one active drives the weekly plan; the rest are a bank): ${data.programs.length ? "\n- " + data.programs.map((p) => programLine(p)).join("\n- ") : "none yet"}
+Goal programs (one active drives the weekly plan; the rest are a bank): ${data.programs.length ? "\n- " + data.programs.map((p) => programLine(p, data)).join("\n- ") : "none yet"}
 ${(() => {
   const ap = activeProgram(data);
   const hp = data.plans.find((x) => x.kind === "home");
@@ -100,8 +100,10 @@ How to work:
   strength (e.g. max squat): 3 progressive weeks + 1 deload, repeated, test in the last week; small jumps (2.5-5%), hip pain rule overrides the numbers.
   muscle gain: 8-12 weeks, 3-5 days, 6-12 reps near failure, progressive volume, deload every 4th week; mention eating a bit more and protein, briefly (not a dietitian).
   swimming distance: technique + aerobic base, then longer continuous swims; open-water safety note if it's the ocean.
+  rehab or anything that's done when the body says so (kind "milestone"): no fixed end. Set criteria the app can check from their log, e.g. pain_streak (daily checks of the area <= 1 for 7 days in a row), sessions (4 sessions with pain <= 2 in the last 10 days), tour (a short tour with pain <= 3 during and 0 next morning) - plus manual ones if needed. target_date is only a hoped-for date. Phases run in order and the last one holds until the checks are met, e.g. Calm (settle, isometrics) > Load (strength back, pain <= 2) > Return (short tour, then normal plan). An injury mid-program: offer a rehab milestone that pauses the current program and resumes it when done.
   Phase weeks must add up to the program length. With activate true, also build week 1 in the same turn (propose_workout for anything new, then propose_plan_change) - it's bundled into the program card. Keep their pain rule and hip swaps in every phase.
 - Running a program: each new week, build that week's plan from the active program's current phase, their log and pain trend, with propose_plan_change (it's tied to the program week automatically). Progress loads week to week, ease off when pain or feel says so, and say in a line what changed vs last week. Check-ins report against the active program too (week, phase, on track or not). To switch, pause, finish or restart a program, call set_program_status. If an event date has passed, ask how it went and offer to mark it done.
+- Finishing a milestone: when the program line says ALL MET, tell them and offer to call it done. They can also call it done early - it's their call; say plainly which checks are still unproven (e.g. "hip's been 0-1 for 3 days, the usual bar is 7 plus a clean short tour") and let them decide. When done, ask in a few words how it went (save as outcome), then offer to resume the program it paused and, if they're in the calm phase, to switch to build.
 - Building a week from a description ("3 strength days, 2 easy, a tour Saturday", "more upper body this week"): if one or two things that change the plan are missing (days available, equipment, time per session), ask them first in one message. Otherwise build it: prefer workouts already in the library; create new ones with propose_workout only when nothing fits (full rundown, hip swaps in tips); then call propose_plan_change once with the whole week. You can name the new workouts you just proposed in the plan - they are bundled into one card and saved together. Say in 2-4 lines how the week serves their goals and their pain rule.
 - Red flags (pain at rest or at night, catching or clicking deep in a joint, numbness, limping that won't settle) -> suggest PT or sports med.`;
 }
@@ -200,8 +202,26 @@ const TOOLS: Anthropic.Tool[] = [
       properties: {
         title: { type: "string", description: "Short, e.g. 'Jan 18 big ski day', 'Ski all day', 'Beach swim', 'Squat 1.5x BW'" },
         goal: { type: "string", description: "What they want, in their words, plus how you'll measure it" },
-        kind: { type: "string", enum: ["event", "ongoing"] },
-        target_date: { type: "string", description: "YYYY-MM-DD, events only" },
+        kind: { type: "string", enum: ["event", "ongoing", "milestone"], description: "event: done on a date; ongoing: no end; milestone: done when the criteria are met (rehab)" },
+        target_date: { type: "string", description: "YYYY-MM-DD. Required for events; for a milestone, an optional hoped-for date" },
+        criteria: {
+          type: "array",
+          description: "Milestones only: how we'll know it's done. The app checks these from the log.",
+          items: {
+            type: "object",
+            properties: {
+              kind: { type: "string", enum: ["pain_streak", "sessions", "tour", "manual"] },
+              label: { type: "string", description: "Short, e.g. 'Hip 0-1 for 7 days'" },
+              max: { type: "integer", description: "pain_streak: highest daily check that counts" },
+              days: { type: "integer", description: "pain_streak: days in a row; sessions: look-back window" },
+              area: { type: "string", description: "pain_streak: pain area name (default the primary one)" },
+              max_pain: { type: "integer", description: "sessions/tour: highest pain during that counts" },
+              count: { type: "integer", description: "sessions: how many" },
+              min_vert: { type: "integer", description: "tour: minimum vert in ft" },
+            },
+            required: ["kind", "label"],
+          },
+        },
         weeks: { type: "integer", minimum: 1, maximum: 52, description: "Program length. For an event starting now, weeks until the date." },
         days_per_week: { type: "integer", minimum: 1, maximum: 7 },
         phases: { type: "array", items: { type: "object", properties: { name: { type: "string" }, weeks: { type: "integer", minimum: 1 }, focus: { type: "string" } }, required: ["name", "weeks", "focus"] } },
@@ -215,8 +235,8 @@ const TOOLS: Anthropic.Tool[] = [
   },
   {
     name: "set_program_status",
-    description: "Start, pause, finish or shelve a saved program by title. Starting one pauses the current active program.",
-    input_schema: { type: "object", properties: { title: { type: "string" }, status: { type: "string", enum: ["active", "paused", "done", "idea"] } }, required: ["title", "status"] },
+    description: "Start, pause, finish or shelve a saved program by title. Starting one pauses the current active program. With done, pass outcome (how it went, in their words).",
+    input_schema: { type: "object", properties: { title: { type: "string" }, status: { type: "string", enum: ["active", "paused", "done", "idea"] }, outcome: { type: "string" } }, required: ["title", "status"] },
   },
   {
     name: "set_goals",
@@ -327,21 +347,30 @@ export async function POST(req: Request) {
       }
       case "propose_program": {
         const today = todayISO();
-        const kind = i.kind === "event" ? "event" : "ongoing";
+        const kind = i.kind === "event" ? "event" : i.kind === "milestone" ? "milestone" : "ongoing";
+        const num = (v: unknown, lo: number, hi: number, d: number) => Math.max(lo, Math.min(hi, Math.round(Number(v ?? d)) || d));
+        const criteria: Criterion[] = (Array.isArray(i.criteria) ? i.criteria : []).slice(0, 6).map((c: any): Criterion => {
+          const label = String(c?.label ?? "").slice(0, 80);
+          if (c?.kind === "pain_streak") return { kind: "pain_streak", label, max: num(c.max, 0, 10, 1), days: num(c.days, 1, 60, 7), ...(c.area ? { area: String(c.area).slice(0, 40) } : {}) };
+          if (c?.kind === "sessions") return { kind: "sessions", label, max_pain: num(c.max_pain, 0, 10, 2), count: num(c.count, 1, 30, 4), days: num(c.days, 1, 60, 10) };
+          if (c?.kind === "tour") return { kind: "tour", label, max_pain: num(c.max_pain, 0, 10, 3), ...(c.min_vert ? { min_vert: num(c.min_vert, 0, 20000, 0) } : {}) };
+          return { kind: "manual", label };
+        });
+        if (kind === "milestone" && !criteria.length) return { ok: false, reason: "A milestone needs criteria - how will we know it's done?" };
         const target = typeof i.target_date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(i.target_date) ? i.target_date : null;
         if (kind === "event" && !target) return { ok: false, reason: "An event program needs target_date (YYYY-MM-DD). Ask for the date if you don't have it." };
         if (target && target < today) return { ok: false, reason: "That date has passed." };
         const phases: ProgramPhase[] = (Array.isArray(i.phases) ? i.phases : []).slice(0, 8).map((x: any) => ({ name: String(x?.name ?? "").slice(0, 24), weeks: Math.max(1, Math.min(52, Math.round(Number(x?.weeks) || 1))), focus: String(x?.focus ?? "").slice(0, 200) }));
         if (!phases.length) return { ok: false, reason: "Give at least one phase." };
         const sum = phases.reduce((a, x) => a + x.weeks, 0);
-        const toDate = target ? Math.max(1, Math.ceil((Math.round((+new Date(target + "T12:00:00") - +new Date(today + "T12:00:00")) / 86400000) + 1) / 7)) : null;
+        const toDate = target && kind === "event" ? Math.max(1, Math.ceil((Math.round((+new Date(target + "T12:00:00") - +new Date(today + "T12:00:00")) / 86400000) + 1) / 7)) : null;
         const weeks = Number.isInteger(i.weeks) ? Math.max(1, Math.min(52, Number(i.weeks))) : toDate ?? (kind === "event" ? sum : null);
         if (i.activate && toDate && Math.abs(sum - toDate) > 1) return { ok: false, reason: `Starting now, there are ${toDate} weeks until ${target}, but the phases add up to ${sum}. Adjust the phase weeks.` };
         const prefIn = (i.preferences ?? {}) as Record<string, unknown>;
         const preferences = Object.fromEntries(["session_minutes", "variety", "rest_days", "equipment", "limits"].filter((k) => prefIn[k] != null && prefIn[k] !== "").map((k) => [k, k === "session_minutes" ? Number(prefIn[k]) : String(prefIn[k]).slice(0, 200)]));
         const prog: ProgramProposal = {
           type: "program", reason: String(i.reason ?? "").slice(0, 300), title: String(i.title ?? "").slice(0, 60), goal: String(i.goal ?? "").slice(0, 600),
-          kind, target_date: target, weeks, days_per_week: Number.isInteger(i.days_per_week) ? Number(i.days_per_week) : null, phases, preferences,
+          kind, target_date: target, criteria, weeks: kind === "milestone" ? null : weeks, days_per_week: Number.isInteger(i.days_per_week) ? Number(i.days_per_week) : null, phases, preferences,
           notes: String(i.notes ?? "").slice(0, 600), activate: !!i.activate,
         };
         // week 1 proposed earlier in this turn? fold it in
@@ -355,12 +384,20 @@ export async function POST(req: Request) {
         const prog = data.programs.find((p) => p.title.toLowerCase() === name) ?? data.programs.find((p) => p.title.toLowerCase().includes(name));
         if (!prog) return { ok: false, reason: `No program called "${i.title}". Saved: ${data.programs.map((p) => p.title).join(", ") || "none"}.` };
         const status = (["active", "paused", "done", "idea"].includes(String(i.status)) ? i.status : "paused") as ProgramStatus;
-        if (status === "active") await sb.from("programs").update({ status: "paused" }).eq("user_id", userId!).eq("status", "active").neq("id", prog.id);
+        const wasActive = data.programs.find((p) => p.status === "active" && p.id !== prog.id);
+        if (status === "active" && wasActive) {
+          await sb.from("programs").update({ status: "paused" }).eq("id", wasActive.id);
+          await sb.from("programs").update({ resumes_id: wasActive.id }).eq("id", prog.id);
+        }
         const restart = status === "active" && (!prog.start_date || prog.status === "done" || prog.status === "idea");
-        const { error } = await sb.from("programs").update({ status, ...(restart ? { start_date: todayISO() } : {}) }).eq("id", prog.id);
+        const done = status === "done" ? { completed_at: new Date().toISOString(), ...(i.outcome ? { outcome: String(i.outcome).slice(0, 600) } : {}) } : {};
+        const { error } = await sb.from("programs").update({ status, ...(restart ? { start_date: todayISO() } : {}), ...done }).eq("id", prog.id);
         if (error) throw error;
-        actions.push(`${prog.title}: ${status === "active" ? "started" : status}`);
-        return { ok: true, ...(status === "active" ? { week: programPosition({ ...prog, status, start_date: restart ? todayISO() : prog.start_date }).week, note: "Offer to build this week's plan for it." } : {}) };
+        actions.push(`${prog.title}: ${status === "active" ? "started" : status === "done" ? "done ✓" : status}`);
+        const resumes = status === "done" && prog.resumes_id ? data.programs.find((p) => p.id === prog.resumes_id && p.status === "paused") : undefined;
+        if (status === "active") return { ok: true, week: programPosition({ ...prog, status, start_date: restart ? todayISO() : prog.start_date }).week, note: "Offer to build this week's plan for it." };
+        if (resumes) return { ok: true, note: `It had paused "${resumes.title}". Offer to resume it (set_program_status active)${data.state.phase === "calm" ? " and to switch from calm-down to build (set_phase)" : ""}.` };
+        return { ok: true, ...(status === "done" && data.state.phase === "calm" ? { note: "They're still in the calm phase: offer to switch to build." } : {}) };
       }
       case "set_goals": {
         await setGoals(sb, userId!, String(i.goals ?? ""));

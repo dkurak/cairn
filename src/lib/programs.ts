@@ -1,6 +1,6 @@
 // Goal programs: where you are in one (week, phase, days to go) and what to show the coach.
-import type { AppData, Plan, Program, ProgramPhase } from "./types";
-import { addDays, todayISO } from "./rules";
+import type { AppData, Criterion, Plan, Program, ProgramPhase } from "./types";
+import { addDays, checksFor, primaryArea, todayISO } from "./rules";
 
 const days = (a: string, b: string) => Math.round((+new Date(b + "T12:00:00") - +new Date(a + "T12:00:00")) / 86400000);
 
@@ -16,6 +16,7 @@ export type ProgramPosition = {
 
 /** Length in weeks: events run from the start to the date; otherwise explicit, else the phases. */
 export function programWeeks(p: Program, from = p.start_date ?? todayISO()): number | null {
+  if (p.kind === "milestone") return null; // done when it's done
   if (p.target_date) return Math.max(1, Math.ceil((days(from, p.target_date) + 1) / 7));
   if (p.weeks) return p.weeks;
   const sum = p.phases.reduce((a, x) => a + (x.weeks || 0), 0);
@@ -29,7 +30,7 @@ export function programWeeks(p: Program, from = p.start_date ?? todayISO()): num
  */
 export function effectivePhases(p: Program, from = p.start_date ?? todayISO()): ProgramPhase[] {
   const phases = p.phases.map((x) => ({ ...x, weeks: Math.max(1, x.weeks || 1) }));
-  const total = p.target_date ? programWeeks(p, from) : null;
+  const total = p.kind === "event" && p.target_date ? programWeeks(p, from) : null; // a milestone's date is only a hope
   if (!total || !phases.length) return phases;
   let diff = total - phases.reduce((a, x) => a + x.weeks, 0);
   if (diff > 0) phases[0].weeks += diff;
@@ -51,7 +52,7 @@ export function programPosition(p: Program, today = todayISO()): ProgramPosition
   // ongoing programs repeat their phases as a cycle; event/fixed programs run once
   const phases = effectivePhases(p, start);
   const cycle = phases.reduce((a, x) => a + x.weeks, 0);
-  let w = p.kind === "ongoing" && !p.weeks && cycle ? ((week - 1) % cycle) + 1 : week;
+  let w = p.kind === "ongoing" && !p.weeks && cycle ? ((week - 1) % cycle) + 1 : week; // milestones: the last phase holds until it's done
   let phaseIndex = -1;
   for (let i = 0; i < phases.length; i++) {
     if (w <= phases[i].weeks) { phaseIndex = i; break; }
@@ -61,7 +62,7 @@ export function programPosition(p: Program, today = todayISO()): ProgramPosition
   const phase = phaseIndex >= 0 ? phases[phaseIndex] : null;
   return {
     week, totalWeeks, phase: phase?.name ?? null, phaseFocus: phase?.focus ?? null, phaseIndex, daysToTarget,
-    over: (daysToTarget != null && daysToTarget < 0) || (p.kind === "event" && totalWeeks != null && week > totalWeeks),
+    over: p.kind === "event" && ((daysToTarget != null && daysToTarget < 0) || (totalWeeks != null && week > totalWeeks)),
   };
 }
 
@@ -80,7 +81,9 @@ export function needsNewWeek(data: Pick<AppData, "programs">, plan: Plan | undef
 export const fmtDate = (iso: string) => new Date(iso + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
 /** "Week 3 of 8 · Build · 23 days to Jan 18" */
-export function positionLabel(p: Program, pos = programPosition(p)) {
+export function positionLabel(p: Program, pos = programPosition(p), crit?: { met: number; total: number }) {
+  if (p.kind === "milestone")
+    return [p.status === "active" ? `Week ${pos.week}` : null, p.status === "active" ? pos.phase : null, crit?.total ? `${crit.met} of ${crit.total} checks met` : null, p.target_date ? `aiming for ${fmtDate(p.target_date)}` : null].filter(Boolean).join(" · ");
   return [
     p.status === "active" ? `Week ${pos.week}${pos.totalWeeks ? ` of ${pos.totalWeeks}` : ""}` : null,
     p.status === "active" ? pos.phase : null,
@@ -89,9 +92,49 @@ export function positionLabel(p: Program, pos = programPosition(p)) {
 }
 
 /** One line per program for the coach. */
-export function programLine(p: Program, today = todayISO()) {
+export function programLine(p: Program, data?: CritData, today = todayISO()) {
   const pos = programPosition(p, today);
+  const crit = data && p.kind === "milestone" ? evaluateCriteria(p, data, today) : null;
   const prefs = Object.entries(p.preferences ?? {}).filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join("; ");
-  return `"${p.title}" [${p.status}${p.status === "active" ? `, started ${p.start_date}, week ${pos.week}${pos.totalWeeks ? `/${pos.totalWeeks}` : ""}, phase ${pos.phase ?? "-"} (${pos.phaseFocus ?? ""})` : ""}] ${p.kind}${p.target_date ? ` on ${p.target_date}` : ""}; goal: ${p.goal}; ${p.days_per_week ?? "?"} days/wk; phases: ${effectivePhases(p).map((x) => `${x.name} ${x.weeks}w (${x.focus})`).join(" > ") || "-"}${prefs ? `; prefs: ${prefs}` : ""}${p.notes ? `; notes: ${p.notes}` : ""}`;
+  return `"${p.title}" [${p.status}${p.status === "active" ? `, started ${p.start_date}, week ${pos.week}${pos.totalWeeks ? `/${pos.totalWeeks}` : ""}, phase ${pos.phase ?? "-"} (${pos.phaseFocus ?? ""})` : ""}] ${p.kind}${p.target_date ? ` on ${p.target_date}` : ""}; goal: ${p.goal}; ${p.days_per_week ?? "?"} days/wk; phases: ${effectivePhases(p).map((x) => `${x.name} ${x.weeks}w (${x.focus})`).join(" > ") || "-"}${prefs ? `; prefs: ${prefs}` : ""}${p.notes ? `; notes: ${p.notes}` : ""}${crit ? `; checks ${crit.met}/${crit.total}${crit.allMet ? " ALL MET - suggest calling it done" : ""}: ${crit.results.map((r) => `${r.label} (${r.met ? "met" : r.progress})`).join(", ")}` : ""}${p.resumes_id ? "; paused another program when it started (offer to resume it when done)" : ""}${p.status === "done" && p.outcome ? `; outcome: ${p.outcome}` : ""}`;
 }
 
+
+// ---------- milestone criteria ----------
+
+export type CriterionResult = { label: string; met: boolean; progress: string };
+type CritData = Pick<AppData, "log" | "areas" | "checks">;
+
+/** Score one check against the log. Only data since the program started counts. */
+export function evaluateCriterion(c: Criterion, data: CritData, since: string, today = todayISO()): CriterionResult {
+  switch (c.kind) {
+    case "pain_streak": {
+      const area = (c.area && data.areas.find((a) => a.name.toLowerCase() === c.area!.toLowerCase())) || primaryArea(data.areas);
+      if (!area) return { label: c.label, met: false, progress: "no pain area tracked" };
+      const byDate = new Map(checksFor(data.checks, area.id).map((x) => [x.date, x.pain]));
+      // count back from today (or yesterday, if today isn't checked yet); a missed or high day ends the streak
+      let d = byDate.has(today) ? today : addDays(today, -1);
+      let n = 0;
+      while (d >= since && byDate.has(d) && byDate.get(d)! <= c.max) { n++; d = addDays(d, -1); }
+      return { label: c.label, met: n >= c.days, progress: `${Math.min(n, c.days)} of ${c.days} days` };
+    }
+    case "sessions": {
+      const from = addDays(today, -(c.days - 1));
+      const ok = data.log.filter((e) => e.kind === "workout" && e.date >= from && e.date >= since && e.date <= today && e.pain_during != null && e.pain_during <= c.max_pain).length;
+      return { label: c.label, met: ok >= c.count, progress: `${Math.min(ok, c.count)} of ${c.count}` };
+    }
+    case "tour": {
+      const clean = data.log.find((e) => e.kind === "tour" && e.date >= since && (e.pain_during ?? 99) <= c.max_pain && e.pain_next_am === 0 && (!c.min_vert || (e.vert_ft ?? 0) >= c.min_vert));
+      const pending = data.log.find((e) => e.kind === "tour" && e.date >= since && e.pain_next_am == null);
+      return { label: c.label, met: !!clean, progress: clean ? `done ${clean.date.slice(5)}` : pending ? "waiting on next-morning check" : "not yet" };
+    }
+    default:
+      return { label: c.label, met: !!c.met, progress: c.met ? "done" : "not yet" };
+  }
+}
+
+export function evaluateCriteria(p: Program, data: CritData, today = todayISO()) {
+  const since = p.start_date ?? today;
+  const results = (p.criteria ?? []).map((c) => evaluateCriterion(c, data, since, today));
+  return { results, met: results.filter((r) => r.met).length, total: results.length, allMet: results.length > 0 && results.every((r) => r.met) };
+}

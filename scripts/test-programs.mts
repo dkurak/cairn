@@ -1,11 +1,12 @@
 // Checks for goal program math: npm run test:programs
 import assert from "node:assert/strict";
-import { effectivePhases, needsNewWeek, positionLabel, programPosition, programWeeks } from "../src/lib/programs.ts";
+import { effectivePhases, evaluateCriteria, needsNewWeek, positionLabel, programPosition, programWeeks } from "../src/lib/programs.ts";
 import type { Program } from "../src/lib/types.ts";
 
 const base: Program = {
   id: "p1", user_id: "u", title: "Jan 18 big day", goal: "", kind: "event", target_date: "2027-01-18", start_date: "2026-11-27",
   weeks: null, days_per_week: 4, status: "active", notes: "", preferences: {}, created_at: "", updated_at: "",
+  criteria: [], resumes_id: null, completed_at: null, outcome: "",
   phases: [{ name: "Base", weeks: 3, focus: "aerobic" }, { name: "Build", weeks: 3, focus: "long days" }, { name: "Peak", weeks: 1, focus: "big day sim" }, { name: "Taper", weeks: 1, focus: "fresh legs" }],
 };
 let n = 0;
@@ -53,5 +54,45 @@ test("phase bar weeks always add up to the weeks left", () => {
   assert.deepEqual(effectivePhases({ ...base, start_date: "2026-11-06" }).map((x) => x.weeks), [6, 3, 1, 1]); // 11 weeks out
   assert.deepEqual(effectivePhases({ ...base, start_date: "2026-12-11" }).map((x) => x.weeks), [1, 3, 1, 1]); // 6 weeks out
   assert.deepEqual(effectivePhases({ ...base, start_date: "2027-01-01" }).map((x) => [x.name, x.weeks]), [["Build", 1], ["Peak", 1], ["Taper", 1]]); // 3 weeks out
+});
+// a hip rehab milestone, started Nov 22 after the tour
+const rehab: Program = { ...base, title: "Hip rehab", kind: "milestone", target_date: "2026-12-15", start_date: "2026-11-22",
+  phases: [{ name: "Calm", weeks: 1, focus: "" }, { name: "Load", weeks: 2, focus: "" }, { name: "Return", weeks: 1, focus: "" }],
+  criteria: [
+    { kind: "pain_streak", label: "Hip 0-1 for 7 days", max: 1, days: 7 },
+    { kind: "sessions", label: "4 sessions at pain 2 or less", max_pain: 2, count: 4, days: 10 },
+    { kind: "tour", label: "Clean short tour", max_pain: 3 },
+  ] };
+const hip = { id: "hip", user_id: "u", name: "Right hip flexor", is_primary: true, active: true };
+const check = (date: string, pain: number) => ({ id: date, area_id: "hip", date, pain, note: "" });
+const sess = (date: string, pain: number, kind = "workout", extra = {}) => ({ id: date + kind, user_id: "u", date, kind, workout_id: null, what: kind, pain_during: pain, pain_next_am: null, feel: null, vert_ft: null, notes: "", created_at: date, ...extra });
+const now = { areas: [hip], checks: [check("2026-11-22", 6), check("2026-11-23", 3), check("2026-11-24", 1), check("2026-11-25", 1), check("2026-11-26", 0), check("2026-11-27", 0)],
+  log: [sess("2026-11-23", 3), sess("2026-11-24", 1), sess("2026-11-26", 1)] } as any;
+test("rehab today: hip streak 4 of 7, 2 of 4 sessions, no tour yet", () => {
+  const r = evaluateCriteria(rehab, now, "2026-11-27");
+  assert.deepEqual(r.results.map((x) => [x.met, x.progress]), [[false, "4 of 7 days"], [false, "2 of 4"], [false, "not yet"]]);
+  assert.equal(r.allMet, false);
+});
+test("today unchecked still counts yesterday's streak; a missed day breaks it", () => {
+  const noToday = { ...now, checks: now.checks.filter((c: any) => c.date !== "2026-11-27") };
+  assert.equal(evaluateCriteria(rehab, noToday, "2026-11-27").results[0].progress, "3 of 7 days");
+  const gap = { ...now, checks: now.checks.filter((c: any) => c.date !== "2026-11-25") };
+  assert.equal(evaluateCriteria(rehab, gap, "2026-11-27").results[0].progress, "2 of 7 days");
+});
+test("rehab done a week later: all met", () => {
+  const later = { ...now,
+    checks: [...now.checks, ...["2026-11-28", "2026-11-29", "2026-11-30", "2026-12-01"].map((d) => check(d, 0))],
+    log: [...now.log, sess("2026-11-28", 1), sess("2026-11-29", 2), sess("2026-11-30", 2, "tour", { pain_next_am: 0, vert_ft: 1200 })] };
+  const r = evaluateCriteria(rehab, later, "2026-12-01");
+  assert.equal(r.allMet, true, JSON.stringify(r.results));
+});
+test("a tour waiting on its morning check says so", () => {
+  const t = { ...now, log: [...now.log, sess("2026-11-27", 2, "tour", { pain_next_am: null })] };
+  assert.equal(evaluateCriteria(rehab, t, "2026-11-27").results[2].progress, "waiting on next-morning check");
+});
+test("milestones have no end week and don't go 'over'; last phase holds", () => {
+  const p = programPosition(rehab, "2027-01-10");
+  assert.deepEqual([p.totalWeeks, p.over, p.phase], [null, false, "Return"]);
+  assert.equal(positionLabel(rehab, programPosition(rehab, "2026-11-27"), { met: 1, total: 3 }), "Week 1 · Calm · 1 of 3 checks met · aiming for Dec 15");
 });
 console.log(`${n} passed`);
