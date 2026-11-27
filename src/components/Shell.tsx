@@ -30,24 +30,27 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   const active = (href: string) => (href === "/" ? path === "/" : path.startsWith(href));
   const initial = (profile.display_name || "?").trim().charAt(0).toUpperCase();
 
-  useEffect(() => { setMenu(false); }, [path]);
+  // the menu pushes the page (like the coach pane) and stays open while you navigate; remember the choice
+  useEffect(() => { try { setMenu(localStorage.getItem("cairn.menu") === "1"); } catch { /* ignore */ } }, []);
+  const toggleMenu = (open: boolean) => { setMenu(open); try { localStorage.setItem("cairn.menu", open ? "1" : "0"); } catch { /* ignore */ } };
   useEffect(() => {
-    const h = (e: KeyboardEvent) => { if (e.key === "Escape") setMenu(false); };
+    const h = (e: KeyboardEvent) => { if (e.key === "Escape" && !coachOpen) toggleMenu(false); };
     document.addEventListener("keydown", h);
     return () => document.removeEventListener("keydown", h);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coachOpen]);
 
-  const coachBtn = (cls: string, close = false) => (
-    <button key="coach" className={cls} aria-expanded={coachOpen} onClick={() => { setCoachOpen(!coachOpen); if (close) setMenu(false); }}>
+  const coachBtn = (cls: string) => (
+    <button key="coach" className={cls} aria-expanded={coachOpen} onClick={() => setCoachOpen(!coachOpen)}>
       {ICONS.coach}<span>Coach</span>
     </button>
   );
 
   return (
-    <div className={`shell-body${coachOpen ? " coach-open" : ""}`}>
+    <div className={`shell-body${coachOpen ? " coach-open" : ""}${menu ? " menu-open" : ""}`}>
       <header className="topbar">
         <div className="brandrow">
-          <button className="hamburger" aria-label="Open menu" aria-expanded={menu} onClick={() => setMenu(true)}>
+          <button className="hamburger" aria-label={menu ? "Close menu" : "Open menu"} aria-expanded={menu} onClick={() => toggleMenu(!menu)}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
           </button>
           <span className="brand">Cairn</span>
@@ -60,8 +63,10 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           <Link href="/account" className="avatar" aria-label="Account" title={profile.display_name}>{initial}</Link>
         </div>
       </header>
-      {status && <div className="status" role="status" style={{ padding: "8px 16px" }}>{status}</div>}
-      {children}
+      <div className="content">
+        {status && <div className="status" role="status" style={{ padding: "8px 16px" }}>{status}</div>}
+        {children}
+      </div>
 
       {/* phone: bottom tabs */}
       <nav className="nav six" aria-label="Main">
@@ -73,14 +78,9 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       </nav>
 
       {/* laptop: slide-out menu */}
-      <div className={`scrim${menu ? " open" : ""}`} onClick={() => setMenu(false)} aria-hidden="true" />
       <aside className={`navdrawer${menu ? " open" : ""}`} aria-label="Menu" aria-hidden={!menu} inert={!menu}>
-        <div className="drawer-head">
-          <span className="brand">Cairn</span>
-          <button className="link" onClick={() => setMenu(false)} aria-label="Close menu">Close</button>
-        </div>
         <nav className="dnav" aria-label="Main menu">
-          {TABS.map((t) => t.key === "coach" ? coachBtn("dnavbtn", true) : (
+          {TABS.map((t) => t.key === "coach" ? coachBtn("dnavbtn") : (
             <Link key={t.key} href={t.href} aria-current={active(t.href) ? "page" : undefined}>
               {ICONS[t.key]}<span>{t.label}</span>
             </Link>

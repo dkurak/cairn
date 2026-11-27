@@ -263,3 +263,24 @@ svg.viz path[fill="none"] { vector-effect: non-scaling-stroke; }
   .dnav a[aria-current="page"], .dnavbtn[aria-expanded="true"] { color: var(--accent); font-weight: 700; background: var(--bg); }
 }
 @media (prefers-reduced-motion: reduce) { .navdrawer, .scrim { transition: none; } }
+
+/* menu pushes the page instead of overlaying it */
+@media (min-width: 900px) {
+  .scrim { display: none !important; }
+  .navdrawer { box-shadow: none; }
+  .shell-body { transition: margin-left .2s ease-out, margin-right .2s ease-out; }
+  .shell-body.menu-open { margin-left: 260px; }
+  .shell-body.menu-open .page { max-width: 1100px; }
+}
+@media (min-width: 900px) and (max-width: 1250px) { .shell-body.menu-open.coach-open .two, .shell-body.menu-open .two { grid-template-columns: minmax(0, 1fr); } }
+
+/* menu sits under the top bar (no second "Cairn"); only the page content is pushed */
+:root { --topbar-h: 57px; }
+.topbar { height: var(--topbar-h); box-sizing: border-box; padding-top: 0; padding-bottom: 0; }
+.content { min-width: 0; }
+@media (min-width: 900px) {
+  .shell-body.menu-open { margin-left: 0; }
+  .navdrawer { top: var(--topbar-h); grid-template-rows: 1fr; z-index: 4; border-top: none; }
+  .content { transition: margin-left .2s ease-out; }
+  .shell-body.menu-open .content { margin-left: 260px; }
+}
