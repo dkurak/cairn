@@ -312,3 +312,18 @@ svg.viz path[fill="none"] { vector-effect: non-scaling-stroke; }
 .pills.pain11 { display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 4px; }
 .pills.pain11 button { min-width: 0; padding: 10px 0; border-radius: 8px; }
 button.danger { color: var(--bad); border-color: var(--bad-bg); background: var(--bad-bg); }
+/* watch (Garmin) + workout history */
+.tag.warn { color: var(--warn); background: var(--warn-bg); border-color: var(--warn); }
+.watch-list, .watch-help { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.watch-help code { font-size: .9em; }
+.linkbtn { justify-self: start; background: none; border: none; padding: 0; color: var(--accent); font: inherit; text-decoration: underline; cursor: pointer; }
+.history { list-style: none; margin: 0; padding: 0 0 0 10px; border-left: 2px solid var(--line); display: grid; }
+.history li { border-bottom: 1px solid var(--line); }
+.history li:last-child { border-bottom: none; }
+.history-note { color: var(--muted); }
+.history-body { display: grid; gap: 8px; padding: 0 0 10px; }
+/* done for the day */
+.next.done-today { border-color: var(--good); background: var(--good-bg); }
+.next.done-today .label { color: var(--good); }
+.strip a.done:not(.sel) { border-color: var(--good); background: var(--good-bg); }
+.strip a.done:not(.sel) .w { color: var(--good); }

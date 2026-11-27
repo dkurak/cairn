@@ -46,7 +46,8 @@ Owner/admin: Dave. Other users (family, friends) can sign up and log their own w
 
 ## Data model (Supabase)
 - `profiles` (id = auth.users.id, display_name, role: 'admin' | 'member', created_at)
-- `workouts` (id, name, category, owner_id null = shared library, steps jsonb, notes, updated_at, updated_by)
+- `workouts` (id, name, category, owner_id null = shared library, steps jsonb (Garmin), rundown jsonb (display), notes, version, change_note, updated_at, updated_by)
+- `workout_versions` (snapshot per version, written by trigger; restore from the Library) and `garmin_exports` (user_id, workout_id, version last downloaded for the watch)
 - `plans` (id, owner_id, name, kind: 'home' | 'travel' | 'calm', items jsonb: [{key, day, title, workout_ids[], kind: 'workout'|'tour'|'rest', note}])
 - `plan_state` (user_id pk, phase, travel bool, active_home_plan_id, active_travel_plan_id, done jsonb, travel_done jsonb, week int)
 - `log_entries` (id, user_id, date, kind: 'workout'|'tour'|'rest'|'hip_check', workout_id null, what text, pain_during, pain_next_am, hip_pain, feel, vert_ft, notes, created_at, updated_at)
@@ -69,7 +70,8 @@ Owner/admin: Dave. Other users (family, friends) can sign up and log their own w
 - Admin "change the app" from chat: tool `request_code_change` opens a GitHub issue (title and body from the conversation) that tags @claude. The Claude Code GitHub Action makes a PR, Vercel makes a preview, Dave reviews and merges. Never let the chat edit code or merge directly.
 
 ### Phase 3 - Garmin
-- Export any workout as a Garmin .fit file (port `garmin/fitlib.py` rules, or run it as a Python function). Rules learned the hard way:
+- Done: `src/lib/garmin/` (TS port of `garmin/fitlib.py`, decodes identically for all 24 workouts). Library shows "Update watch" when a workout changed since the last download; `/api/garmin` and `npm run garmin:pull` give the files. Coach edits rebuild only the changed rows' watch steps. Tests: `npm run test:garmin`.
+- Export any workout as a Garmin .fit file. Rules learned the hard way:
   - sport = TRAINING, sub_sport = STRENGTH_TRAINING
   - exercise_category and exercise_name on every step, plus ExerciseTitle messages for custom names
   - unique serial_number and time_created per file, or the watch overwrites

@@ -4,12 +4,33 @@ import { createClient } from "@/lib/supabase/server";
 import { addPainArea, loadAll, logEntries, markDone, savePainCheck, setPhase, setTravel, skipUpNext, startNextWeek, clampPain } from "@/lib/actions";
 import { activePlan, checksFor, doneMap, itemWorkoutIds, primaryArea, sortedLog, todayISO, tours, upNext } from "@/lib/rules";
 import type { Proposal } from "@/lib/proposals";
+import { isGarminExercise, patchSteps, type GarminHint, type GarminStep } from "@/lib/garmin/steps";
+import { watchStatus } from "@/lib/garmin/status";
 import { FEELS, PAIN_SCALE, type AppData, type Feel, type PlanItem } from "@/lib/types";
 
 export const maxDuration = 60;
 
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-5-5";
 const anthropic = new Anthropic(); // reads ANTHROPIC_API_KEY (server only)
+
+/** Every workout the person can see, in full, so the coach can read and edit them exactly. */
+function libraryText(data: AppData) {
+  const usedIn = (id: string) =>
+    data.plans.flatMap((pl) => pl.items.filter((i) => i.workout_ids.includes(id)).map((i) => `${pl.kind} ${i.day}`));
+  const ws = data.workouts.map((w) => {
+    const who = w.owner_id === null ? "shared" : w.owner_id === data.profile.id ? "theirs" : "other";
+    const used = usedIn(w.id);
+    const ws = watchStatus(w, data);
+    const watch = ws.kind === "update" ? `, v${w.version} - watch has v${ws.onWatch}` : ws.kind === "current" ? `, v${w.version} on watch` : `, v${w.version} not on watch`;
+    const blocks = (w.rundown ?? []).map((b) =>
+      `  [${b.label ?? "list"}]\n` + b.rows.map((r) => `    - ${r[0]} | ${r[1]}${r[2] ? ` | ${r[2]}` : ""}`).join("\n"),
+    ).join("\n");
+    return `### ${w.name} (${w.category}, ${who}${watch})${used.length ? ` - in plan: ${used.join(", ")}` : ""}
+${w.notes ? `  notes: ${w.notes}\n` : ""}${blocks || "  (no rundown)"}`;
+  });
+  return `WORKOUT LIBRARY - the full current content of every workout they can use. Rows are "exercise | sets_reps | tip". Block labels like "Circuit · 3 rounds" are set/circuit tiles; "list" means no label.
+${ws.join("\n\n")}`;
+}
 
 function systemPrompt(data: AppData) {
   const { state, workouts, profile, areas, checks } = data;
@@ -38,7 +59,8 @@ Cairn covers all training (strength, full body, travel, surf prep, rehab). Worki
 Pain rule: keep pain at 3/10 or less during anything. Scale: ${PAIN_SCALE}.
 Tracked pain areas and recent daily checks (0-10): ${JSON.stringify(pain)}
 ${touring ? "Tours: start at 1,000-1,500 ft, then +20-25%/week only if the primary area is 0 the next morning (pain during > 3 means step back; next-morning pain > 0 means hold). Calm phase (no tours) lasts until the primary area is 3 or less." : ""}
-Workouts in the library (shared + theirs): ${workouts.map((w) => w.name + (w.owner_id ? " (theirs)" : "")).join(", ")}. You can also log free text like Run, Bike, Hike, Tour, Rest.
+The full workout library is above (WORKOUT LIBRARY). You can also log free text like Run, Bike, Hike, Tour, Rest.
+Role: ${profile.role}. ${profile.role === "admin" ? "As admin, saving a change to a shared workout updates it for everyone." : "Changing a shared workout saves their own version and swaps it into their plan; the shared one is untouched."}
 Plan (${state.travel ? "travel mode ON" : "home"}): ${plan?.items.length ? plan.items.map((i) => `${i.key} ${i.day}: ${i.title} [${i.workout_ids.map(wName).join(", ")}]`).join("; ") : "EMPTY - no weekly plan yet"}.
 Travel info: ${state.travel ? JSON.stringify(state.travel_info) : "not traveling"}.
 Phase: ${state.phase}. Week ${state.week}. Done: ${JSON.stringify(doneMap(state))}.
@@ -48,7 +70,8 @@ Recent log (newest first): ${JSON.stringify(recent)}
 How to work:
 - Reports of something done or a pain number: call the matching tool, then confirm in one line. If a number is missing, log what you have and ask for it. Never invent numbers.
 - When they mention pain somewhere new, call add_pain_area, then ask for today's 0-10 (call pain_check once they answer). Ask how it's trending when it helps.
-- To change or create a workout, call propose_workout (the person sees a diff card and taps Save; nothing saves until they do). Base changes on their pain trend and log. To change the weekly plan, call propose_plan_change with workouts that already exist; if one is new, propose it first. Keep proposals small and explain why in one line.
+- Workouts: answer questions about any workout from the library above - never guess its content. To change one, call propose_workout with base_workout set to its exact name and the FULL new rundown: copy every row you are not changing word for word (same exercise, sets_reps and tip text, same block labels and order) so the diff only shows real changes. Keep its notes unless the change is to the notes. Use save_as 'copy' only when they want a separate variant. For a brand new workout, omit base_workout. The person sees a diff card and taps Save; nothing saves until they do, so never say it's saved. Base changes on their pain trend and log. To change the weekly plan, call propose_plan_change with workouts that already exist; if one is new, propose it first. Keep proposals small and explain why in one line.
+- Garmin: workouts run on their watch from .fit files they download in the Library ("Update watch"). Each workout shows its version and what the watch has. After a saved change, remind them once to update the watch. If propose_workout returns garmin_warnings, mention the important ones in a few words.
 - ${plan?.items.length ? "" : "They have no plan yet: ask 2-3 short questions (goal, pain areas, equipment, days per week), then propose a starter week."}
 - Travel: when they say they're traveling (gear: gym or bodyweight, jog yes/no, return date), call propose_plan_change with kind 'travel'. Bodyweight: use TRV1-TRV3 style workouts that exist. Gym: you can use CC/EZ2/EZ1 from the library. Jogging: add an easy run item with no workouts (e.g. title 'Easy run 20-30 min', note pace/RPE, keep pain <= 3). Size the number of items to the trip length when known. TRV4 Drive Reset is for drive/flight days. Mention the return date in your reply.
 - Plan items with no workouts (like an easy run or a rest day) are fine: describe them in title and note.
@@ -60,7 +83,8 @@ const rowSchema = {
   properties: {
     exercise: { type: "string" },
     sets_reps: { type: "string", description: "e.g. '3 x 12 each side @ 20 lb' or '40s'" },
-    tip: { type: "string", description: "swap/cue/limit, e.g. 'swap to dead bug if shoulder >3/10'" },
+    tip: { type: "string", description: "swap/cue/limit, e.g. 'swap to dead bug if shoulder >3/10'. Start with 'Ramp: 5 @ 95, 5 @ 115.' for warm-up sets." },
+    garmin: { type: "string", description: "Only for an exercise that is not already in the library: Garmin exercise as CATEGORY/NAME from the FIT profile, e.g. 'SQUAT/GOBLET_SQUAT', 'CRUNCH/BICYCLE_CRUNCH'." },
   },
   required: ["exercise", "sets_reps"],
 };
@@ -95,12 +119,13 @@ const TOOLS: Anthropic.Tool[] = [
   },
   {
     name: "propose_workout",
-    description: "Suggest a new workout or a change to an existing one. Shows a diff card; nothing is saved until the person taps Save. Give the FULL new workout, not just the changes.",
+    description: "Suggest a new workout or a change to an existing one (exercises, sets/reps, weights, tips, notes, name, category, set/circuit grouping). Shows a diff card; nothing is saved until the person taps Save. Give the FULL new workout, not just the changes.",
     input_schema: {
       type: "object",
       properties: {
         name: { type: "string", description: "Name of the new/updated workout" },
-        base_workout: { type: "string", description: "Existing workout name this changes. Omit for a brand new workout." },
+        base_workout: { type: "string", description: "Exact name of the existing workout this changes (from the library). Omit for a brand new workout." },
+        save_as: { type: "string", enum: ["update", "copy"], description: "'update' (default) changes base_workout; 'copy' saves a separate new workout based on it." },
         category: { type: "string", description: "Short code like REHAB, STR, EZ, CC" },
         reason: { type: "string", description: "One line on why (tie to their pain/log)" },
         notes: { type: "string" },
@@ -212,14 +237,29 @@ export async function POST(req: Request) {
         return { ok: true };
       }
       case "propose_workout": {
-        const base = typeof i.base_workout === "string" ? data.workouts.find((w) => w.name === i.base_workout) : undefined;
+        const baseName = typeof i.base_workout === "string" ? i.base_workout.trim() : "";
+        const base = baseName ? data.workouts.find((w) => w.name === baseName) ?? data.workouts.find((w) => w.name.toLowerCase() === baseName.toLowerCase()) : undefined;
+        if (baseName && !base) return { ok: false, reason: `No workout named "${baseName}". Use an exact name from the library, or omit base_workout for a new one.` };
         const blocks = (Array.isArray(i.blocks) ? i.blocks : []).slice(0, 12).map((b: any) => ({
           ...(b.label ? { label: String(b.label).slice(0, 80) } : {}),
           rows: (Array.isArray(b.rows) ? b.rows : []).slice(0, 20).map((r: any) => [String(r.exercise ?? "").slice(0, 80), String(r.sets_reps ?? "").slice(0, 80), String(r.tip ?? "").slice(0, 200)] as [string, string, string]),
         }));
         if (!blocks.length) return { ok: false, reason: "need at least one block of rows" };
-        proposals.push({ type: "workout", reason: String(i.reason ?? "").slice(0, 300), base_id: base?.id ?? null, name: String(i.name).slice(0, 60), category: String(i.category || base?.category || "CUSTOM").slice(0, 12).toUpperCase(), notes: String(i.notes ?? "").slice(0, 500), blocks });
-        return { ok: true, note: "Shown to the person as a card. It is NOT saved until they tap Save." };
+        // keep the watch version in step: rebuild only the rows that changed
+        const hints: Record<string, GarminHint> = {};
+        const badHints: string[] = [];
+        for (const b of (Array.isArray(i.blocks) ? i.blocks : []) as any[]) for (const r of (Array.isArray(b?.rows) ? b.rows : [])) {
+          const [cat, nm] = String(r?.garmin ?? "").toUpperCase().split("/").map((x) => x.trim());
+          if (!cat) continue;
+          if (isGarminExercise(cat, nm ?? "")) hints[String(r.exercise)] = { category: cat, name: nm };
+          else badHints.push(`${r.exercise}: ${r.garmin}`);
+        }
+        const { data: stepRows } = await sb.from("workouts").select("id, steps");
+        const stepsOf = new Map((stepRows ?? []).map((r: { id: string; steps: GarminStep[] | null }) => [r.id, r.steps ?? []]));
+        const garmin = patchSteps(base?.rundown ?? null, blocks, base ? stepsOf.get(base.id) ?? [] : null, [...stepsOf.values()].filter((x) => x.length), hints);
+        const garmin_warnings = [...badHints.map((h) => `${h} is not a Garmin exercise`), ...garmin.warnings];
+        proposals.push({ type: "workout", reason: String(i.reason ?? "").slice(0, 300), base_id: base?.id ?? null, mode: i.save_as === "copy" ? "copy" : "update", name: String(i.name || base?.name || "").slice(0, 60), category: String(i.category || base?.category || "CUSTOM").slice(0, 12).toUpperCase(), notes: String(typeof i.notes === "string" ? i.notes : base?.notes ?? "").slice(0, 1000), blocks, steps: garmin.steps, garmin_warnings });
+        return { ok: true, note: "Shown to the person as a card. It is NOT saved until they tap Save. Once saved, the Library shows 'Update watch' for it.", ...(garmin_warnings.length ? { garmin_warnings } : {}) };
       }
       case "propose_plan_change": {
         const items: PlanItem[] = [];
@@ -267,7 +307,10 @@ export async function POST(req: Request) {
       const res = await anthropic.messages.create({
         model: MODEL,
         max_tokens: 2000,
-        system: systemPrompt(data),
+        system: [
+          { type: "text", text: libraryText(data), cache_control: { type: "ephemeral" } },
+          { type: "text", text: systemPrompt(data) },
+        ],
         tools: TOOLS,
         messages,
         output_config: { effort: "low" },
