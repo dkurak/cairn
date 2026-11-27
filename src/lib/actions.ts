@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { AppData, EntryKind, Feel, LogEntry, Phase, PlanState } from "./types";
+import type { AppData, EntryKind, Feel, LogEntry, Phase, PlanState, TravelInfo } from "./types";
 import { FEELS } from "./types";
 import { activePlan, doneMap, nextInCycle, planOf, primaryArea, todayISO, upNext } from "./rules";
 
@@ -10,7 +10,7 @@ export const clampPain = (n: unknown) => Math.max(0, Math.min(10, Math.round(Num
 
 export async function loadAll(sb: SupabaseClient, userId: string): Promise<AppData> {
   const since = new Date(Date.now() - 180 * 86400000).toISOString().slice(0, 10);
-  const [profile, workouts, plans, state, log, areas, checks] = await Promise.all([
+  const [profile, workouts, plans, state, log, areas, checks, checkins] = await Promise.all([
     sb.from("profiles").select("id, display_name, role").eq("id", userId).single(),
     sb.from("workouts").select("id, name, category, owner_id, rundown, notes").order("name"),
     sb.from("plans").select("id, owner_id, name, kind, items"),
@@ -18,8 +18,9 @@ export async function loadAll(sb: SupabaseClient, userId: string): Promise<AppDa
     sb.from("log_entries").select("*").eq("user_id", userId).order("date", { ascending: false }).order("created_at", { ascending: false }).limit(300),
     sb.from("pain_areas").select("id, user_id, name, is_primary, active").eq("user_id", userId).order("created_at"),
     sb.from("pain_checks").select("id, area_id, date, pain, note").eq("user_id", userId).gte("date", since),
+    sb.from("daily_checkins").select("date, feel").eq("user_id", userId).gte("date", since),
   ]);
-  for (const r of [profile, workouts, plans, state, log, areas, checks]) if (r.error) throw r.error;
+  for (const r of [profile, workouts, plans, state, log, areas, checks, checkins]) if (r.error) throw r.error;
   return {
     profile: profile.data as AppData["profile"],
     workouts: workouts.data as AppData["workouts"],
@@ -28,6 +29,7 @@ export async function loadAll(sb: SupabaseClient, userId: string): Promise<AppDa
     log: log.data as LogEntry[],
     areas: areas.data as AppData["areas"],
     checks: checks.data as AppData["checks"],
+    checkins: checkins.data as AppData["checkins"],
   };
 }
 
@@ -82,6 +84,11 @@ export async function savePainCheck(sb: SupabaseClient, userId: string, areaId: 
 }
 
 /** Create a tracked area (or reactivate it). The first area someone adds becomes their primary one. */
+export async function saveDailyFeel(sb: SupabaseClient, userId: string, feel: Feel, date = todayISO()) {
+  const { error } = await sb.from("daily_checkins").upsert({ user_id: userId, date, feel }, { onConflict: "user_id,date" });
+  if (error) throw error;
+}
+
 export async function addPainArea(sb: SupabaseClient, userId: string, name: string, makePrimary = false) {
   const clean = name.trim().slice(0, 60);
   if (!clean) throw new Error("Area needs a name");
@@ -115,8 +122,8 @@ export function markDone(sb: SupabaseClient, state: PlanState, key: string, val:
 }
 
 export const setPhase = (sb: SupabaseClient, s: PlanState, phase: Phase) => patchState(sb, s.user_id, { phase });
-export const setTravel = (sb: SupabaseClient, s: PlanState, on: boolean) =>
-  patchState(sb, s.user_id, { travel: on, ...(on && !s.travel ? { travel_done: {} } : {}) });
+export const setTravel = (sb: SupabaseClient, s: PlanState, on: boolean, info?: TravelInfo) =>
+  patchState(sb, s.user_id, { travel: on, ...(on && !s.travel ? { travel_done: {} } : {}), ...(info ? { travel_info: info } : {}) });
 
 export async function skipUpNext(sb: SupabaseClient, data: AppData) {
   const n = upNext(data);

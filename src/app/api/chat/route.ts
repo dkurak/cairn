@@ -40,6 +40,7 @@ Tracked pain areas and recent daily checks (0-10): ${JSON.stringify(pain)}
 ${touring ? "Tours: start at 1,000-1,500 ft, then +20-25%/week only if the primary area is 0 the next morning (pain during > 3 means step back; next-morning pain > 0 means hold). Calm phase (no tours) lasts until the primary area is 3 or less." : ""}
 Workouts in the library (shared + theirs): ${workouts.map((w) => w.name + (w.owner_id ? " (theirs)" : "")).join(", ")}. You can also log free text like Run, Bike, Hike, Tour, Rest.
 Plan (${state.travel ? "travel mode ON" : "home"}): ${plan?.items.length ? plan.items.map((i) => `${i.key} ${i.day}: ${i.title} [${i.workout_ids.map(wName).join(", ")}]`).join("; ") : "EMPTY - no weekly plan yet"}.
+Travel info: ${state.travel ? JSON.stringify(state.travel_info) : "not traveling"}.
 Phase: ${state.phase}. Week ${state.week}. Done: ${JSON.stringify(doneMap(state))}.
 Up next: ${n.type === "item" || n.type === "calm" ? `${n.item.key} ${n.item.title}` : n.type === "empty" ? "no plan yet" : "week complete"}. Details: ${JSON.stringify(upNextWorkouts)}
 Recent log (newest first): ${JSON.stringify(recent)}
@@ -49,6 +50,8 @@ How to work:
 - When they mention pain somewhere new, call add_pain_area, then ask for today's 0-10 (call pain_check once they answer). Ask how it's trending when it helps.
 - To change or create a workout, call propose_workout (the person sees a diff card and taps Save; nothing saves until they do). Base changes on their pain trend and log. To change the weekly plan, call propose_plan_change with workouts that already exist; if one is new, propose it first. Keep proposals small and explain why in one line.
 - ${plan?.items.length ? "" : "They have no plan yet: ask 2-3 short questions (goal, pain areas, equipment, days per week), then propose a starter week."}
+- Travel: when they say they're traveling (gear: gym or bodyweight, jog yes/no, return date), call propose_plan_change with kind 'travel'. Bodyweight: use TRV1-TRV3 style workouts that exist. Gym: you can use CC/EZ2/EZ1 from the library. Jogging: add an easy run item with no workouts (e.g. title 'Easy run 20-30 min', note pace/RPE, keep pain <= 3). Size the number of items to the trip length when known. TRV4 Drive Reset is for drive/flight days. Mention the return date in your reply.
+- Plan items with no workouts (like an easy run or a rest day) are fine: describe them in title and note.
 - Red flags (pain at rest or at night, catching or clicking deep in a joint, numbness, limping that won't settle) -> suggest PT or sports med.`;
 }
 
@@ -158,9 +161,17 @@ export async function POST(req: Request) {
   const userId = claims?.claims?.sub;
   if (!userId) return NextResponse.json({ error: "Sign in first" }, { status: 401 });
 
-  const body = (await req.json().catch(() => null)) as { messages?: { role: "user" | "assistant"; content: string }[] } | null;
-  const history = (body?.messages ?? []).slice(-12);
-  if (!history.length || history[history.length - 1].role !== "user") return NextResponse.json({ error: "Bad request" }, { status: 400 });
+  const body = (await req.json().catch(() => null)) as { text?: string } | null;
+  const userText = (body?.text ?? "").trim().slice(0, 2000);
+  if (!userText) return NextResponse.json({ error: "Bad request" }, { status: 400 });
+
+  // save the user's message first, then rebuild the conversation from the database
+  // so the coach remembers earlier chats (and other devices)
+  const stamp = (i: number) => new Date(Date.now() + i).toISOString();
+  const { error: insErr } = await sb.from("coach_messages").insert({ user_id: userId, role: "user", content: userText, created_at: stamp(0) });
+  if (insErr) return NextResponse.json({ error: "Couldn't save that message" }, { status: 500 });
+  const { data: past } = await sb.from("coach_messages").select("role, content").eq("user_id", userId).in("role", ["user", "assistant"]).is("proposal", null).neq("content", "").order("created_at", { ascending: false }).limit(14);
+  const history = (past ?? []).reverse() as { role: "user" | "assistant"; content: string }[];
   while (history.length && history[0].role !== "user") history.shift();
 
   const actions: string[] = [];
@@ -261,7 +272,7 @@ export async function POST(req: Request) {
         messages,
         output_config: { effort: "low" },
       });
-      if (res.stop_reason === "refusal") return NextResponse.json({ text: "I can't help with that one.", actions, proposals });
+      if (res.stop_reason === "refusal") return NextResponse.json({ rows: [{ id: `r${Date.now()}`, role: "assistant", content: "I can't help with that one.", proposal: null, proposal_status: null, created_at: stamp(1) }] });
       text = res.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("\n").trim();
       if (res.stop_reason !== "tool_use") break;
       messages.push({ role: "assistant", content: res.content });
@@ -277,7 +288,14 @@ export async function POST(req: Request) {
       }
       messages.push({ role: "user", content: results });
     }
-    return NextResponse.json({ text: text || "Done.", actions, proposals });
+    const reply = text || "Done.";
+    const toInsert = [
+      ...actions.map((a) => ({ role: "act", content: a })),
+      { role: "assistant", content: reply },
+      ...proposals.map((p) => ({ role: "assistant", content: "", proposal: p, proposal_status: "open" })),
+    ].map((r, i) => ({ user_id: userId, ...r, created_at: stamp(i + 1) }));
+    const { data: rows } = await sb.from("coach_messages").insert(toInsert).select("id, role, content, proposal, proposal_status, created_at");
+    return NextResponse.json({ rows: rows ?? [] });
   } catch (e) {
     if (e instanceof Anthropic.RateLimitError) return NextResponse.json({ error: "Too many messages at once. Give it a minute." }, { status: 429 });
     console.error("chat failed", e);

@@ -35,6 +35,8 @@ export type Plan = {
   items: PlanItem[];
 };
 
+export type TravelInfo = { gear?: "gym" | "bodyweight"; jog?: boolean; returns?: string };
+
 export type PlanState = {
   user_id: string;
   phase: Phase;
@@ -43,6 +45,7 @@ export type PlanState = {
   active_travel_plan_id: string | null;
   done: Record<string, string>;
   travel_done: Record<string, string>;
+  travel_info: TravelInfo;
   week: number;
 };
 
@@ -64,6 +67,17 @@ export type LogEntry = {
 export type PainArea = { id: string; user_id: string; name: string; is_primary: boolean; active: boolean };
 export type PainCheck = { id: string; area_id: string; date: string; pain: number; note: string };
 
+export type DailyCheckin = { date: string; feel: Feel };
+
+export type CoachRow = {
+  id: string;
+  role: "user" | "assistant" | "act";
+  content: string;
+  proposal: import("./proposals").Proposal | null;
+  proposal_status: "open" | "saved" | "discarded" | null;
+  created_at: string;
+};
+
 export type Profile = { id: string; display_name: string; role: "admin" | "member" };
 
 export type AppData = {
@@ -74,6 +88,7 @@ export type AppData = {
   log: LogEntry[];
   areas: PainArea[];
   checks: PainCheck[];
+  checkins: DailyCheckin[];
 };
 
 export const PAIN_SCALE =

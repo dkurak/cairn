@@ -98,3 +98,19 @@ export function greenLight(state: PlanState, log: LogEntry[], touring: boolean):
     body: "Last tour was clean during and the next morning. Add 20-25%.",
   };
 }
+
+/** Plans are sequences, not dates: project the remaining items onto upcoming days (one per day, after today's Up next). */
+export function projectedItems(data: AppData): PlanItem[] {
+  const n = upNext(data);
+  const plan = activePlan(data);
+  if (!plan) return [];
+  const dm = doneMap(data.state);
+  const skipKey = n.type === "item" ? n.item.key : null;
+  return plan.items.filter((i) => !dm[i.key] && i.key !== skipKey);
+}
+
+export const addDays = (iso: string, n: number) => {
+  const d = new Date(iso + "T12:00:00");
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
+};

@@ -38,8 +38,8 @@ function WorkoutDiff({ p, data }: { p: WorkoutProposal; data: AppData }) {
   );
 }
 
-export default function ProposalCard({ proposal, data, onSave }: { proposal: Proposal; data: AppData; onSave: (p: Proposal) => Promise<boolean> }) {
-  const [state, setState] = useState<"open" | "saving" | "saved" | "discarded" | "error">("open");
+export default function ProposalCard({ proposal, data, status = "open", onSave, onStatus }: { proposal: Proposal; data: AppData; status?: "open" | "saved" | "discarded" | null; onSave: (p: Proposal) => Promise<boolean>; onStatus?: (s: "saved" | "discarded") => void }) {
+  const [state, setState] = useState<"open" | "saving" | "saved" | "discarded" | "error">(status ?? "open");
   const wName = (id: string) => data.workouts.find((w) => w.id === id)?.name ?? "?";
   const oldPlan = proposal.type === "plan" ? data.plans.find((pl) => pl.kind === proposal.kind) : undefined;
 
@@ -61,8 +61,8 @@ export default function ProposalCard({ proposal, data, onSave }: { proposal: Pro
       )}
       {state === "open" || state === "saving" || state === "error" ? (
         <div className="row">
-          <button className="primary" disabled={state === "saving"} onClick={async () => { setState("saving"); setState((await onSave(proposal)) ? "saved" : "error"); }}>Save</button>
-          <button disabled={state === "saving"} onClick={() => setState("discarded")}>Discard</button>
+          <button className="primary" disabled={state === "saving"} onClick={async () => { setState("saving"); const ok = await onSave(proposal); setState(ok ? "saved" : "error"); if (ok) onStatus?.("saved"); }}>Save</button>
+          <button disabled={state === "saving"} onClick={() => { setState("discarded"); onStatus?.("discarded"); }}>Discard</button>
           {state === "error" && <span className="status">Couldn&apos;t save. Try again.</span>}
         </div>
       ) : (
