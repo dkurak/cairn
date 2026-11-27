@@ -11,12 +11,25 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const { data } = await sb.auth.getClaims();
   const uid = data?.claims?.sub;
   if (!uid) redirect("/login");
-  const initial = await loadAll(sb, uid).catch(() => null);
+  let loadError = "";
+  const initial = await loadAll(sb, uid).catch((e) => {
+    loadError = e?.message ?? String(e);
+    console.error("loadAll failed", e);
+    return null;
+  });
   if (!initial) {
+    const noRow = /0 rows|no rows|PGRST116/i.test(loadError);
     return (
       <div className="page">
         <h1>Cairn</h1>
-        <p className="status">Your account isn&apos;t set up yet (no profile or plan found). If you just signed up, reload in a moment.</p>
+        {noRow ? (
+          <p className="status">Your account isn&apos;t set up yet (no profile or plan found). If you just signed up, reload in a moment.</p>
+        ) : (
+          <>
+            <p className="status">You&apos;re signed in, but Cairn couldn&apos;t load your data. Reload in a moment. If it keeps happening, the database may be missing an update.</p>
+            <p className="status"><code>{loadError}</code></p>
+          </>
+        )}
       </div>
     );
   }

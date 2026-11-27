@@ -21,17 +21,26 @@ export async function loadAll(sb: SupabaseClient, userId: string): Promise<AppDa
     sb.from("daily_checkins").select("date, feel").eq("user_id", userId).gte("date", since).limit(1000),
     sb.from("garmin_exports").select("workout_id, version, exported_at").eq("user_id", userId),
   ]);
-  for (const r of [profile, workouts, plans, state, log, areas, checks, checkins, exports]) if (r.error) throw r.error;
+  for (const r of [profile, plans, state, log, areas, checks, checkins]) if (r.error) throw r.error;
+  // Watch/version features need migration 0005. Without it, keep the app working and just skip them.
+  let workoutRows = workouts.data as AppData["workouts"] | null;
+  if (workouts.error) {
+    console.warn("workouts: falling back without version columns (apply migration 0005)", workouts.error.message);
+    const r = await sb.from("workouts").select("id, name, category, owner_id, rundown, notes").order("name");
+    if (r.error) throw r.error;
+    workoutRows = (r.data ?? []).map((w) => ({ ...w, version: 1, updated_at: "" })) as AppData["workouts"];
+  }
+  if (exports.error) console.warn("garmin_exports unavailable (apply migration 0005)", exports.error.message);
   return {
     profile: profile.data as AppData["profile"],
-    workouts: workouts.data as AppData["workouts"],
+    workouts: workoutRows ?? [],
     plans: (plans.data as AppData["plans"]).filter((p) => p.owner_id === userId),
     state: state.data as PlanState,
     log: log.data as LogEntry[],
     areas: areas.data as AppData["areas"],
     checks: checks.data as AppData["checks"],
     checkins: checkins.data as AppData["checkins"],
-    exports: exports.data as AppData["exports"],
+    exports: (exports.error ? [] : exports.data) as AppData["exports"],
   };
 }
 
