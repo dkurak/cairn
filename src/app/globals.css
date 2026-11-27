@@ -327,3 +327,5 @@ button.danger { color: var(--bad); border-color: var(--bad-bg); background: var(
 .next.done-today .label { color: var(--good); }
 .strip a.done:not(.sel) { border-color: var(--good); background: var(--good-bg); }
 .strip a.done:not(.sel) .w { color: var(--good); }
+.next.rest-today { border-color: var(--line); background: var(--bg); }
+.next.rest-today .label { color: var(--muted); }

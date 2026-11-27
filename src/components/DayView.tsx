@@ -65,12 +65,14 @@ export default function DayView({ date }: { date: string }) {
   const caption = (d: string) => {
     if (d === today && doneToday) { const e = todayEntries.find((x) => x.kind !== "rest") ?? todayEntries[0]; return `✓ ${e.kind === "rest" ? "Rest" : first(e.what)}`; }
     if (d === today) return todayTitle ? first(todayTitle) : "-";
-    if (d < today) { const e = entriesOn(d).find((x) => x.kind !== "rest"); return e ? first(e.what) : kindOf(d) === "rest" ? "Rest" : "-"; }
+    if (d < today) { const e = entriesOn(d).find((x) => x.kind !== "rest"); return e ? `✓ ${first(e.what)}` : kindOf(d) === "rest" ? "Rest" : "-"; }
     const it = plannedAt(d);
     if (!it) return "-";
     return it.cycle ? first(itemWorkoutIds(it, workouts, log).map(wById)[0]?.name ?? it.title) : first(it.title);
   };
   const window7 = [-3, -2, -1, 0, 1, 2, 3].map((n) => addDays(date, n));
+  /** a day you trained: green. Rest days stay grey. */
+  const trained = (d: string) => d <= today && entriesOn(d).some((e) => e.kind === "workout" || e.kind === "tour");
 
   useEffect(() => { // keep the selected tile in view on narrow screens
     stripRef.current?.querySelector('[aria-current="date"]')?.scrollIntoView({ inline: "center", block: "nearest" });
@@ -110,7 +112,7 @@ export default function DayView({ date }: { date: string }) {
 
       <nav className="strip" ref={stripRef} aria-label="Days">
         {window7.map((d) => (
-          <Link key={d} href={hrefFor(d)} className={`${d === date ? "sel" : ""} ${d === today ? "istoday" : ""} ${d < today ? "past" : ""} ${d === today && doneToday ? "done" : ""} k-${kindOf(d)}`} aria-current={d === date ? "date" : undefined}>
+          <Link key={d} href={hrefFor(d)} className={`${d === date ? "sel" : ""} ${d === today ? "istoday" : ""} ${d < today ? "past" : ""} ${trained(d) ? "done" : ""} k-${kindOf(d)}`} aria-current={d === date ? "date" : undefined}>
             <span className="d">{d === today ? "Today" : dow(d)}</span>
             <span className="dn">{parse(d).getDate()}</span>
             <span className="w">{caption(d)}</span>
@@ -121,8 +123,8 @@ export default function DayView({ date }: { date: string }) {
       <div className="two">
         <div className="stack">
           {isToday && doneToday && (
-            <section className="card next done-today" aria-live="polite">
-              <div className="label">✓ Done today</div>
+            <section className={`card next ${trained(today) ? "done-today" : "rest-today"}`} aria-live="polite">
+              <div className="label">{trained(today) ? "✓ Done today" : "Rest day"}</div>
               <div className="title">{todayEntries.map((e) => (e.kind === "rest" ? "Rest day" : e.what)).join(" + ")}</div>
               {todayEntries.length === 1 ? (
                 <div className="feelrow"><FeelPill feel={todayEntries[0].feel} /><VertPill ft={todayEntries[0].vert_ft} /><Chip p={todayEntries[0].pain_during} />{todayEntries[0].notes ? <span className="note">{todayEntries[0].notes}</span> : null}</div>
@@ -193,8 +195,8 @@ export default function DayView({ date }: { date: string }) {
           )}
 
           {isPast && (
-            <section className="card next" style={{ borderColor: "var(--line)" }}>
-              <div className="label" style={{ color: "var(--muted)" }}>Done · {dow(date)} {md(date)}</div>
+            <section className={`card next ${trained(date) ? "done-today" : ""}`} style={trained(date) ? undefined : { borderColor: "var(--line)" }}>
+              <div className="label" style={trained(date) ? undefined : { color: "var(--muted)" }}>{trained(date) ? "✓ " : ""}Done · {dow(date)} {md(date)}</div>
               {dayEntries.length ? (
                 <>
                   <div className="title" style={dayEntries.every((e) => e.kind === "rest") ? { color: "var(--muted)" } : undefined}>{dayEntries.map((e) => e.what).join(" + ")}</div>
