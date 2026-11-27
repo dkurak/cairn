@@ -5,3 +5,4 @@ __pycache__/
 *.tsbuildinfo
 next-env.d.ts
 .vercel
+garmin/out/

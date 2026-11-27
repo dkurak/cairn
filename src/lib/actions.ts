@@ -10,17 +10,18 @@ export const clampPain = (n: unknown) => Math.max(0, Math.min(10, Math.round(Num
 
 export async function loadAll(sb: SupabaseClient, userId: string): Promise<AppData> {
   const since = new Date(Date.now() - 1900 * 86400000).toISOString().slice(0, 10);
-  const [profile, workouts, plans, state, log, areas, checks, checkins] = await Promise.all([
+  const [profile, workouts, plans, state, log, areas, checks, checkins, exports] = await Promise.all([
     sb.from("profiles").select("id, display_name, role").eq("id", userId).single(),
-    sb.from("workouts").select("id, name, category, owner_id, rundown, notes").order("name"),
+    sb.from("workouts").select("id, name, category, owner_id, rundown, notes, version, updated_at").order("name"),
     sb.from("plans").select("id, owner_id, name, kind, items"),
     sb.from("plan_state").select("*").eq("user_id", userId).single(),
     sb.from("log_entries").select("*").eq("user_id", userId).order("date", { ascending: false }).order("created_at", { ascending: false }).limit(2000),
     sb.from("pain_areas").select("id, user_id, name, is_primary, active").eq("user_id", userId).order("created_at"),
     sb.from("pain_checks").select("id, area_id, date, pain, note").eq("user_id", userId).gte("date", since).limit(5000),
     sb.from("daily_checkins").select("date, feel").eq("user_id", userId).gte("date", since).limit(1000),
+    sb.from("garmin_exports").select("workout_id, version, exported_at").eq("user_id", userId),
   ]);
-  for (const r of [profile, workouts, plans, state, log, areas, checks, checkins]) if (r.error) throw r.error;
+  for (const r of [profile, workouts, plans, state, log, areas, checks, checkins, exports]) if (r.error) throw r.error;
   return {
     profile: profile.data as AppData["profile"],
     workouts: workouts.data as AppData["workouts"],
@@ -30,6 +31,7 @@ export async function loadAll(sb: SupabaseClient, userId: string): Promise<AppDa
     areas: areas.data as AppData["areas"],
     checks: checks.data as AppData["checks"],
     checkins: checkins.data as AppData["checkins"],
+    exports: exports.data as AppData["exports"],
   };
 }
 

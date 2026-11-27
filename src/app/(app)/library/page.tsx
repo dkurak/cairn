@@ -2,12 +2,16 @@
 import { useMemo, useState } from "react";
 import { useApp } from "@/components/AppProvider";
 import Rundown from "@/components/Rundown";
+import WorkoutHistory from "@/components/WorkoutHistory";
+import { WatchCard, WatchChip, useGarminDownload } from "@/components/Watch";
 
 export default function Library() {
   const { data, askCoach } = useApp();
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("All");
   const [open, setOpen] = useState<string | null>(null);
+  const [history, setHistory] = useState<string | null>(null);
+  const { download, busy } = useGarminDownload();
   const cats = useMemo(() => ["All", ...[...new Set(data.workouts.map((w) => w.category))].sort()], [data.workouts]);
   const list = data.workouts.filter((w) => (cat === "All" || w.category === cat) && w.name.toLowerCase().includes(q.toLowerCase()));
 
@@ -17,6 +21,7 @@ export default function Library() {
         <h1>Library</h1>
         <button className="askbtn" onClick={() => askCoach("I'd like a new set of workouts. I want to focus on: ", false)}>Build with coach</button>
       </div>
+      <WatchCard />
       <input
         className="search"
         type="search"
@@ -35,14 +40,17 @@ export default function Library() {
             <li key={w.id} style={{ display: "grid" }}>
               <button className="rowbtn" aria-expanded={open === w.id} onClick={() => setOpen(open === w.id ? null : w.id)}>
                 <strong>{w.name}{w.owner_id ? " (yours)" : ""}</strong>
-                <span className="tag">{w.category}</span>
+                <span className="row" style={{ flexWrap: "nowrap" }}><WatchChip w={w} /><span className="tag">{w.category}</span></span>
               </button>
               {open === w.id && (
                 <div style={{ display: "grid", gap: 8, paddingBottom: 8 }}>
                   <Rundown workout={w} />
                   <div className="row">
                     <button onClick={() => askCoach(`Can you change "${w.name}"? I'd like it to: `, false)}>Change with coach</button>
+                    <button disabled={busy} onClick={() => download(`id=${w.id}`)}>Download .fit</button>
+                    <button aria-expanded={history === w.id} onClick={() => setHistory(history === w.id ? null : w.id)}>History (v{w.version})</button>
                   </div>
+                  {history === w.id && <WorkoutHistory w={w} />}
                 </div>
               )}
             </li>

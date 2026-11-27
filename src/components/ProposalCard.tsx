@@ -38,6 +38,7 @@ function WorkoutDiff({ p, data }: { p: WorkoutProposal; data: AppData }) {
           <div className="note" style={notesChanged ? { background: "var(--good-bg)" } : undefined}>{p.notes || "(none)"}</div>
         </div>
       )}
+      {p.steps && <span className="note">Watch: {target === "new" ? "a new .fit to download" : "flagged \"Update watch\" in the Library after you save"}.{p.garmin_warnings?.length ? ` ${p.garmin_warnings.join(". ")}.` : ""}</span>}
       {removed.length > 0 && (
         <div className="block" style={{ borderLeftColor: "var(--bad)" }}>
           <div className="block-label" style={{ color: "var(--bad)" }}>Removed</div>

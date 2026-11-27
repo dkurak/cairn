@@ -78,12 +78,12 @@ export default function AppProvider({ initial, children }: { initial: AppData; c
       const target = workoutSaveTarget(p, data);
       if (target === "update_own" || target === "update_shared") {
         // RLS also enforces this: shared rows are admin-only
-        const { error } = await sb.from("workouts").update({ name: p.name, category: p.category, rundown: p.blocks, notes: p.notes, updated_by: uid }).eq("id", p.base_id!);
+        const { error } = await sb.from("workouts").update({ name: p.name, category: p.category, rundown: p.blocks, ...(p.steps ? { steps: p.steps } : {}), notes: p.notes, change_note: p.reason, updated_by: uid }).eq("id", p.base_id!);
         if (error) throw error;
       } else {
         let name = p.name;
         for (let n = 2; workouts.some((w) => w.owner_id === uid && w.name === name); n++) name = `${p.name} (${n})`;
-        const { data: row, error } = await sb.from("workouts").insert({ owner_id: uid, name, category: p.category, steps: [], rundown: p.blocks, notes: p.notes, updated_by: uid }).select("id").single();
+        const { data: row, error } = await sb.from("workouts").insert({ owner_id: uid, name, category: p.category, steps: p.steps ?? [], rundown: p.blocks, notes: p.notes, change_note: p.reason, updated_by: uid }).select("id").single();
         if (error) throw error;
         if (target === "fork") {
           // member changed a shared workout: point their own plans at the new private version

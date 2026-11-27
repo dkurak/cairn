@@ -1,4 +1,5 @@
 import type { AppData, PlanItem, RundownBlock } from "./types";
+import type { GarminStep } from "./garmin/steps";
 
 // Things the coach suggests. Nothing is saved until the person taps Save in the app.
 export type WorkoutProposal = {
@@ -11,6 +12,10 @@ export type WorkoutProposal = {
   category: string;
   notes: string;
   blocks: RundownBlock[];
+  /** Garmin watch steps to match the new rundown (only rows that changed are rebuilt) */
+  steps?: GarminStep[];
+  /** things the watch version can't match exactly */
+  garmin_warnings?: string[];
 };
 export type PlanProposal = {
   type: "plan";

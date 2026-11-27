@@ -14,6 +14,24 @@ export type Workout = {
   owner_id: string | null;
   rundown: RundownBlock[] | null;
   notes: string;
+  version: number;
+  updated_at: string;
+};
+
+/** Which version of a workout this person last downloaded for their watch. */
+export type GarminExport = { workout_id: string; version: number; exported_at: string };
+
+export type WorkoutVersion = {
+  id: string;
+  workout_id: string;
+  version: number;
+  name: string;
+  category: string;
+  rundown: RundownBlock[] | null;
+  notes: string;
+  change_note: string;
+  changed_by: string | null;
+  changed_at: string;
 };
 
 export type PlanItem = {
@@ -89,6 +107,7 @@ export type AppData = {
   areas: PainArea[];
   checks: PainCheck[];
   checkins: DailyCheckin[];
+  exports: GarminExport[];
 };
 
 export const PAIN_SCALE =
