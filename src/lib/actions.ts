@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AppData, EntryKind, Feel, LogEntry, Phase, PlanState, TravelInfo } from "./types";
 import { FEELS } from "./types";
-import { activePlan, doneMap, nextInCycle, planOf, primaryArea, todayISO, upNext } from "./rules";
+import { activePlan, doneMap, itemWorkoutIds, nextInCycle, planOf, primaryArea, todayISO, upNext } from "./rules";
 
 // All mutations live here so the browser (UI) and the server (chat tools) behave the same.
 // RLS keeps every call scoped to the signed-in user.
@@ -139,8 +139,59 @@ export function markDone(sb: SupabaseClient, state: PlanState, key: string, val:
 }
 
 export const setPhase = (sb: SupabaseClient, s: PlanState, phase: Phase) => patchState(sb, s.user_id, { phase });
-export const setTravel = (sb: SupabaseClient, s: PlanState, on: boolean, info?: TravelInfo) =>
-  patchState(sb, s.user_id, { travel: on, ...(on && !s.travel ? { travel_done: {} } : {}), ...(info ? { travel_info: info } : {}) });
+/** Back to traveling within this many days of switching home = the same trip, set progress kept. */
+export const TRAVEL_RESUME_DAYS = 3;
+const daysBetween = (a: string, b: string) => Math.round((+new Date(b + "T12:00:00") - +new Date(a + "T12:00:00")) / 86400000);
+
+/** Switching to Traveling now would pick the last trip back up (an accidental tap, or a short stop at home). */
+export const canResumeTravel = (s: PlanState, today = todayISO()) =>
+  !s.travel && !!s.travel_info?.ended && daysBetween(s.travel_info.ended, today) <= TRAVEL_RESUME_DAYS;
+
+/**
+ * Travel on/off. Going home keeps the travel set's progress and remembers the day. Going back to traveling
+ * continues that trip if it was recent (or `fresh: false`), otherwise starts the set over.
+ */
+export function setTravel(sb: SupabaseClient, s: PlanState, on: boolean, info?: TravelInfo, opts: { fresh?: boolean } = {}) {
+  const today = todayISO();
+  const prev = s.travel_info ?? {};
+  if (!on) return patchState(sb, s.user_id, { travel: false, ...(s.travel ? { travel_info: { ...prev, ended: today } } : {}) });
+  if (s.travel) return patchState(sb, s.user_id, info ? { travel_info: { ...prev, ...info } } : {}); // edit the current trip
+  const fresh = opts.fresh ?? !canResumeTravel(s, today);
+  const { ended: _, ...kept } = prev;
+  return patchState(sb, s.user_id, fresh
+    ? { travel: true, travel_done: {}, travel_info: { ...(info ?? {}), started: today } }
+    : { travel: true, travel_info: { ...kept, ...(info ?? {}) } });
+}
+
+/** Start the travel set over (a new trip while already traveling). */
+export const restartTravelSet = (sb: SupabaseClient, s: PlanState) =>
+  patchState(sb, s.user_id, { travel_done: {}, travel_info: { ...(s.travel_info ?? {}), started: todayISO() } });
+
+/** Un-tick a plan item (marked done or skipped by mistake). */
+export function unmarkDone(sb: SupabaseClient, s: PlanState, key: string) {
+  const map = { ...(s.travel ? s.travel_done : s.done) };
+  delete map[key];
+  return patchState(sb, s.user_id, s.travel ? { travel_done: map } : { done: map });
+}
+
+/**
+ * Logging what's up next counts as doing it, however it was logged ("Log a workout", the coach, a past day).
+ * Returns the item's title when it moved the plan on.
+ */
+export async function creditUpNext(sb: SupabaseClient, data: AppData, whats: string[], date: string) {
+  const n = upNext(data);
+  if (n.type !== "item") return null;
+  const it = n.item;
+  const names = itemWorkoutIds(it, data.workouts, data.log).map((id) => data.workouts.find((w) => w.id === id)?.name).filter(Boolean) as string[];
+  const lower = whats.map((w) => w.toLowerCase());
+  const hit =
+    (it.kind === "workout" && names.some((nm) => lower.includes(nm.toLowerCase()))) ||
+    (it.kind === "tour" && lower.includes("tour")) ||
+    (it.kind === "rest" && lower.includes("rest"));
+  if (!hit) return null;
+  await markDone(sb, data.state, it.key, date);
+  return it.title;
+}
 
 export async function skipUpNext(sb: SupabaseClient, data: AppData) {
   const n = upNext(data);

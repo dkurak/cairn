@@ -11,7 +11,8 @@
     "garmin:pull": "tsx --env-file=.env.local scripts/garmin-pull.mts",
     "test:garmin": "tsx scripts/test-garmin.mts",
     "test:programs": "tsx scripts/test-programs.mts",
-    "test": "tsx scripts/test-garmin.mts && tsx scripts/test-programs.mts"
+    "test": "tsx scripts/test-garmin.mts && tsx scripts/test-programs.mts && tsx scripts/test-travel.mts",
+    "test:travel": "tsx scripts/test-travel.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.14.0",

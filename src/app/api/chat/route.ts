@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { addPainArea, loadAll, setGoals, logEntries, markDone, savePainCheck, setPhase, setTravel, skipUpNext, startNextWeek, clampPain } from "@/lib/actions";
+import { addPainArea, creditUpNext, loadAll, setGoals, logEntries, markDone, savePainCheck, setPhase, setTravel, skipUpNext, startNextWeek, clampPain } from "@/lib/actions";
 import { activePlan, checksFor, doneMap, itemWorkoutIds, primaryArea, sortedLog, todayISO, tours, upNext } from "@/lib/rules";
 import type { PlanProposal, ProgramProposal, Proposal, WorkoutProposal } from "@/lib/proposals";
 import { digest, digestLine } from "@/lib/review";
@@ -328,7 +328,7 @@ export async function POST(req: Request) {
         if (i.completes_up_next && n.type === "item") {
           await markDone(sb, data.state, n.item.key, date);
           advanced = true;
-        }
+        } else advanced = !!(await creditUpNext(sb, data, [String(i.what)], date)); // it was what's up next anyway
         actions.push(`Logged: ${i.what}${Number.isInteger(i.pain_during) ? ` · pain ${clampPain(i.pain_during)}/10` : ""}${advanced ? " · up next moved on" : ""}`);
         return { ok: true, advanced };
       }

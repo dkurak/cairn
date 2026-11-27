@@ -40,7 +40,7 @@ Owner/admin: Dave. Other users (family, friends) can sign up and log their own w
 - Daily hip check banner until today's check is logged. The morning after a tour, it also fills that tour's next-morning pain.
 - Plans are sequences, not dates: "Up next" = first item not done. Missed a day? Just do what's next. Skip is allowed.
 - Home plan (7 items): Mon SKI1 + EZ1 / Tue CC (next in CC01 > CC05 > CC10 > CC15 > CC20) / Wed SKI2 / Thu EZ2 / Fri Rest (optional SKI3) / Sat Tour (SKI4 at trailhead, SKI3 after) / Sun SKI1.
-- Travel plan: TRV1 > TRV2 > TRV1 > TRV3, plus TRV4 Drive Reset at every stop on drive/flight days. Toggle travel mode; home plan progress is kept.
+- Travel plan: TRV1 > TRV2 > TRV1 > TRV3, plus TRV4 Drive Reset at every stop on drive/flight days. Toggle travel mode; home plan progress is kept. Switching home keeps the travel set and the day; back to Traveling within 3 days continues the same trip. "New trip - start over" on the Plan page resets it. Logging the up-next workout any way counts as doing it (`creditUpNext`); plan items can be ticked/unticked on the Plan page.
 - A plan item can hold several workouts; logging it creates one log entry per workout. Logging allows adding extra workouts (rare).
 - Every log entry can be edited later (notes at minimum).
 

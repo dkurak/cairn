@@ -87,7 +87,15 @@ export type Program = {
   updated_at: string;
 };
 
-export type TravelInfo = { gear?: "gym" | "bodyweight"; jog?: boolean; returns?: string };
+export type TravelInfo = {
+  gear?: "gym" | "bodyweight";
+  jog?: boolean;
+  returns?: string;
+  /** when this trip's travel set started */
+  started?: string;
+  /** the day they switched back home; switching on again soon after continues the same trip */
+  ended?: string;
+};
 
 export type PlanState = {
   user_id: string;

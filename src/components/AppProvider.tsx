@@ -2,7 +2,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
-import { loadAll, logEntries, markDone, patchState, setTravel } from "@/lib/actions";
+import { canResumeTravel, creditUpNext, loadAll, logEntries, markDone, patchState, setTravel } from "@/lib/actions";
 import { todayISO } from "@/lib/rules";
 import { workoutSaveTarget, type PlanProposal, type Proposal } from "@/lib/proposals";
 import type { AppData, TravelInfo } from "@/lib/types";
@@ -161,7 +161,14 @@ export default function AppProvider({ initial, children }: { initial: AppData; c
     askCoach(`I'm traveling${info.returns ? ` until ${info.returns}` : ""}. I have ${gear}${info.jog ? " and want to fit in some jogging" : ""}. Can you set up my travel plan?`);
   }
 
-  const value: Ctx = { data, sb, uid, today, status, setStatus, run, openLog: setSheet, openTravel: () => setTravelSheet(true), saveProposal, askCoach, coachOpen, setCoachOpen, outbox, clearOutbox: () => setOutbox(null) };
+  /** Traveling: back within a few days of switching home just continues that trip; otherwise ask about the new one. */
+  const openTravel = useCallback(() => {
+    if (canResumeTravel(data.state)) {
+      void run(() => setTravel(sb, data.state, true)).then((ok) => ok && setStatus("Back to your trip - picking up the travel set where you left off."));
+    } else setTravelSheet(true);
+  }, [data.state, run, sb]);
+
+  const value: Ctx = { data, sb, uid, today, status, setStatus, run, openLog: setSheet, openTravel, saveProposal, askCoach, coachOpen, setCoachOpen, outbox, clearOutbox: () => setOutbox(null) };
 
   return (
     <AppCtx.Provider value={value}>
@@ -176,7 +183,9 @@ export default function AppProvider({ initial, children }: { initial: AppData; c
           onSave={async (v) => {
             const ok = await run(async () => {
               await logEntries(sb, data, v.whats.map((what) => ({ what, date: v.date, pain_during: v.pain, feel: v.feel, notes: v.notes, vert_ft: what === "Tour" ? v.vert : null })));
+              // logged from Up next: that item is done. Logged any other way: it still counts if it's what's up next
               if (sheet.itemKey) await markDone(sb, data.state, sheet.itemKey, v.date);
+              else await creditUpNext(sb, data, v.whats, v.date ?? today);
             }, "Couldn't save. Check your connection and tap Save again.");
             if (ok) setSheet(null);
             return ok;
