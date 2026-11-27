@@ -1,0 +1,18 @@
+{
+  "exported": "2026-11-27",
+  "user": "Dave",
+  "plan_state": {"phase": "build", "travel": false, "week": 1,
+    "done": {"r1": "2026-11-23", "r2": "2026-11-24", "r3": "skipped", "r4": "2026-11-26"}},
+  "log": [
+    {"date": "2026-11-21", "what": "Tour", "vert": 1867, "painDuring": 10, "painNextAm": 6, "feel": "Rough",
+     "notes": "Washington Gulch / Gothic area. Right hip flexor hit 8-10 once fatigued. had to hike out b/c I came down too far skiers left"},
+    {"date": "2026-11-22", "what": "Hip check", "pain": 6},
+    {"date": "2026-11-23", "what": "Hip check", "pain": 3},
+    {"date": "2026-11-23", "what": "SKI1 Hip Strength + EZ1 Upper Core", "painDuring": 3, "feel": "Good"},
+    {"date": "2026-11-24", "what": "Hip check", "pain": 2},
+    {"date": "2026-11-24", "what": "CC01 Combo", "painDuring": 1, "feel": "Good", "notes": "Left tricep sore and cramping when I started pushups"},
+    {"date": "2026-11-25", "what": "Hip check", "pain": 1},
+    {"date": "2026-11-26", "what": "Hip check", "pain": 1},
+    {"date": "2026-11-26", "what": "EZ2 Light Full Body", "painDuring": 1, "feel": "Great", "notes": "Felts great. Keep these hip knee ups going."}
+  ]
+}

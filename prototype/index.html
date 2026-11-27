@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cairn</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: one narrow column, phone first. Summary (up next) on top, logging in a bottom sheet, history below. */
+:root {
+  --bg: #eef2f4;
+  --surface: #ffffff;
+  --ink: #17242c;
+  --muted: #5d6e78;
+  --line: #d5dee3;
+  --accent: #1d6a86;
+  --accent-ink: #ffffff;
+  --good: #2e7d4f;
+  --warn: #b7791f;
+  --bad: #b23b3b;
+  --good-bg: #e3f2e8;
+  --warn-bg: #fbf0dc;
+  --bad-bg: #f8e3e3;
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f171c; --surface: #18232a; --ink: #e5edf1; --muted: #93a4ae; --line: #2a3943;
+    --accent: #5fb3d3; --accent-ink: #0b1418;
+    --good: #6fcf97; --warn: #e6b45c; --bad: #ef8a8a;
+    --good-bg: #183327; --warn-bg: #3a2e17; --bad-bg: #3a1d1f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f171c; --surface: #18232a; --ink: #e5edf1; --muted: #93a4ae; --line: #2a3943;
+  --accent: #5fb3d3; --accent-ink: #0b1418;
+  --good: #6fcf97; --warn: #e6b45c; --bad: #ef8a8a;
+  --good-bg: #183327; --warn-bg: #3a2e17; --bad-bg: #3a1d1f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.4; }
+main { max-width: 560px; margin: 0 auto; padding: 16px 16px 48px; display: grid; gap: 14px; }
+.col { display: contents; }
+.o1{order:1}.o2{order:2}.o3{order:3}.o4{order:4}.o5{order:5}.o6{order:6}.o7{order:7}.o8{order:8}.o9{order:9}.o10{order:10}
+@media (min-width: 900px) {
+  main { max-width: 1180px; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: start; gap: 18px; padding: 24px; }
+  .head { grid-column: 1 / -1; }
+  .col { display: grid; gap: 14px; align-content: start; }
+  .col > * { order: 0; }
+}
+.rundown { list-style: none; margin: 0; padding: 0; display: grid; }
+.rundown li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 9px 0; border-top: 1px solid var(--line); }
+.rundown .ex { font-weight: 600; }
+.rundown .sr { font-variant-numeric: tabular-nums; text-align: right; color: var(--ink); white-space: nowrap; }
+.rundown .tip { grid-column: 1 / -1; color: var(--muted); font-size: .88rem; }
+.block { border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 10px; padding: 8px 12px 2px; margin-top: 8px; background: var(--bg); }
+.block .rundown li:first-child { border-top: none; }
+.block-label { font-family: var(--font-display); text-transform: uppercase; font-size: .95rem; color: var(--accent); letter-spacing: .02em; }
+.rundown-title { font-family: var(--font-display); font-size: 1.1rem; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+select#lib-pick { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; width: 100%; }
+h1, h2 { font-family: var(--font-display); font-weight: 700; letter-spacing: .01em; margin: 0; text-wrap: balance; }
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.15rem; text-transform: uppercase; color: var(--muted); }
+.top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.top small { color: var(--muted); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 10px; }
+.next { border: 2px solid var(--accent); }
+.next .label { font-family: var(--font-display); text-transform: uppercase; color: var(--accent); font-size: 1rem; }
+.next .title { font-family: var(--font-display); font-size: 2rem; line-height: 1.05; }
+.next .note { color: var(--muted); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+button { font: inherit; cursor: pointer; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 10px 14px; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; font-size: 1.1rem; padding: 14px 18px; flex: 1; }
+button.link { border: none; background: none; color: var(--accent); padding: 6px 0; text-decoration: underline; }
+button:disabled { opacity: .5; cursor: default; }
+.banner { border-radius: 12px; padding: 14px 16px; display: grid; gap: 10px; }
+.banner.warn { background: var(--warn-bg); }
+.banner.good { background: var(--good-bg); }
+.banner.bad { background: var(--bad-bg); }
+.banner strong { font-family: var(--font-display); font-size: 1.2rem; }
+.week { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.week li { display: grid; grid-template-columns: 28px 44px 1fr; gap: 8px; align-items: start; padding: 8px 4px; border-bottom: 1px solid var(--line); }
+.week li:last-child { border-bottom: none; }
+.week .tick { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; font-size: .8rem; font-weight: 700; }
+.week .done .tick { background: var(--good); border-color: var(--good); color: #fff; }
+.week .done .what { color: var(--muted); text-decoration: line-through; }
+.week .current .tick { border-color: var(--accent); }
+.week .current .what { font-weight: 700; }
+.week .day { color: var(--muted); font-size: .9rem; padding-top: 2px; }
+.pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.pills button { min-width: 40px; padding: 8px 0; text-align: center; font-variant-numeric: tabular-nums; }
+#am-pills, #f-pain { display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 4px; }
+#am-pills button, #f-pain button { min-width: 0; padding: 10px 0; border-radius: 8px; }
+.pills button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
+.chip { display: inline-block; border-radius: 999px; padding: 1px 9px; font-size: .85rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.chip.g { background: var(--good-bg); color: var(--good); }
+.chip.w { background: var(--warn-bg); color: var(--warn); }
+.chip.b { background: var(--bad-bg); color: var(--bad); }
+.log { list-style: none; margin: 0; padding: 0; }
+.log li { display: grid; grid-template-columns: 54px 1fr auto; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); align-items: start; }
+.log li:last-child { border-bottom: none; }
+.log .date { color: var(--muted); font-size: .9rem; font-variant-numeric: tabular-nums; }
+.log .meta { color: var(--muted); font-size: .9rem; }
+.log .right { display: grid; gap: 4px; justify-items: end; }
+.log .entry { border: none; background: none; padding: 0; text-align: left; color: inherit; display: grid; gap: 2px; border-radius: 6px; }
+.log .note-editor { grid-column: 1 / -1; display: grid; gap: 8px; padding-top: 4px; }
+.log .del { border: none; background: none; color: var(--muted); padding: 0 4px; font-size: .85rem; }
+.empty { color: var(--muted); }
+svg text { fill: var(--muted); font-family: var(--font-body); font-size: 11px; }
+.status { color: var(--muted); font-size: .9rem; }
+/* chat */
+.chat-log { display: grid; gap: 8px; max-height: 320px; overflow-y: auto; }
+.msg { padding: 10px 12px; border-radius: 12px; max-width: 88%; white-space: pre-wrap; }
+.msg.me { background: var(--accent); color: var(--accent-ink); justify-self: end; }
+.msg.ai { background: var(--bg); justify-self: start; }
+.msg.act { background: var(--good-bg); color: var(--good); font-size: .85rem; justify-self: start; }
+.chat-form { display: flex; gap: 8px; }
+.chat-form input { flex: 1; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.scale { color: var(--muted); font-size: .85rem; }
+/* bottom sheet */
+.sheet-wrap { position: fixed; inset: 0; background: rgba(10,20,25,.45); display: none; align-items: flex-end; justify-content: center; z-index: 10; }
+.sheet-wrap.open { display: flex; }
+.sheet { background: var(--surface); width: 100%; max-width: 520px; border-radius: 16px 16px 0 0; padding: 18px 16px 24px; display: grid; gap: 14px; max-height: 92%; overflow-y: auto; }
+.field { display: grid; gap: 6px; }
+.field label, .field .lbl { font-weight: 600; }
+.field .hint { color: var(--muted); font-size: .85rem; }
+input[type="number"], input[type="date"], textarea, select { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; width: 100%; }
+textarea { min-height: 64px; resize: vertical; }
+@media (prefers-reduced-motion: no-preference) { .sheet-wrap.open .sheet { animation: up .18s ease-out; } @keyframes up { from { transform: translateY(24px); } to { transform: none; } } }
+</style>
+</head>
+<body>
+<main>
+  <div class="top head">
+    <h1>Cairn</h1>
+    <small id="today"></small>
+  </div>
+  <div class="col left">
+    <div id="status" class="status o1" role="status">Loading your log…</div>
+    <section id="next" class="card next o3" aria-live="polite"></section>
+    <section class="card o10" id="library">
+      <h2>Workout library</h2>
+      <label for="lib-pick" class="meta">Look up any workout on your watch</label>
+      <select id="lib-pick"></select>
+      <div id="lib-body"></div>
+    </section>
+  </div>
+  <div class="col right">
+    <div id="morning" class="o2"></div>
+    <div id="greenlight" class="o5"></div>
+    <section class="card o4" id="chat-card" hidden>
+      <h2>Ask Claude</h2>
+      <div id="chat-log" class="chat-log" aria-live="polite">
+        <div class="msg ai">Tell me what you did or how the hip feels, and I'll log it. Try: "did SKI1, pain 2, felt good" or "what should I do today?"</div>
+      </div>
+      <form id="chat-form" class="chat-form">
+        <input id="chat-in" autocomplete="off" placeholder="Did SKI1, pain 3…" aria-label="Message Claude">
+        <button type="submit" id="chat-send">Send</button>
+      </form>
+    </section>
+    <section class="card o6">
+      <div class="top"><h2 id="weekhead">This week</h2><small id="weekcount"></small></div>
+      <ul id="week" class="week"></ul>
+    </section>
+    <section class="card o7">
+      <h2>Log something else</h2>
+      <div class="row">
+        <button id="btn-tour">Log a tour</button>
+        <button id="btn-other">Log a workout</button>
+        <button id="btn-rest">Rest day</button>
+      </div>
+    </section>
+    <section class="card o8">
+      <h2>Hip pain trend</h2>
+      <div id="chart"></div>
+    </section>
+    <section class="card o9">
+      <h2>Recent</h2>
+      <ul id="log" class="log"></ul>
+    </section>
+  </div>
+</main>
+
+<div id="sheet-wrap" class="sheet-wrap" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+  <form id="sheet" class="sheet">
+    <h2 id="sheet-title" style="color:var(--ink);font-size:1.4rem;text-transform:none">Log it</h2>
+    <div class="field" id="f-what-wrap">
+      <label for="f-what">What</label>
+      <select id="f-what"></select>
+      <div id="f-extra" style="display:grid;gap:6px"></div>
+      <button type="button" class="link" id="f-add" style="justify-self:start">+ Add another workout</button>
+    </div>
+    <div class="field">
+      <label for="f-date">Date</label>
+      <input type="date" id="f-date">
+    </div>
+    <div class="field" id="f-vert-wrap">
+      <label for="f-vert">Vert (ft)</label>
+      <input type="number" id="f-vert" inputmode="numeric" min="0" step="50" placeholder="e.g. 1200">
+    </div>
+    <div class="field">
+      <span class="lbl" id="pain-lbl">Hip pain during (0-10)</span>
+      <div class="pills" id="f-pain" role="group" aria-labelledby="pain-lbl"></div>
+      <span class="hint">0 none · 1-3 aware of it, moves fine (green zone) · 4-6 sharp, changes how you walk · 7-10 stops you</span>
+    </div>
+    <div class="field">
+      <span class="lbl" id="feel-lbl">How you felt</span>
+      <div class="pills" id="f-feel" role="group" aria-labelledby="feel-lbl"></div>
+    </div>
+    <div class="field">
+      <label for="f-notes">Notes (optional)</label>
+      <textarea id="f-notes" placeholder="Pain onset, ankle weight, anything odd"></textarea>
+    </div>
+    <div class="row">
+      <button type="button" id="f-cancel">Cancel</button>
+      <button type="submit" class="primary" id="f-save">Save</button>
+    </div>
+  </form>
+</div>
+
+<script>
+const ROTATION = [
+  { id: "r1", day: "Mon", title: "SKI1 Hip Strength + EZ1 Upper Core", note: "Rehab first, then easy upper body." },
+  { id: "r2", day: "Tue", title: "CC Combo", note: "Next CC in line. Use the hip swaps on crunch and tuck moves." },
+  { id: "r3", day: "Wed", title: "SKI2 Hip Endurance", note: "Build the weighted march toward 3:00." },
+  { id: "r4", day: "Thu", title: "EZ2 Light Full Body", note: "Easy. RPE 5. Rest is fine too." },
+  { id: "r7", day: "Fri", title: "Rest day", note: "Recover for the weekend. Optional: SKI3 Mobility Recov or an easy walk. Tap Done to log it.", rest: true },
+  { id: "r5", day: "Sat", title: "Tour", note: "SKI4 at the trailhead, SKI3 that evening.", tour: true },
+  { id: "r6", day: "Sun", title: "SKI1 Hip Strength", note: "Or rest if the tour left pain the next morning." },
+];
+const TRAVEL = [
+  { id: "t1", day: "Hotel", title: "TRV1 Hotel Hip", note: "Hip rehab, no gym needed. Pack the 5 lb ankle weights if you can." },
+  { id: "t2", day: "Hotel", title: "TRV2 Hotel Full Body", note: "Bodyweight, CC-style 40s on / 20s off. Hotel gym? Do a CC or EZ2 instead." },
+  { id: "t3", day: "Hotel", title: "TRV1 Hotel Hip", note: "Second hip session of the trip." },
+  { id: "t4", day: "Hotel", title: "TRV3 Hotel Upper", note: "Legs off. Hotel gym? EZ1 works too." },
+];
+const TRAVEL_NOTE = "Drive or flight day: TRV4 Drive Reset at every stop. Missed a day? Just do what's next.";
+const CALM = { title: "Wall march holds + EZ1", note: "Calm-down days. Wall march holds (from SKI1) and EZ1 Upper Core only. No tours, no hard stretching." };
+const WORKOUTS = ["Tour","SKI1 Hip Strength","SKI2 Hip Endurance","SKI3 Mobility Recov","SKI4 Trailhead","SKI5 Uphill","SKI6 Downhill","SKI7 Tour Inside",
+  "Wall march holds","EZ1 Upper Core","EZ2 Light Full Body","EZ3 Bike Core","STR1 Squat Bench","STR2 Deadlift Pull","STR3 Front Sq Press",
+  "CC01 Combo","CC05 Combo","CC10 Combo","CC15 Combo","CC20 Combo","SURF1 Paddle","SURF2 Pop-up Cond","TRV1 Hotel Hip","TRV2 Hotel Full Body","TRV3 Hotel Upper","TRV4 Drive Reset","Run","Bike","Hike","Other"];
+const DETAILS = {"STR1 Squat Bench":[{"label":"Warm-up","rows":[["Warm-up","1 round","Leg swings, knee hugs, hip circles, air squat, arm circles, pull-aparts, dead bug"]]},{"label":"Circuit \u00b7 5 rounds","rows":[["Back squat","5 @ 135 lb","Ramp: 5 @ 95, 5 @ 115. 5x5 ~80% of 165 max. Knees first"],["Band pull-apart","15",""]]},{"label":"Circuit \u00b7 4 rounds","rows":[["Bench press","5 @ 205 lb","Ramp: 5 @ 135, 5 @ 165. 4x5 ~80% of 255 max. +5 lb when clean"],["DB row","8 each side @ 60 lb",""]]},{"label":"Circuit \u00b7 3 rounds","rows":[["DB step-up","8 each side @ 50 lb","Drive knee up at top"],["Face pull","12 @ 40 lb",""],["SL calf raise","15 @ 25 lb","15 each leg"]]},{"rows":[["Finisher EMOM","6 min @ 50 lb","Optional EMOM 6: 6 goblet sq + 8 push-ups"]]}],"STR2 Deadlift Pull":[{"label":"Warm-up","rows":[["Warm-up","1 round","Leg swings, knee hugs, hip circles, air squat, arm circles, pull-aparts, dead bug"]]},{"label":"Circuit \u00b7 5 rounds","rows":[["Deadlift","5 @ 205 lb","Ramp: 5 @ 135, 5 @ 165. 5x5 ~80% of max. Stop if back rounds"],["Weighted pull-up","5 @ 35 lb","+35 lb. Bodyweight if tired"]]},{"label":"Circuit \u00b7 3 rounds","rows":[["SL RDL","8 each side @ 35 lb",""],["Farmer carry","45s @ 70 lb","70 lb each hand"]]},{"label":"Circuit \u00b7 3 rounds","rows":[["Goblet squat","12 @ 60 lb","3s down"],["Back extension","12",""],["Side plank","30s each side",""]]},{"rows":[["Finisher AMRAP","6 min @ 53 lb","Optional AMRAP 6: 12 KB swings + 6 burpees"]]}],"STR3 Front Sq Press":[{"label":"Warm-up","rows":[["Warm-up","1 round","Leg swings, knee hugs, hip circles, air squat, arm circles, pull-aparts, dead bug"]]},{"rows":[["Box jump","4 x 3","Step down. Skip if R hip flares"]]},{"label":"Circuit \u00b7 4 rounds","rows":[["Front squat","5 @ 105 lb","Ramp: 5 @ 45, 5 @ 75. 4x5. +5 lb when all sets clean"],["Dead bug","8",""]]},{"label":"Circuit \u00b7 4 rounds","rows":[["Overhead press","5 @ 125 lb","Ramp: 5 @ 75, 5 @ 95. 4x5 ~80% of 155 max. +5 lb when clean"],["Pull-up","10",""]]},{"label":"Circuit \u00b7 3 rounds","rows":[["DB side lunge","8 each side @ 35 lb",""],["Calf raise","15 @ 50 lb",""],["Face pull","12 @ 40 lb",""]]},{"rows":[["Finisher AMRAP","7 min @ 35 lb","Optional AMRAP 7: 5 thrusters, 7 push-up, 10 air sq"]]}],"EZ1 Upper Core":[{"rows":[["Arm circles","10",""],["Band pull-apart","15",""]]},{"label":"Circuit \u00b7 3 rounds","rows":[["Push-up","25","Easy day. RPE 5, nothing to failure"],["Pull-up","8",""],["Band pull-apart","15",""]]},{"label":"Circuit \u00b7 3 rounds","rows":[["DB shoulder press","10 @ 35 lb",""],["Chest-supported row","12 @ 45 lb",""],["Dead bug","10",""]]},{"label":"Circuit \u00b7 2 rounds","rows":[["Side plank","30s each side",""],["Farmer carry","45s @ 60 lb","60 lb each hand"]]}],"EZ2 Light Full Body":[{"rows":[["Leg swings fwd/back","20","10 each leg"],["Leg swings side","20","10 each leg"],["Walking knee hugs","10",""],["Hip circles","10",""],["Air squat","10",""]]},{"label":"Circuit \u00b7 3 rounds","rows":[["Goblet squat","10 @ 35 lb","Easy day. RPE 5, nothing to failure"],["Push-up","10",""],["DB RDL","10 @ 35 lb","35 lb each hand"]]},{"label":"Circuit \u00b7 3 rounds","rows":[["Step-up","8 each side","Bodyweight, slow"],["DB row","10 each side @ 35 lb",""]]},{"label":"Circuit \u00b7 2 rounds","rows":[["SL glute bridge","10 each side",""],["Dead bug","10",""],["Calf raise","20",""]]}],"EZ3 Bike Core":[{"rows":[["Easy bike","12 min","Zone 1-2 spin, legs flush"]]},{"label":"Circuit \u00b7 3 rounds","rows":[["Dead bug","10","Easy day. RPE 5, nothing to failure"],["Side plank","30s each side",""],["Superman","10",""],["Glute bridge","15",""]]},{"rows":[["Cat-cow","10",""],["Kneeling HF stretch","45s each side","Tuck pelvis, gentle"]]}],"SKI1 Hip Strength":[{"rows":[["Leg swings","2 min","Front-back and side-side, easy"],["Wall march hold","4 x 40s each side + extra R set","Knee above hip, back to wall, 3/10 max"],["Knee drive ankle wt","3 x 15 each side @ 5 lb + extra R set","5 lb, 2s up 2s down. 10 lb at 3/10 max"],["Seated knee lift","3 x 10 each side","Sit tall, lift knee off seat, hold 3s"],["SL glute bridge","3 x 12 each side","Squeeze glute at top"],["Side plank","3 x 30s each side",""],["Dead bug","3 x 10","Low back flat"]]}],"SKI2 Hip Endurance":[{"rows":[["Leg swings","2 min",""],["Weighted march","3 x 2 min @ 5 lb","Ankle wts 5 lb, slow. Build 2:00 to 3:00"],["Step-up w pack","3 x 10 each side + extra R set","Wear touring pack, drive knee at top"],["Knee drive ankle wt","2 x 20 each side @ 5 lb","Ankle wts, controlled"],["Side-lying leg raise","3 x 15 each side","Glute med, toes forward"],["Dead bug","2 x 10",""]]}],"SKI3 Mobility Recov":[{"rows":[["Easy bike","8 min","Optional. Easy spin to warm up"],["Leg swings","90s",""],["Cat-cow","10","Arch look up, round look down"],["Kneeling HF stretch","2 x 45s each side","Tuck pelvis, squeeze glute"],["90/90 switches","2 x 10","Gentle, stay out of rotation pain"],["Pigeon / figure-4","2 x 45s each side",""],["Couch stretch","2 x 45s each side","Week 3+ only, skip if sharp"],["Knee-wall ankle mob","10 each side",""],["Calf raise","20",""]]}],"SKI4 Trailhead":[{"rows":[["Leg swings","90s",""],["Walking knee hugs","10",""],["Easy march","60s","No weights, easy high knees"],["Kneeling HF stretch","20s each side","Short and gentle, not a deep stretch"]]}],"SKI5 Uphill":[{"rows":[["Leg swings","90s",""],["Walking knee hugs","10",""],["Step-up w pack","4 x 10 each side","25-30 lb pack, high box, drive knee"]]},{"label":"Circuit \u00b7 3 rounds","rows":[["SL RDL","8 each side @ 35 lb",""],["Knee drive ankle wt","15 each side @ 10 lb",""]]},{"label":"Circuit \u00b7 3 rounds","rows":[["Weighted march","3 min @ 10 lb","10 lb ankle wts, steady"],["SL calf raise","15 each side",""]]},{"rows":[["Copenhagen plank","2 x 20s each side","Top leg on bench, short lever ok"]]}],"SKI6 Downhill":[{"rows":[["Leg swings","90s",""],["Air squat","10",""],["Lateral bound","4 x 12","6 each way, stick landing 2s"]]},{"label":"Circuit \u00b7 3 rounds","rows":[["Wall sit","60s @ 25 lb","Plate on lap, thighs parallel"],["Tempo goblet squat","8 @ 50 lb","4s down, 1s pause"]]},{"label":"Circuit \u00b7 3 rounds","rows":[["Box jump","5","Step down"],["DB side lunge","8 each side @ 35 lb",""]]},{"label":"Circuit \u00b7 3 rounds","rows":[["Cable woodchop","10 each side",""],["Dead bug","10",""]]}],"SKI7 Tour Inside":[{"rows":[["Stair stepper","5 min","Easy, no pack"],["Stair stepper","50 min @ 25 lb","25 lb pack, Zone 2 skin-track pace"],["Stair stepper","5 min",""]]}],"SURF1 Paddle":[{"rows":[["Arm circles","10",""],["Band pull-apart","15",""],["Cat-cow","8",""],["Thoracic rotation","16","8 each side"]]},{"label":"Circuit \u00b7 4 rounds","rows":[["Pull-up","8",""],["Prone Y-T-W","8","8 each letter, chest on floor"],["Push-up","15",""]]},{"label":"Circuit \u00b7 3 rounds","rows":[["Band paddle pull","20","Straight arms, alternate like paddling"],["Superman hold","30s","Chest and arms up, paddle position"]]},{"label":"Circuit \u00b7 3 rounds","rows":[["Pop-up","8","Prone to stance. R hip: go slow"],["Cobra hold","30s",""]]}],"SURF2 Pop-up Cond":[{"rows":[["Arm circles","10",""],["Leg swings","20","10 each leg"],["Inchworm","5",""]]},{"label":"Circuit \u00b7 5 rounds","rows":[["Burpee pop-up","40s","Land in surf stance each rep"],["Skater hop","40s",""],["Band paddle pull","40s",""],["Rotational chop","40s","Cable or band, switch sides each round"]]},{"label":"Circuit \u00b7 3 rounds","rows":[["Single-leg balance","30s each side","Bosu or pad if available"],["Side plank","30s each side",""]]}],"CC01 Combo":[{"label":"Set 1 \u00b7 each move 3 x 40s on / 20s off, then the next","rows":[["Side lateral raise","3 x 40s @ 10 lb",""],["B-stance squat","3 x 40s @ 25 lb","Switch lead leg each round"],["Close grip row","3 x 40s @ 40 lb",""],["Chest press","3 x 40s @ 20 lb",""]]},{"label":"Set 2 \u00b7 each move 3 x 40s on / 20s off, then the next","rows":[["RDL","3 x 40s @ 25 lb",""],["ISO hold w bottom curl","3 x 40s @ 12.5 lb",""],["Overhead triceps ext","3 x 40s @ 25 lb",""],["Dead bug","3 x 40s",""]]}],"CC05 Combo":[{"label":"Set 1 \u00b7 each move 3 x 40s on / 20s off, then the next","rows":[["Alt Arnold press","3 x 40s @ 15 lb",""],["Goblet squat","3 x 40s @ 40 lb",""],["Skiers","3 x 40s @ 15 lb","DB skier swing"],["Close grip row","3 x 40s @ 40 lb",""]]},{"label":"Set 2 \u00b7 each move 3 x 40s on / 20s off, then the next","rows":[["Hammer curl","3 x 40s @ 15 lb",""],["SDL knees soft","3 x 40s @ 25 lb",""],["Triceps press","3 x 40s @ 20 lb",""],["Rev crunch to extension","3 x 40s","R hip >3/10: swap to dead bug"]]}],"CC10 Combo":[{"label":"Set 1 \u00b7 each move 3 x 40s on / 20s off, then the next","rows":[["ISO hold w bottom curl","3 x 40s @ 12.5 lb",""],["Lateral lunge","3 x 40s @ 25 lb",""],["Overhead triceps ext","3 x 40s @ 25 lb",""],["Squeeze press","3 x 40s @ 20 lb",""]]},{"label":"Set 2 \u00b7 each move 3 x 40s on / 20s off, then the next","rows":[["Bent arm lateral raise","3 x 40s @ 12.5 lb",""],["Sumo squat","3 x 40s @ 55 lb",""],["Supinated grip row","3 x 40s @ 20 lb","Dumbbells, palms up"],["Tuck to extension","3 x 40s","R hip >3/10: swap to dead bug"]]}],"CC15 Combo":[{"label":"Set 1 \u00b7 each move 3 x 40s on / 20s off, then the next","rows":[["Upright row","3 x 40s @ 12.5 lb",""],["RDL","3 x 40s @ 30 lb",""],["Alt chest press","3 x 40s @ 25 lb",""],["Skiers","3 x 40s @ 12.5 lb","DB skier swing"]]},{"label":"Set 2 \u00b7 each move 3 x 40s on / 20s off, then the next","rows":[["Hammer curl","3 x 40s @ 15 lb",""],["Narrow squat","3 x 40s @ 30 lb","Feet hip width"],["Close grip row","3 x 40s @ 40 lb",""],["Dead bug","3 x 40s",""]]}],"CC20 Combo":[{"label":"Set 1 \u00b7 each move 3 x 40s on / 20s off, then the next","rows":[["Upright row","3 x 40s @ 12.5 lb",""],["Alt reverse lunge","3 x 40s @ 25 lb","R hip >3/10: swap to step-up"],["Pronated grip row","3 x 40s @ 20 lb",""],["Overhead triceps ext","3 x 40s @ 25 lb",""]]},{"label":"Set 2 \u00b7 each move 3 x 40s on / 20s off, then the next","rows":[["Wide curl","3 x 40s @ 15 lb",""],["Lateral lunge","3 x 40s @ 30 lb",""],["Squeeze press","3 x 40s @ 20 lb",""],["Rev crunch to extension","3 x 40s","R hip >3/10: swap to dead bug"]]}],"TRV1 Hotel Hip":[{"rows":[["Leg swings","2 min","Front-back and side-side, easy"],["Wall march hold","4 x 40s each side + extra R set","Back to hotel wall, knee above hip, 3/10 max"],["Standing knee drive","3 x 15 each side + extra R set","Ankle wts if packed, else 3s up 3s down"],["Seated knee lift","3 x 10 each side","Hotel chair, sit tall, hold 3s"],["Slow march","3 x 2 min","In place, ankle wts if packed. Build to 3:00"],["SL glute bridge","3 x 12 each side","Floor or bed edge, squeeze glute"]]},{"label":"Circuit \u00b7 2 rounds","rows":[["Side plank","30s each side",""],["Dead bug","10",""]]}],"TRV2 Hotel Full Body":[{"label":"Set 1 \u00b7 each move 3 x 40s on / 20s off, then the next","rows":[["Push-up","3 x 40s",""],["Tempo air squat","3 x 40s","3s down, 1s pause"],["SL RDL bodyweight","3 x 40s","Switch legs each round, reach long"],["Plank shoulder tap","3 x 40s","Hips still"]]},{"label":"Set 2 \u00b7 each move 3 x 40s on / 20s off, then the next","rows":[["Pike push-up","3 x 40s","Feet on bed to make it harder"],["Side lunge","3 x 40s","Alternate sides"],["Glute bridge","3 x 40s","Squeeze 2s at top"],["Dead bug","3 x 40s",""]]}],"TRV3 Hotel Upper":[{"rows":[["Arm circles","10",""],["Thoracic rotation","16","8 each side"]]},{"label":"Circuit \u00b7 3 rounds","rows":[["Push-up","25","Legs off day. RPE 6"],["Chair dip","12","Sturdy chair or bed edge"],["Prone Y-T-W","8","8 each letter"]]},{"label":"Circuit \u00b7 3 rounds","rows":[["Pike push-up","8",""],["Superman","10",""],["Diamond push-up","8",""]]},{"label":"Circuit \u00b7 2 rounds","rows":[["Side plank","30s each side",""],["Dead bug","10",""]]}],"TRV4 Drive Reset":[{"rows":[["Leg swings","20","Every stop. 10 each leg, hold the car"],["Walking knee hugs","10",""],["Standing HF stretch","30s each side","Short stance, tuck pelvis, gentle"],["Glute bridge","10","Optional, if there is grass or a hotel floor"],["Calf raise","20",""],["Thoracic rotation","10","5 each side"]]}],"Wall march holds":[{"rows":[["Wall march hold","4 x 40s each side + extra R set","Knee above hip, back to wall, 3/10 max. Calm-down: this is the whole session"]]}]};
+const CC_ORDER = ["CC01 Combo","CC05 Combo","CC10 Combo","CC15 Combo","CC20 Combo"];
+function nextCC() {
+  const last = [...entries].filter(e => CC_ORDER.includes(e.what)).sort((a,b) => a.date < b.date ? 1 : a.date > b.date ? -1 : (b.ts||0)-(a.ts||0))[0];
+  return last ? CC_ORDER[(CC_ORDER.indexOf(last.what) + 1) % CC_ORDER.length] : CC_ORDER[0];
+}
+function rundownFor(name) {
+  const blocks = DETAILS[name];
+  if (!blocks) return "";
+  const rows = (rs) => `<ul class="rundown">${rs.map(([ex, sr, tip]) =>
+    `<li><span class="ex">${esc(ex)}</span><span class="sr">${esc(sr)}</span>${tip ? `<span class="tip">${esc(tip)}</span>` : ""}</li>`).join("")}</ul>`;
+  return `<div class="rundown-title">${esc(name)}</div>` + blocks.map(b => b.label
+    ? `<div class="block"><div class="block-label">${esc(b.label)}</div>${rows(b.rows)}</div>`
+    : rows(b.rows)).join("");
+}
+function workoutsIn(item) {
+  if (item.calm) return ["Wall march holds", "EZ1 Upper Core"];
+  if (item.tour) return ["SKI4 Trailhead", "SKI3 Mobility Recov"];
+  if (item.rest) return ["SKI3 Mobility Recov"];
+  if (item.title === "CC Combo") return [nextCC()];
+  return item.title.replace(/\s*\(or rest\)/, "").split(" + ").map(x => x.trim());
+}
+const FEELS = ["Rough","OK","Good","Great"];
+
+let db = null, entries = [], state = { phase: "calm", done: {}, week: 1 }, stateLoaded = false, logLoaded = false;
+let form = null; // {rotationId, what, tour}
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const todayISO = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+const fmtDate = (iso) => { const [y,m,d] = iso.split("-").map(Number); return new Date(y, m-1, d).toLocaleDateString(undefined, { month: "short", day: "numeric" }); };
+const painClass = (p) => p == null ? "" : p <= 3 ? "g" : p <= 6 ? "w" : "b";
+const painChip = (p, label) => p == null ? "" : `<span class="chip ${painClass(p)}">${label ? label + " " : ""}${p}/10</span>`;
+const round50 = (n) => Math.round(n / 50) * 50;
+
+$("today").textContent = new Date().toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+
+function setStatus(msg) { $("status").textContent = msg || ""; $("status").style.display = msg ? "" : "none"; }
+
+const plan = () => state.travel ? TRAVEL : ROTATION;
+const doneMap = () => (state.travel ? state.tdone : state.done) || {};
+function nextItem() {
+  if (state.phase === "calm") return { calm: true, ...CALM };
+  return plan().find(r => !doneMap()[r.id]) || null;
+}
+
+function renderNext() {
+  const n = nextItem();
+  const el = $("next");
+  if (n && n.calm) {
+    el.innerHTML = `<div class="label">Up next · calm-down</div>
+      <div class="title">${esc(n.title)}</div>
+      <div class="note">${esc(n.note)}</div>
+      ${state.travel ? `<div class="note">Traveling: wall march holds work against any hotel wall. TRV4 Drive Reset at every stop.</div>` : ""}
+      ${hipChecks()[0] ? `<div>Latest hip check: ${painChip(hipChecks()[0].pain)} <span class="note">(${fmtDate(hipChecks()[0].date)}) · need 3 or less to start</span></div>` : ""}
+      <div class="row"><button class="primary" id="do-next">Done - log it</button></div>
+      ${workoutsIn(n).map(rundownFor).join("")}
+      <div class="row"><button class="link" id="start-plan">Everyday pain is 3/10 or less - start the plan</button></div>`;
+    $("do-next").onclick = () => openSheet({ what: "Wall march holds + EZ1 Upper Core" });
+    $("start-plan").onclick = () => saveState({ ...state, phase: "build" });
+  } else if (n) {
+    el.innerHTML = `<div class="label">Up next · ${esc(n.day)}${state.travel ? " · travel mode" : ""}</div>
+      <div class="title">${esc(n.title === "CC Combo" ? nextCC() : n.title)}</div>
+      <div class="note">${esc(n.note)}${state.travel ? "<br>" + esc(TRAVEL_NOTE) : ""}</div>
+      <div class="row"><button class="primary" id="do-next">Done - log it</button><button id="skip-next">Skip</button></div>
+      ${workoutsIn(n).map(rundownFor).join("")}`;
+    $("do-next").onclick = () => n.rest ? openSheet({ rotationId: n.id, what: "Rest", rest: true }) : openSheet({ rotationId: n.id, what: n.tour ? "Tour" : (n.title === "CC Combo" ? nextCC() : n.title), tour: !!n.tour });
+    $("skip-next").onclick = () => markDone(n.id, "skipped");
+  } else {
+    el.innerHTML = state.travel ? `<div class="label">Travel set done</div>
+      <div class="title">Nice work on the road</div>
+      <div class="row"><button class="primary" id="new-week">Run the travel set again</button></div>`
+      : `<div class="label">Week ${state.week || 1} done</div>
+      <div class="title">Nice work</div>
+      <div class="row"><button class="primary" id="new-week">Start next week</button></div>`;
+    $("new-week").onclick = () => saveState(state.travel ? { ...state, tdone: {} } : { ...state, done: {}, week: (state.week || 1) + 1 });
+  }
+}
+
+function renderWeek() {
+  const n = nextItem(), list = plan(), dm = doneMap();
+  const doneCount = list.filter(r => dm[r.id]).length;
+  $("weekhead").textContent = state.travel ? "Travel set" : "This week";
+  $("weekcount").textContent = state.phase === "calm" ? "Starts after calm-down" : `${doneCount} of ${list.length}`;
+  $("week").innerHTML = list.map((r, i) => {
+    const d = dm[r.id];
+    const cls = d ? "done" : (n && n.id === r.id ? "current" : "");
+    return `<li class="${cls}"><span class="tick" aria-hidden="true">${d ? (d === "skipped" ? "–" : "✓") : i + 1}</span>
+      <span class="day">${r.day}</span><span class="what">${esc(r.title)}${d === "skipped" ? " (skipped)" : ""}</span></li>`;
+  }).join("") + (state.travel ? `<li style="grid-template-columns:1fr" class="note">${esc(TRAVEL_NOTE)}</li>` : "")
+    + `<li style="grid-template-columns:1fr;border:none"><div class="row">
+      <button id="toggle-travel">${state.travel ? "Back home - resume my plan" : "I'm traveling"}</button>
+      ${state.phase === "build" ? `<button class="link" id="back-calm">Hip flared? Back to calm-down</button>` : ""}</div></li>`;
+  $("toggle-travel").onclick = () => saveState({ ...state, travel: !state.travel, tdone: state.travel ? (state.tdone || {}) : {} });
+  const b = $("back-calm"); if (b) b.onclick = () => saveState({ ...state, phase: "calm" });
+}
+
+function tours() { return entries.filter(e => e.what === "Tour").sort((a,b) => a.date < b.date ? 1 : -1); }
+
+const SCALE = "0 none · 1-3 aware of it, moves fine · 4-6 sharp, changes how you walk · 7-10 stops you";
+function hipChecks() { return entries.filter(e => e.what === "Hip check").sort((a,b) => a.date < b.date ? 1 : -1); }
+async function saveHipCheck(pain, date) {
+  date = date || todayISO();
+  const existing = hipChecks().find(h => h.date === date);
+  if (existing) await db.collection("log").doc(existing.id).update({ pain });
+  else await db.collection("log").add({ what: "Hip check", date, pain, ts: Date.now() });
+  const t = tours()[0];
+  if (t && t.painNextAm == null && t.date < date) {
+    const dayAfter = new Date(t.date + "T12:00:00"); dayAfter.setDate(dayAfter.getDate() + 1);
+    if (dayAfter.toISOString().slice(0,10) === date) await db.collection("log").doc(t.id).update({ painNextAm: pain });
+  }
+}
+function renderMorning() {
+  const el = $("morning");
+  const today = hipChecks().find(h => h.date === todayISO());
+  if (today || !db) { el.innerHTML = ""; return; }
+  const t = tours()[0];
+  const afterTour = t && t.painNextAm == null && t.date < todayISO();
+  el.innerHTML = `<div class="banner warn"><strong>How's the hip today? (0-10)</strong>
+    <span>${afterTour ? `Morning after your ${fmtDate(t.date)} tour. This number decides your next tour.` : "Everyday pain, walking around. This decides when you move past calm-down."}</span>
+    <div class="pills" id="am-pills">${Array.from({length: 11}, (_, i) => `<button data-v="${i}">${i}</button>`).join("")}</div>
+    <span class="scale">${SCALE}</span></div>`;
+  el.querySelectorAll("#am-pills button").forEach(b => b.onclick = async () => {
+    el.querySelectorAll("button").forEach(x => x.disabled = true);
+    try { await saveHipCheck(Number(b.dataset.v)); }
+    catch (e) { setStatus("Couldn't save that. Try again in a moment."); el.querySelectorAll("button").forEach(x => x.disabled = false); }
+  });
+}
+
+function renderGreenlight() {
+  const el = $("greenlight");
+  const t = tours()[0];
+  if (state.phase === "calm") { el.innerHTML = `<div class="banner bad"><strong>No tours yet</strong><span>Calm-down first. When everyday pain is 3/10 or less, tap "start the plan" in Up next.</span></div>`; return; }
+  if (!t) { el.innerHTML = `<div class="banner good"><strong>Next tour: 1,000-1,500 ft</strong><span>Start small, then add 20-25% a week if the pain is gone the next morning.</span></div>`; return; }
+  const v = t.vert || 0;
+  if (t.painNextAm == null && t.date < todayISO()) { el.innerHTML = ""; return; }
+  if (t.painDuring != null && t.painDuring > 3) {
+    el.innerHTML = `<div class="banner bad"><strong>Step back: 1,000-1,500 ft</strong><span>Last tour hit ${t.painDuring}/10. Stay in the green zone (3 or less) before adding vert.</span></div>`;
+  } else if (t.painNextAm != null && t.painNextAm > 0) {
+    el.innerHTML = `<div class="banner warn"><strong>Hold at ${v ? round50(v).toLocaleString() : "the same"} ft</strong><span>Pain was still there the next morning (${t.painNextAm}/10). Repeat before adding.</span></div>`;
+  } else if (t.painNextAm === 0) {
+    el.innerHTML = `<div class="banner good"><strong>Green light: ${round50(v*1.2).toLocaleString()}-${round50(v*1.25).toLocaleString()} ft</strong><span>Last tour was clean during and the next morning. Add 20-25%.</span></div>`;
+  } else { el.innerHTML = ""; }
+}
+
+let editingId = null;
+function renderLog() {
+  const ae = document.activeElement;
+  if (editingId && ae && ae.id === "note-edit") return; // don't wipe notes mid-typing
+  const list = [...entries].sort((a,b) => (a.date === b.date ? (b.ts||0)-(a.ts||0) : a.date < b.date ? 1 : -1)).slice(0, 20);
+  if (!list.length) { $("log").innerHTML = `<li class="empty" style="display:block">Nothing logged yet. Your first Done will show up here.</li>`; return; }
+  $("log").innerHTML = list.map(e => `<li>
+    <span class="date">${fmtDate(e.date)}</span>
+    <button class="entry" data-id="${esc(e.id)}" aria-expanded="${e.id === editingId}" aria-label="Edit notes for ${esc(e.what)} on ${fmtDate(e.date)}">
+      <strong>${esc(e.what)}</strong>${e.vert ? ` · ${Number(e.vert).toLocaleString()} ft` : ""}
+      <span class="meta">${[e.feel, e.notes].filter(Boolean).map(esc).join(" · ") || (e.id === editingId ? "" : "Tap to add notes")}</span></button>
+    <span class="right">${painChip(e.painDuring)}${e.what === "Hip check" ? painChip(e.pain) : ""}${e.painNextAm != null ? painChip(e.painNextAm, "AM") : ""}
+      <button class="del" data-id="${esc(e.id)}" aria-label="Delete ${esc(e.what)} on ${fmtDate(e.date)}">Delete</button></span>
+    ${e.id === editingId ? `<div class="note-editor">
+      <label for="note-edit" class="meta">Notes</label>
+      <textarea id="note-edit">${esc(e.notes || "")}</textarea>
+      <div class="row"><button type="button" id="note-cancel">Cancel</button><button type="button" class="primary" id="note-save">Save notes</button></div>
+    </div>` : ""}
+  </li>`).join("");
+  $("log").querySelectorAll(".entry").forEach(b => b.onclick = () => {
+    editingId = editingId === b.dataset.id ? null : b.dataset.id;
+    renderLog();
+    const t = $("note-edit"); if (t) { t.focus(); t.setSelectionRange(t.value.length, t.value.length); }
+  });
+  const cancel = $("note-cancel"); if (cancel) cancel.onclick = () => { editingId = null; renderLog(); };
+  const save = $("note-save"); if (save) save.onclick = async () => {
+    const id = editingId, notes = $("note-edit").value.trim().slice(0, 1000);
+    save.disabled = true;
+    try {
+      await db.collection("log").doc(id).update(notes ? { notes } : { notes: "" });
+      editingId = null; $("note-edit").blur(); renderLog();
+    } catch (e) { setStatus("Couldn't save notes. Try again."); save.disabled = false; }
+  };
+  $("log").querySelectorAll(".del").forEach(b => b.onclick = async () => {
+    if (b.dataset.confirm) {
+      b.disabled = true;
+      try { await db.collection("log").doc(b.dataset.id).delete(); } catch (e) { setStatus("Couldn't delete. Try again."); b.disabled = false; }
+    } else { b.dataset.confirm = "1"; b.textContent = "Tap to confirm"; setTimeout(() => { if (b.isConnected) { delete b.dataset.confirm; b.textContent = "Delete"; } }, 4000); }
+  });
+}
+
+function renderChart() {
+  const pv = (e) => e.painDuring ?? e.pain;
+  const pts = entries.filter(e => pv(e) != null).map(e => ({ ...e, painDuring: pv(e) })).sort((a,b) => a.date < b.date ? -1 : a.date > b.date ? 1 : (a.ts||0)-(b.ts||0)).slice(-20);
+  if (pts.length < 2) { $("chart").innerHTML = `<p class="empty">Log a few sessions to see the trend. Goal: everything at 3 or below.</p>`; return; }
+  const W = 480, H = 160, L = 26, R = 10, T = 10, B = 24;
+  const x = (i) => L + (i * (W - L - R)) / (pts.length - 1);
+  const y = (p) => T + ((10 - p) * (H - T - B)) / 10;
+  const line = pts.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(p.painDuring).toFixed(1)}`).join(" ");
+  const area = `${line} L${x(pts.length-1).toFixed(1)},${y(0)} L${x(0).toFixed(1)},${y(0)} Z`;
+  const color = (p) => p <= 3 ? "var(--good)" : p <= 6 ? "var(--warn)" : "var(--bad)";
+  $("chart").innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Hip pain from sessions and daily checks, last ${pts.length} entries">
+    <rect x="${L}" y="${y(3)}" width="${W-L-R}" height="${y(0)-y(3)}" fill="var(--good-bg)"/>
+    ${[0,3,5,10].map(v => `<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${v}</text>`).join("")}
+    <path d="${area}" fill="var(--accent)" opacity=".08"/>
+    <path d="${line}" fill="none" stroke="var(--accent)" stroke-width="2"/>
+    ${pts.map((p,i) => `<circle cx="${x(i)}" cy="${y(p.painDuring)}" r="${i === pts.length-1 ? 5 : 3.5}" fill="${color(p.painDuring)}"/>`).join("")}
+    <text x="${L}" y="${H-6}">${fmtDate(pts[0].date)}</text><text x="${W-R}" y="${H-6}" text-anchor="end">${fmtDate(pts[pts.length-1].date)}</text>
+  </svg>`;
+}
+
+function renderAll() { renderNext(); renderWeek(); renderMorning(); renderGreenlight(); renderLog(); renderChart(); }
+
+/* ---------- library ---------- */
+$("lib-pick").innerHTML = Object.keys(DETAILS).map(k => `<option>${esc(k)}</option>`).join("");
+$("lib-pick").onchange = () => { $("lib-body").innerHTML = rundownFor($("lib-pick").value); };
+$("lib-pick").value = "SKI1 Hip Strength"; $("lib-body").innerHTML = rundownFor("SKI1 Hip Strength");
+
+/* ---------- logging sheet ---------- */
+let painVal = null, feelVal = null;
+function pills(container, values, onPick) {
+  container.innerHTML = values.map(v => `<button type="button" aria-pressed="false" data-v="${esc(v)}">${esc(v)}</button>`).join("");
+  container.querySelectorAll("button").forEach(b => b.onclick = () => {
+    container.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", "false"));
+    b.setAttribute("aria-pressed", "true"); onPick(b.dataset.v);
+  });
+}
+const optionsHtml = (sel) => (WORKOUTS.includes(sel) ? WORKOUTS : [sel, ...WORKOUTS]).map(w => `<option${w === sel ? " selected" : ""}>${esc(w)}</option>`).join("");
+$("f-what").innerHTML = optionsHtml("Other");
+const allWhats = () => [$("f-what").value, ...[...document.querySelectorAll(".f-what-x")].map(x => x.value)].filter((v, i, a) => v && a.indexOf(v) === i);
+function syncVert() { $("f-vert-wrap").style.display = allWhats().includes("Tour") ? "" : "none"; }
+$("f-what").onchange = syncVert;
+function addExtra(val) {
+  const row = document.createElement("div"); row.className = "row"; row.style.flexWrap = "nowrap";
+  const n = document.querySelectorAll(".f-what-x").length + 2;
+  row.innerHTML = `<select class="f-what-x" id="f-what-${n}" aria-label="Workout ${n}" style="flex:1">${optionsHtml(val || "EZ1 Upper Core")}</select><button type="button" aria-label="Remove workout ${n}">Remove</button>`;
+  row.querySelector("select").onchange = syncVert;
+  row.querySelector("button").onclick = () => { row.remove(); syncVert(); };
+  $("f-extra").appendChild(row); syncVert();
+}
+$("f-add").onclick = () => addExtra();
+
+function openSheet(opts) {
+  if (!db) { setStatus("Saving isn't available here. Open this page in Claude while signed in."); return; }
+  form = opts;
+  $("sheet-title").textContent = opts.rest ? "Rest day" : "Log it";
+  $("f-what-wrap").style.display = opts.rest ? "none" : "";
+  const parts = String(opts.what || "Other").split(" + ").map(x => x.trim()).filter(Boolean);
+  $("f-what").innerHTML = optionsHtml(parts[0]);
+  $("f-extra").innerHTML = ""; parts.slice(1).forEach(addExtra);
+  $("f-add").style.display = opts.rest ? "none" : "";
+  $("f-date").value = todayISO();
+  $("f-vert").value = ""; $("f-notes").value = "";
+  painVal = null; feelVal = null;
+  pills($("f-pain"), Array.from({length: 11}, (_, i) => String(i)), v => painVal = Number(v));
+  pills($("f-feel"), FEELS, v => feelVal = v);
+  syncVert(); if (opts.rest) $("f-vert-wrap").style.display = "none";
+  $("sheet-wrap").classList.add("open");
+  $("f-save").disabled = false;
+}
+function closeSheet() { $("sheet-wrap").classList.remove("open"); form = null; }
+$("f-cancel").onclick = closeSheet;
+$("sheet-wrap").addEventListener("click", e => { if (e.target === $("sheet-wrap")) closeSheet(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && form) closeSheet(); });
+
+$("sheet").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!form) return;
+  const whats = form.rest ? ["Rest"] : allWhats();
+  const date = $("f-date").value || todayISO();
+  const base = {};
+  if (painVal != null) base.painDuring = painVal;
+  if (feelVal) base.feel = feelVal;
+  const notes = $("f-notes").value.trim(); if (notes) base.notes = notes.slice(0, 500);
+  $("f-save").disabled = true;
+  const rot = form.rotationId;
+  const entry = { date };
+  try {
+    for (const [i, what] of whats.entries()) {
+      const e2 = { what, date, ts: Date.now() + i, ...base };
+      if (what === "Tour" && $("f-vert").value) e2.vert = Number($("f-vert").value);
+      await db.collection("log").add(e2);
+    }
+    closeSheet();
+    if (rot) await markDone(rot, entry.date);
+  } catch (err) {
+    $("f-save").disabled = false;
+    setStatus(err && err.code === "quota_exceeded" ? "The log is full. Delete a few old entries, then save again." : "Couldn't save. Check your connection and tap Save again.");
+  }
+});
+
+$("btn-tour").onclick = () => openSheet({ what: "Tour", tour: true });
+$("btn-other").onclick = () => openSheet({ what: "SKI1 Hip Strength" });
+$("btn-rest").onclick = () => openSheet({ what: "Rest", rest: true });
+
+/* ---------- state ---------- */
+let saving = Promise.resolve();
+function saveState(next) {
+  state = next; renderAll();
+  saving = saving.then(() => db.doc("state/plan").set(next)).catch(() => setStatus("Couldn't save your progress. Try again."));
+  return saving;
+}
+function markDone(id, val) {
+  return id.startsWith("t") ? saveState({ ...state, tdone: { ...(state.tdone || {}), [id]: val } })
+    : saveState({ ...state, done: { ...(state.done || {}), [id]: val } });
+}
+
+
+/* ---------- chat with Claude ---------- */
+let sample = null, chatMsgs = [], chatBusy = false;
+function addMsg(cls, text) {
+  const d = document.createElement("div"); d.className = "msg " + cls; d.textContent = text;
+  $("chat-log").appendChild(d); $("chat-log").scrollTop = $("chat-log").scrollHeight; return d;
+}
+function context() {
+  const recent = [...entries].sort((a,b) => a.date < b.date ? 1 : -1).slice(0, 25)
+    .map(e => ({ date: e.date, what: e.what, vert: e.vert, painDuring: e.painDuring, painNextAm: e.painNextAm, hipCheck: e.pain, feel: e.feel, notes: e.notes }));
+  const n = nextItem();
+  return `You are the assistant inside Dave's hip flexor ski-touring tracker. Be brief, casual and practical (1-3 short sentences or bullets, use "-" not em dashes).
+Today is ${todayISO()} (${new Date().toLocaleDateString(undefined,{weekday:"long"})}).
+Situation: recurring right hip flexor strain. Worst motion is pulling the leg forward from behind. Goal: tour as much as possible this winter.
+Rules: pain must stay 3/10 or less during anything; tours start at 1,000-1,500 ft, then +20-25%/week only if pain is gone next morning. Calm-down phase (wall march holds + EZ1 only, no tours) lasts until everyday walking pain is 3/10 or less.
+Pain scale: ${SCALE}.
+Workouts on his Garmin: ${WORKOUTS.join(", ")}.
+Weekly rotation (build phase): ${ROTATION.map(r => r.id + " " + r.day + ": " + r.title).join("; ")}.
+Up next workout details: ${n ? JSON.stringify(workoutsIn(n).map(w => ({ [w]: DETAILS[w] }))) : "none"}.
+Travel mode: ${state.travel ? "on (hotel set: " + TRAVEL.map(r => r.id + " " + r.title).join("; ") + ". " + TRAVEL_NOTE + ")" : "off"}.
+Current phase: ${state.phase}. Up next: ${n ? (n.calm ? n.title : n.id + " " + n.title) : "week complete"}. Done this week: ${JSON.stringify(state.done || {})}.
+Recent log (newest first): ${JSON.stringify(recent)}
+When he reports something he did or how the hip feels, call the matching tool, then confirm in one line. If a detail is missing (like pain), log what you have and ask for it. Do not invent numbers. If he describes red flags (pain at rest or at night, catching or clicking deep in the hip, limping that won't settle), suggest a PT or sports med visit. You are not a doctor; keep advice general.`;
+}
+const TOOLS = [
+  { name: "log_session", description: "Log a workout, tour or rest day. Set completes_up_next true when it is the 'Up next' rotation item, so the plan advances.",
+    inputSchema: { type: "object", properties: {
+      what: { type: "string", description: "Workout name from the list, 'Tour', 'Rest', or short free text" },
+      date: { type: "string", description: "YYYY-MM-DD, default today" },
+      pain_during: { type: "integer", minimum: 0, maximum: 10 },
+      feel: { type: "string", enum: FEELS },
+      vert_ft: { type: "integer", description: "Tours only" },
+      notes: { type: "string" },
+      completes_up_next: { type: "boolean" } }, required: ["what"] },
+    execute: async (i) => {
+      const entry = { what: String(i.what).slice(0, 80), date: i.date || todayISO(), ts: Date.now() };
+      if (Number.isInteger(i.pain_during)) entry.painDuring = Math.max(0, Math.min(10, i.pain_during));
+      if (FEELS.includes(i.feel)) entry.feel = i.feel;
+      if (i.vert_ft) entry.vert = Number(i.vert_ft);
+      if (i.notes) entry.notes = String(i.notes).slice(0, 500);
+      await db.collection("log").add(entry);
+      let advanced = false;
+      const n = nextItem();
+      if (i.completes_up_next && n && !n.calm) { await markDone(n.id, entry.date); advanced = true; }
+      addMsg("act", `Logged: ${entry.what}${entry.painDuring != null ? " · pain " + entry.painDuring + "/10" : ""}${advanced ? " · up next moved on" : ""}`);
+      return { ok: true, advanced };
+    } },
+  { name: "hip_check", description: "Record today's (or a given day's) everyday hip pain 0-10 while walking around. Also fills next-morning pain for a tour done the day before.",
+    inputSchema: { type: "object", properties: { pain: { type: "integer", minimum: 0, maximum: 10 }, date: { type: "string" } }, required: ["pain"] },
+    execute: async (i) => { const p = Math.max(0, Math.min(10, i.pain)); await saveHipCheck(p, i.date); addMsg("act", `Hip check saved: ${p}/10`); return { ok: true }; } },
+  { name: "set_phase", description: "Switch between 'calm' (calm-down, no tours) and 'build' (weekly rotation). Only when he asks or clearly qualifies.",
+    inputSchema: { type: "object", properties: { phase: { type: "string", enum: ["calm", "build"] } }, required: ["phase"] },
+    execute: async (i) => { await saveState({ ...state, phase: i.phase }); addMsg("act", `Phase: ${i.phase === "calm" ? "calm-down" : "build"}`); return { ok: true }; } },
+  { name: "set_travel", description: "Turn travel mode on (hotel/bodyweight set) or off (back to the home plan).",
+    inputSchema: { type: "object", properties: { on: { type: "boolean" } }, required: ["on"] },
+    execute: async (i) => { await saveState({ ...state, travel: !!i.on, tdone: i.on && !state.travel ? {} : (state.tdone || {}) }); addMsg("act", i.on ? "Travel mode on" : "Back to the home plan"); return { ok: true }; } },
+  { name: "skip_up_next", description: "Skip the current Up next rotation item without logging it.",
+    inputSchema: { type: "object", properties: {} },
+    execute: async () => { const n = nextItem(); if (!n || n.calm) return { ok: false, reason: "nothing to skip" }; await markDone(n.id, "skipped"); addMsg("act", `Skipped: ${n.title}`); return { ok: true }; } },
+  { name: "start_next_week", description: "Clear the weekly checklist and start the next week.",
+    inputSchema: { type: "object", properties: {} },
+    execute: async () => { await saveState({ ...state, done: {}, week: (state.week || 1) + 1 }); addMsg("act", "New week started"); return { ok: true }; } },
+];
+$("chat-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const text = $("chat-in").value.trim();
+  if (!text || chatBusy || !sample) return;
+  $("chat-in").value = ""; chatBusy = true; $("chat-send").disabled = true;
+  addMsg("me", text);
+  chatMsgs.push({ role: "user", content: text });
+  chatMsgs = chatMsgs.slice(-12);
+  if (chatMsgs[0].role !== "user") chatMsgs.shift();
+  const msgs = chatMsgs.map((m, i) => i === 0 ? { role: "user", content: context() + "\n\nDave: " + m.content } : m);
+  const bubble = addMsg("ai", "Thinking…");
+  try {
+    const res = await sample(msgs, { tools: TOOLS, cache: false, onText: ({ text }) => { bubble.textContent = text || "Thinking…"; $("chat-log").scrollTop = $("chat-log").scrollHeight; } });
+    bubble.textContent = res.text || "Done.";
+    chatMsgs.push({ role: "assistant", content: res.text || "Done." });
+    $("chat-log").appendChild(bubble);
+  } catch (err) {
+    bubble.textContent = err && err.code === "rate_limited" ? "Too many messages at once. Give it a minute." : "Couldn't reach Claude. Try again.";
+    if (err && err.code === "not_granted") $("chat-card").hidden = true;
+    chatMsgs.pop();
+  } finally { chatBusy = false; $("chat-send").disabled = false; }
+});
+
+/* ---------- boot ---------- */
+renderAll();
+(async () => {
+  const c = window.claude && typeof window.claude.use === "function" ? window.claude : null;
+  db = c ? await c.use("db") : null;
+  if (!db) { setStatus("Open this page in Claude while signed in to save and see your log."); return; }
+  c.use("sample").then(sm => { sample = sm; if (sm) $("chat-card").hidden = false; }).catch(() => {});
+  const timer = setTimeout(() => { if (!stateLoaded || !logLoaded) setStatus("Can't reach your log yet. It will load when the connection catches up."); }, 10000);
+  const done = () => { if (stateLoaded && logLoaded) { clearTimeout(timer); setStatus(""); } };
+  db.doc("state/plan").onSnapshot(s => {
+    if (s.exists) state = { phase: "calm", done: {}, week: 1, ...s.data() };
+    if (!s.metadata.fromCache) { stateLoaded = true; done(); }
+    renderAll();
+  }, () => { stateLoaded = true; clearTimeout(timer); setStatus("Your progress can't load right now. Reopen the page later."); });
+  db.collection("log").orderBy("date", "desc").limit(300).onSnapshot(s => {
+    entries = s.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (!s.metadata.fromCache) { logLoaded = true; done(); }
+    renderAll();
+  }, () => { logLoaded = true; clearTimeout(timer); setStatus("Your log can't load right now. Reopen the page later."); });
+})();
+</script>
+</body>
+</html>

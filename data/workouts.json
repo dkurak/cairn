@@ -1,0 +1,3867 @@
+[
+ {
+  "name": "STR1 Squat Bench",
+  "category": "STR",
+  "steps": [
+   {
+    "type": "exercise",
+    "title": "Leg swings fwd/back",
+    "step_name": "Leg swings fwd/back",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "FORWARD_AND_BACKWARD_LEG_SWINGS",
+    "intensity": "active",
+    "reps": 20,
+    "notes": "10 each leg"
+   },
+   {
+    "type": "exercise",
+    "title": "Leg swings side",
+    "step_name": "Leg swings side",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "SIDE_TO_SIDE_LEG_SWINGS",
+    "intensity": "active",
+    "reps": 20,
+    "notes": "10 each leg"
+   },
+   {
+    "type": "exercise",
+    "title": "Walking knee hugs",
+    "step_name": "Walking knee hugs",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "WALKING_KNEE_HUGS",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "exercise",
+    "title": "Hip circles",
+    "step_name": "Hip circles",
+    "garmin_category": "HIP_STABILITY",
+    "garmin_name": "HIP_CIRCLES",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "exercise",
+    "title": "Air squat",
+    "step_name": "Air squat",
+    "garmin_category": "SQUAT",
+    "garmin_name": "AIR_SQUAT",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "exercise",
+    "title": "Arm circles",
+    "step_name": "Arm circles",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "ARM_CIRCLES",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "exercise",
+    "title": "Band pull-apart",
+    "step_name": "Band pull-apart",
+    "garmin_category": "BANDED_EXERCISES",
+    "garmin_name": "PULL_APART",
+    "intensity": "active",
+    "reps": 15
+   },
+   {
+    "type": "exercise",
+    "title": "Dead bug",
+    "step_name": "Dead bug",
+    "garmin_category": "HIP_STABILITY",
+    "garmin_name": "DEAD_BUG",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "exercise",
+    "title": "Back squat",
+    "step_name": "Squat ramp 95",
+    "garmin_category": "SQUAT",
+    "garmin_name": "BARBELL_BACK_SQUAT",
+    "intensity": "warmup",
+    "reps": 5,
+    "weight_lb": 95
+   },
+   {
+    "type": "exercise",
+    "title": "Back squat",
+    "step_name": "Squat ramp 115",
+    "garmin_category": "SQUAT",
+    "garmin_name": "BARBELL_BACK_SQUAT",
+    "intensity": "warmup",
+    "reps": 5,
+    "weight_lb": 115
+   },
+   {
+    "type": "repeat",
+    "times": 5,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Back squat",
+      "step_name": "Back squat",
+      "garmin_category": "SQUAT",
+      "garmin_name": "BARBELL_BACK_SQUAT",
+      "intensity": "active",
+      "reps": 5,
+      "weight_lb": 135,
+      "notes": "5x5 ~80% of 165 max. Knees first"
+     },
+     {
+      "type": "exercise",
+      "title": "Band pull-apart",
+      "step_name": "Band pull-apart",
+      "garmin_category": "BANDED_EXERCISES",
+      "garmin_name": "PULL_APART",
+      "intensity": "active",
+      "reps": 15
+     },
+     {
+      "type": "rest",
+      "seconds": 90
+     }
+    ]
+   },
+   {
+    "type": "exercise",
+    "title": "Bench press",
+    "step_name": "Bench ramp 135",
+    "garmin_category": "BENCH_PRESS",
+    "garmin_name": "BARBELL_BENCH_PRESS",
+    "intensity": "warmup",
+    "reps": 5,
+    "weight_lb": 135
+   },
+   {
+    "type": "exercise",
+    "title": "Bench press",
+    "step_name": "Bench ramp 165",
+    "garmin_category": "BENCH_PRESS",
+    "garmin_name": "BARBELL_BENCH_PRESS",
+    "intensity": "warmup",
+    "reps": 5,
+    "weight_lb": 165
+   },
+   {
+    "type": "repeat",
+    "times": 4,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Bench press",
+      "step_name": "Bench press",
+      "garmin_category": "BENCH_PRESS",
+      "garmin_name": "BARBELL_BENCH_PRESS",
+      "intensity": "active",
+      "reps": 5,
+      "weight_lb": 205,
+      "notes": "4x5 ~80% of 255 max. +5 lb when clean"
+     },
+     {
+      "type": "exercise",
+      "title": "DB row",
+      "step_name": "DB row R",
+      "garmin_category": "ROW",
+      "garmin_name": "DUMBBELL_ROW",
+      "intensity": "active",
+      "reps": 8,
+      "weight_lb": 60
+     },
+     {
+      "type": "exercise",
+      "title": "DB row",
+      "step_name": "DB row L",
+      "garmin_category": "ROW",
+      "garmin_name": "DUMBBELL_ROW",
+      "intensity": "active",
+      "reps": 8,
+      "weight_lb": 60
+     },
+     {
+      "type": "rest",
+      "seconds": 90
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "DB step-up",
+      "step_name": "DB step-up R",
+      "garmin_category": "SQUAT",
+      "garmin_name": "DUMBBELL_STEP_UP",
+      "intensity": "active",
+      "reps": 8,
+      "weight_lb": 50,
+      "notes": "Drive knee up at top"
+     },
+     {
+      "type": "exercise",
+      "title": "DB step-up",
+      "step_name": "DB step-up L",
+      "garmin_category": "SQUAT",
+      "garmin_name": "DUMBBELL_STEP_UP",
+      "intensity": "active",
+      "reps": 8,
+      "weight_lb": 50
+     },
+     {
+      "type": "exercise",
+      "title": "Face pull",
+      "step_name": "Face pull",
+      "garmin_category": "ROW",
+      "garmin_name": "FACE_PULL",
+      "intensity": "active",
+      "reps": 12,
+      "weight_lb": 40
+     },
+     {
+      "type": "exercise",
+      "title": "SL calf raise",
+      "step_name": "SL calf raise",
+      "garmin_category": "CALF_RAISE",
+      "garmin_name": "SINGLE_LEG_STANDING_DUMBBELL_CALF_RAISE",
+      "intensity": "active",
+      "reps": 15,
+      "weight_lb": 25,
+      "notes": "15 each leg"
+     },
+     {
+      "type": "rest",
+      "seconds": 60
+     }
+    ]
+   },
+   {
+    "type": "exercise",
+    "title": "Finisher EMOM",
+    "step_name": "Finisher EMOM",
+    "garmin_category": "SQUAT",
+    "garmin_name": "GOBLET_SQUAT",
+    "intensity": "active",
+    "seconds": 360,
+    "weight_lb": 50,
+    "notes": "Optional EMOM 6: 6 goblet sq + 8 push-ups"
+   }
+  ]
+ },
+ {
+  "name": "STR2 Deadlift Pull",
+  "category": "STR",
+  "steps": [
+   {
+    "type": "exercise",
+    "title": "Leg swings fwd/back",
+    "step_name": "Leg swings fwd/back",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "FORWARD_AND_BACKWARD_LEG_SWINGS",
+    "intensity": "active",
+    "reps": 20,
+    "notes": "10 each leg"
+   },
+   {
+    "type": "exercise",
+    "title": "Leg swings side",
+    "step_name": "Leg swings side",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "SIDE_TO_SIDE_LEG_SWINGS",
+    "intensity": "active",
+    "reps": 20,
+    "notes": "10 each leg"
+   },
+   {
+    "type": "exercise",
+    "title": "Walking knee hugs",
+    "step_name": "Walking knee hugs",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "WALKING_KNEE_HUGS",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "exercise",
+    "title": "Hip circles",
+    "step_name": "Hip circles",
+    "garmin_category": "HIP_STABILITY",
+    "garmin_name": "HIP_CIRCLES",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "exercise",
+    "title": "Air squat",
+    "step_name": "Air squat",
+    "garmin_category": "SQUAT",
+    "garmin_name": "AIR_SQUAT",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "exercise",
+    "title": "Arm circles",
+    "step_name": "Arm circles",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "ARM_CIRCLES",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "exercise",
+    "title": "Band pull-apart",
+    "step_name": "Band pull-apart",
+    "garmin_category": "BANDED_EXERCISES",
+    "garmin_name": "PULL_APART",
+    "intensity": "active",
+    "reps": 15
+   },
+   {
+    "type": "exercise",
+    "title": "Dead bug",
+    "step_name": "Dead bug",
+    "garmin_category": "HIP_STABILITY",
+    "garmin_name": "DEAD_BUG",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "exercise",
+    "title": "Deadlift",
+    "step_name": "Deadlift ramp 135",
+    "garmin_category": "DEADLIFT",
+    "garmin_name": "BARBELL_DEADLIFT",
+    "intensity": "warmup",
+    "reps": 5,
+    "weight_lb": 135
+   },
+   {
+    "type": "exercise",
+    "title": "Deadlift",
+    "step_name": "Deadlift ramp 165",
+    "garmin_category": "DEADLIFT",
+    "garmin_name": "BARBELL_DEADLIFT",
+    "intensity": "warmup",
+    "reps": 5,
+    "weight_lb": 165
+   },
+   {
+    "type": "repeat",
+    "times": 5,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Deadlift",
+      "step_name": "Deadlift",
+      "garmin_category": "DEADLIFT",
+      "garmin_name": "BARBELL_DEADLIFT",
+      "intensity": "active",
+      "reps": 5,
+      "weight_lb": 205,
+      "notes": "5x5 ~80% of max. Stop if back rounds"
+     },
+     {
+      "type": "exercise",
+      "title": "Weighted pull-up",
+      "step_name": "Weighted pull-up",
+      "garmin_category": "PULL_UP",
+      "garmin_name": "WEIGHTED_PULL_UP",
+      "intensity": "active",
+      "reps": 5,
+      "weight_lb": 35,
+      "notes": "+35 lb. Bodyweight if tired"
+     },
+     {
+      "type": "rest",
+      "seconds": 90
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "SL RDL",
+      "step_name": "SL RDL R",
+      "garmin_category": "DEADLIFT",
+      "garmin_name": "SINGLE_LEG_ROMANIAN_DEADLIFT_WITH_DUMBBELL",
+      "intensity": "active",
+      "reps": 8,
+      "weight_lb": 35
+     },
+     {
+      "type": "exercise",
+      "title": "SL RDL",
+      "step_name": "SL RDL L",
+      "garmin_category": "DEADLIFT",
+      "garmin_name": "SINGLE_LEG_ROMANIAN_DEADLIFT_WITH_DUMBBELL",
+      "intensity": "active",
+      "reps": 8,
+      "weight_lb": 35
+     },
+     {
+      "type": "exercise",
+      "title": "Farmer carry",
+      "step_name": "Farmer carry",
+      "garmin_category": "CARRY",
+      "garmin_name": "FARMERS_CARRY",
+      "intensity": "active",
+      "seconds": 45,
+      "weight_lb": 70,
+      "notes": "70 lb each hand"
+     },
+     {
+      "type": "rest",
+      "seconds": 60
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Goblet squat",
+      "step_name": "Goblet squat",
+      "garmin_category": "SQUAT",
+      "garmin_name": "GOBLET_SQUAT",
+      "intensity": "active",
+      "reps": 12,
+      "weight_lb": 60,
+      "notes": "3s down"
+     },
+     {
+      "type": "exercise",
+      "title": "Back extension",
+      "step_name": "Back extension",
+      "garmin_category": "CORE",
+      "garmin_name": "GHD_BACK_EXTENSIONS",
+      "intensity": "active",
+      "reps": 12
+     },
+     {
+      "type": "exercise",
+      "title": "Side plank",
+      "step_name": "Side plank R",
+      "garmin_category": "PLANK",
+      "garmin_name": "SIDE_PLANK",
+      "intensity": "active",
+      "seconds": 30
+     },
+     {
+      "type": "exercise",
+      "title": "Side plank",
+      "step_name": "Side plank L",
+      "garmin_category": "PLANK",
+      "garmin_name": "SIDE_PLANK",
+      "intensity": "active",
+      "seconds": 30
+     },
+     {
+      "type": "rest",
+      "seconds": 45
+     }
+    ]
+   },
+   {
+    "type": "exercise",
+    "title": "Finisher AMRAP",
+    "step_name": "Finisher AMRAP",
+    "garmin_category": "HIP_RAISE",
+    "garmin_name": "KETTLEBELL_SWING",
+    "intensity": "active",
+    "seconds": 360,
+    "weight_lb": 53,
+    "notes": "Optional AMRAP 6: 12 KB swings + 6 burpees"
+   }
+  ]
+ },
+ {
+  "name": "STR3 Front Sq Press",
+  "category": "STR",
+  "steps": [
+   {
+    "type": "exercise",
+    "title": "Leg swings fwd/back",
+    "step_name": "Leg swings fwd/back",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "FORWARD_AND_BACKWARD_LEG_SWINGS",
+    "intensity": "active",
+    "reps": 20,
+    "notes": "10 each leg"
+   },
+   {
+    "type": "exercise",
+    "title": "Leg swings side",
+    "step_name": "Leg swings side",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "SIDE_TO_SIDE_LEG_SWINGS",
+    "intensity": "active",
+    "reps": 20,
+    "notes": "10 each leg"
+   },
+   {
+    "type": "exercise",
+    "title": "Walking knee hugs",
+    "step_name": "Walking knee hugs",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "WALKING_KNEE_HUGS",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "exercise",
+    "title": "Hip circles",
+    "step_name": "Hip circles",
+    "garmin_category": "HIP_STABILITY",
+    "garmin_name": "HIP_CIRCLES",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "exercise",
+    "title": "Air squat",
+    "step_name": "Air squat",
+    "garmin_category": "SQUAT",
+    "garmin_name": "AIR_SQUAT",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "exercise",
+    "title": "Arm circles",
+    "step_name": "Arm circles",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "ARM_CIRCLES",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "exercise",
+    "title": "Band pull-apart",
+    "step_name": "Band pull-apart",
+    "garmin_category": "BANDED_EXERCISES",
+    "garmin_name": "PULL_APART",
+    "intensity": "active",
+    "reps": 15
+   },
+   {
+    "type": "exercise",
+    "title": "Dead bug",
+    "step_name": "Dead bug",
+    "garmin_category": "HIP_STABILITY",
+    "garmin_name": "DEAD_BUG",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "repeat",
+    "times": 4,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Box jump",
+      "step_name": "Box jump",
+      "garmin_category": "PLYO",
+      "garmin_name": "BOX_JUMP",
+      "intensity": "active",
+      "reps": 3,
+      "notes": "Step down. Skip if R hip flares"
+     },
+     {
+      "type": "rest",
+      "seconds": 45
+     }
+    ]
+   },
+   {
+    "type": "exercise",
+    "title": "Front squat",
+    "step_name": "Front sq ramp 45",
+    "garmin_category": "SQUAT",
+    "garmin_name": "BARBELL_FRONT_SQUAT",
+    "intensity": "warmup",
+    "reps": 5,
+    "weight_lb": 45
+   },
+   {
+    "type": "exercise",
+    "title": "Front squat",
+    "step_name": "Front sq ramp 75",
+    "garmin_category": "SQUAT",
+    "garmin_name": "BARBELL_FRONT_SQUAT",
+    "intensity": "warmup",
+    "reps": 5,
+    "weight_lb": 75
+   },
+   {
+    "type": "repeat",
+    "times": 4,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Front squat",
+      "step_name": "Front squat",
+      "garmin_category": "SQUAT",
+      "garmin_name": "BARBELL_FRONT_SQUAT",
+      "intensity": "active",
+      "reps": 5,
+      "weight_lb": 105,
+      "notes": "4x5. +5 lb when all sets clean"
+     },
+     {
+      "type": "exercise",
+      "title": "Dead bug",
+      "step_name": "Dead bug",
+      "garmin_category": "HIP_STABILITY",
+      "garmin_name": "DEAD_BUG",
+      "intensity": "active",
+      "reps": 8
+     },
+     {
+      "type": "rest",
+      "seconds": 90
+     }
+    ]
+   },
+   {
+    "type": "exercise",
+    "title": "Overhead press",
+    "step_name": "OHP ramp 75",
+    "garmin_category": "SHOULDER_PRESS",
+    "garmin_name": "OVERHEAD_BARBELL_PRESS",
+    "intensity": "warmup",
+    "reps": 5,
+    "weight_lb": 75
+   },
+   {
+    "type": "exercise",
+    "title": "Overhead press",
+    "step_name": "OHP ramp 95",
+    "garmin_category": "SHOULDER_PRESS",
+    "garmin_name": "OVERHEAD_BARBELL_PRESS",
+    "intensity": "warmup",
+    "reps": 5,
+    "weight_lb": 95
+   },
+   {
+    "type": "repeat",
+    "times": 4,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Overhead press",
+      "step_name": "Overhead press",
+      "garmin_category": "SHOULDER_PRESS",
+      "garmin_name": "OVERHEAD_BARBELL_PRESS",
+      "intensity": "active",
+      "reps": 5,
+      "weight_lb": 125,
+      "notes": "4x5 ~80% of 155 max. +5 lb when clean"
+     },
+     {
+      "type": "exercise",
+      "title": "Pull-up",
+      "step_name": "Pull-up",
+      "garmin_category": "PULL_UP",
+      "garmin_name": "PULL_UP",
+      "intensity": "active",
+      "reps": 10
+     },
+     {
+      "type": "rest",
+      "seconds": 90
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "DB side lunge",
+      "step_name": "DB side lunge R",
+      "garmin_category": "LUNGE",
+      "garmin_name": "DUMBBELL_SIDE_LUNGE",
+      "intensity": "active",
+      "reps": 8,
+      "weight_lb": 35
+     },
+     {
+      "type": "exercise",
+      "title": "DB side lunge",
+      "step_name": "DB side lunge L",
+      "garmin_category": "LUNGE",
+      "garmin_name": "DUMBBELL_SIDE_LUNGE",
+      "intensity": "active",
+      "reps": 8,
+      "weight_lb": 35
+     },
+     {
+      "type": "exercise",
+      "title": "Calf raise",
+      "step_name": "Calf raise",
+      "garmin_category": "CALF_RAISE",
+      "garmin_name": "STANDING_DUMBBELL_CALF_RAISE",
+      "intensity": "active",
+      "reps": 15,
+      "weight_lb": 50
+     },
+     {
+      "type": "exercise",
+      "title": "Face pull",
+      "step_name": "Face pull",
+      "garmin_category": "ROW",
+      "garmin_name": "FACE_PULL",
+      "intensity": "active",
+      "reps": 12,
+      "weight_lb": 40
+     },
+     {
+      "type": "rest",
+      "seconds": 60
+     }
+    ]
+   },
+   {
+    "type": "exercise",
+    "title": "Finisher AMRAP",
+    "step_name": "Finisher AMRAP",
+    "garmin_category": "SQUAT",
+    "garmin_name": "DUMBBELL_THRUSTERS",
+    "intensity": "active",
+    "seconds": 420,
+    "weight_lb": 35,
+    "notes": "Optional AMRAP 7: 5 thrusters, 7 push-up, 10 air sq"
+   }
+  ]
+ },
+ {
+  "name": "EZ1 Upper Core",
+  "category": "EZ",
+  "steps": [
+   {
+    "type": "exercise",
+    "title": "Arm circles",
+    "step_name": "Arm circles",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "ARM_CIRCLES",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "exercise",
+    "title": "Band pull-apart",
+    "step_name": "Band pull-apart",
+    "garmin_category": "BANDED_EXERCISES",
+    "garmin_name": "PULL_APART",
+    "intensity": "active",
+    "reps": 15
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Push-up",
+      "step_name": "Push-up",
+      "garmin_category": "PUSH_UP",
+      "garmin_name": "PUSH_UP",
+      "intensity": "active",
+      "reps": 25,
+      "notes": "Easy day. RPE 5, nothing to failure"
+     },
+     {
+      "type": "exercise",
+      "title": "Pull-up",
+      "step_name": "Pull-up",
+      "garmin_category": "PULL_UP",
+      "garmin_name": "PULL_UP",
+      "intensity": "active",
+      "reps": 8
+     },
+     {
+      "type": "exercise",
+      "title": "Band pull-apart",
+      "step_name": "Band pull-apart",
+      "garmin_category": "BANDED_EXERCISES",
+      "garmin_name": "PULL_APART",
+      "intensity": "active",
+      "reps": 15
+     },
+     {
+      "type": "rest",
+      "seconds": 45
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "DB shoulder press",
+      "step_name": "DB shoulder press",
+      "garmin_category": "SHOULDER_PRESS",
+      "garmin_name": "DUMBBELL_SHOULDER_PRESS",
+      "intensity": "active",
+      "reps": 10,
+      "weight_lb": 35
+     },
+     {
+      "type": "exercise",
+      "title": "Chest-supported row",
+      "step_name": "Chest-supported row",
+      "garmin_category": "ROW",
+      "garmin_name": "CHEST_SUPPORTED_DUMBBELL_ROW",
+      "intensity": "active",
+      "reps": 12,
+      "weight_lb": 45
+     },
+     {
+      "type": "exercise",
+      "title": "Dead bug",
+      "step_name": "Dead bug",
+      "garmin_category": "HIP_STABILITY",
+      "garmin_name": "DEAD_BUG",
+      "intensity": "active",
+      "reps": 10
+     },
+     {
+      "type": "rest",
+      "seconds": 45
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 2,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Side plank",
+      "step_name": "Side plank R",
+      "garmin_category": "PLANK",
+      "garmin_name": "SIDE_PLANK",
+      "intensity": "active",
+      "seconds": 30
+     },
+     {
+      "type": "exercise",
+      "title": "Side plank",
+      "step_name": "Side plank L",
+      "garmin_category": "PLANK",
+      "garmin_name": "SIDE_PLANK",
+      "intensity": "active",
+      "seconds": 30
+     },
+     {
+      "type": "exercise",
+      "title": "Farmer carry",
+      "step_name": "Farmer carry",
+      "garmin_category": "CARRY",
+      "garmin_name": "FARMERS_CARRY",
+      "intensity": "active",
+      "seconds": 45,
+      "weight_lb": 60,
+      "notes": "60 lb each hand"
+     },
+     {
+      "type": "rest",
+      "seconds": 30
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "EZ2 Light Full Body",
+  "category": "EZ",
+  "steps": [
+   {
+    "type": "exercise",
+    "title": "Leg swings fwd/back",
+    "step_name": "Leg swings fwd/back",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "FORWARD_AND_BACKWARD_LEG_SWINGS",
+    "intensity": "active",
+    "reps": 20,
+    "notes": "10 each leg"
+   },
+   {
+    "type": "exercise",
+    "title": "Leg swings side",
+    "step_name": "Leg swings side",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "SIDE_TO_SIDE_LEG_SWINGS",
+    "intensity": "active",
+    "reps": 20,
+    "notes": "10 each leg"
+   },
+   {
+    "type": "exercise",
+    "title": "Walking knee hugs",
+    "step_name": "Walking knee hugs",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "WALKING_KNEE_HUGS",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "exercise",
+    "title": "Hip circles",
+    "step_name": "Hip circles",
+    "garmin_category": "HIP_STABILITY",
+    "garmin_name": "HIP_CIRCLES",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "exercise",
+    "title": "Air squat",
+    "step_name": "Air squat",
+    "garmin_category": "SQUAT",
+    "garmin_name": "AIR_SQUAT",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Goblet squat",
+      "step_name": "Goblet squat",
+      "garmin_category": "SQUAT",
+      "garmin_name": "GOBLET_SQUAT",
+      "intensity": "active",
+      "reps": 10,
+      "weight_lb": 35,
+      "notes": "Easy day. RPE 5, nothing to failure"
+     },
+     {
+      "type": "exercise",
+      "title": "Push-up",
+      "step_name": "Push-up",
+      "garmin_category": "PUSH_UP",
+      "garmin_name": "PUSH_UP",
+      "intensity": "active",
+      "reps": 10
+     },
+     {
+      "type": "exercise",
+      "title": "DB RDL",
+      "step_name": "DB RDL",
+      "garmin_category": "DEADLIFT",
+      "garmin_name": "ROMANIAN_DEADLIFT",
+      "intensity": "active",
+      "reps": 10,
+      "weight_lb": 35,
+      "notes": "35 lb each hand"
+     },
+     {
+      "type": "rest",
+      "seconds": 45
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Step-up",
+      "step_name": "Step-up R",
+      "garmin_category": "SQUAT",
+      "garmin_name": "STEP_UP",
+      "intensity": "active",
+      "reps": 8,
+      "notes": "Bodyweight, slow"
+     },
+     {
+      "type": "exercise",
+      "title": "Step-up",
+      "step_name": "Step-up L",
+      "garmin_category": "SQUAT",
+      "garmin_name": "STEP_UP",
+      "intensity": "active",
+      "reps": 8
+     },
+     {
+      "type": "exercise",
+      "title": "DB row",
+      "step_name": "DB row R",
+      "garmin_category": "ROW",
+      "garmin_name": "DUMBBELL_ROW",
+      "intensity": "active",
+      "reps": 10,
+      "weight_lb": 35
+     },
+     {
+      "type": "exercise",
+      "title": "DB row",
+      "step_name": "DB row L",
+      "garmin_category": "ROW",
+      "garmin_name": "DUMBBELL_ROW",
+      "intensity": "active",
+      "reps": 10,
+      "weight_lb": 35
+     },
+     {
+      "type": "rest",
+      "seconds": 45
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 2,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "SL glute bridge",
+      "step_name": "SL glute bridge R",
+      "garmin_category": "HIP_RAISE",
+      "garmin_name": "SINGLE_LEG_HIP_RAISE",
+      "intensity": "active",
+      "reps": 10
+     },
+     {
+      "type": "exercise",
+      "title": "SL glute bridge",
+      "step_name": "SL glute bridge L",
+      "garmin_category": "HIP_RAISE",
+      "garmin_name": "SINGLE_LEG_HIP_RAISE",
+      "intensity": "active",
+      "reps": 10
+     },
+     {
+      "type": "exercise",
+      "title": "Dead bug",
+      "step_name": "Dead bug",
+      "garmin_category": "HIP_STABILITY",
+      "garmin_name": "DEAD_BUG",
+      "intensity": "active",
+      "reps": 10
+     },
+     {
+      "type": "exercise",
+      "title": "Calf raise",
+      "step_name": "Calf raise",
+      "garmin_category": "CALF_RAISE",
+      "garmin_name": "STANDING_CALF_RAISE",
+      "intensity": "active",
+      "reps": 20
+     },
+     {
+      "type": "rest",
+      "seconds": 30
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "EZ3 Bike Core",
+  "category": "EZ",
+  "steps": [
+   {
+    "type": "exercise",
+    "title": "Easy bike",
+    "step_name": "Easy bike",
+    "garmin_category": "INDOOR_BIKE",
+    "garmin_name": "STATIONARY_BIKE",
+    "intensity": "active",
+    "seconds": 720,
+    "notes": "Zone 1-2 spin, legs flush"
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Dead bug",
+      "step_name": "Dead bug",
+      "garmin_category": "HIP_STABILITY",
+      "garmin_name": "DEAD_BUG",
+      "intensity": "active",
+      "reps": 10,
+      "notes": "Easy day. RPE 5, nothing to failure"
+     },
+     {
+      "type": "exercise",
+      "title": "Side plank",
+      "step_name": "Side plank R",
+      "garmin_category": "PLANK",
+      "garmin_name": "SIDE_PLANK",
+      "intensity": "active",
+      "seconds": 30
+     },
+     {
+      "type": "exercise",
+      "title": "Side plank",
+      "step_name": "Side plank L",
+      "garmin_category": "PLANK",
+      "garmin_name": "SIDE_PLANK",
+      "intensity": "active",
+      "seconds": 30
+     },
+     {
+      "type": "exercise",
+      "title": "Superman",
+      "step_name": "Superman",
+      "garmin_category": "HYPEREXTENSION",
+      "garmin_name": "SUPERMAN_FROM_FLOOR",
+      "intensity": "active",
+      "reps": 10
+     },
+     {
+      "type": "exercise",
+      "title": "Glute bridge",
+      "step_name": "Glute bridge",
+      "garmin_category": "HIP_RAISE",
+      "garmin_name": "HIP_RAISE",
+      "intensity": "active",
+      "reps": 15
+     },
+     {
+      "type": "rest",
+      "seconds": 30
+     }
+    ]
+   },
+   {
+    "type": "exercise",
+    "title": "Cat-cow",
+    "step_name": "Cat-cow",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "STRETCH_CAT_COW",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "exercise",
+    "title": "Kneeling HF stretch",
+    "step_name": "Kneeling HF stretch R",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "STRETCH_LUNGING_HIP_FLEXOR",
+    "intensity": "active",
+    "seconds": 45,
+    "notes": "Tuck pelvis, gentle"
+   },
+   {
+    "type": "exercise",
+    "title": "Kneeling HF stretch",
+    "step_name": "Kneeling HF stretch L",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "STRETCH_LUNGING_HIP_FLEXOR",
+    "intensity": "active",
+    "seconds": 45
+   }
+  ]
+ },
+ {
+  "name": "SKI1 Hip Strength",
+  "category": "SKI",
+  "steps": [
+   {
+    "type": "exercise",
+    "title": "Leg swings",
+    "step_name": "Leg swings",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "FORWARD_AND_BACKWARD_LEG_SWINGS",
+    "intensity": "active",
+    "seconds": 120,
+    "notes": "Front-back and side-side, easy"
+   },
+   {
+    "type": "rest",
+    "seconds": 15
+   },
+   {
+    "type": "repeat",
+    "times": 4,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Wall march hold",
+      "step_name": "Wall march hold R",
+      "garmin_category": "LEG_RAISE",
+      "garmin_name": "HANGING_KNEE_RAISE",
+      "intensity": "active",
+      "seconds": 40,
+      "notes": "Knee above hip, back to wall, 3/10 max"
+     },
+     {
+      "type": "exercise",
+      "title": "Wall march hold",
+      "step_name": "Wall march hold L",
+      "garmin_category": "LEG_RAISE",
+      "garmin_name": "HANGING_KNEE_RAISE",
+      "intensity": "active",
+      "seconds": 40
+     },
+     {
+      "type": "rest",
+      "seconds": 30
+     }
+    ]
+   },
+   {
+    "type": "exercise",
+    "title": "Wall march hold",
+    "step_name": "Wall march hold R+1",
+    "garmin_category": "LEG_RAISE",
+    "garmin_name": "HANGING_KNEE_RAISE",
+    "intensity": "active",
+    "seconds": 40,
+    "notes": "Extra right-side set"
+   },
+   {
+    "type": "rest",
+    "seconds": 30
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Knee drive ankle wt",
+      "step_name": "Knee drive ankle wt R",
+      "garmin_category": "LEG_RAISE",
+      "garmin_name": "WEIGHTED_HANGING_KNEE_RAISE",
+      "intensity": "active",
+      "reps": 15,
+      "weight_lb": 5,
+      "notes": "5 lb, 2s up 2s down. 10 lb at 3/10 max"
+     },
+     {
+      "type": "exercise",
+      "title": "Knee drive ankle wt",
+      "step_name": "Knee drive ankle wt L",
+      "garmin_category": "LEG_RAISE",
+      "garmin_name": "WEIGHTED_HANGING_KNEE_RAISE",
+      "intensity": "active",
+      "reps": 15,
+      "weight_lb": 5
+     },
+     {
+      "type": "rest",
+      "seconds": 60
+     }
+    ]
+   },
+   {
+    "type": "exercise",
+    "title": "Knee drive ankle wt",
+    "step_name": "Knee drive ankle wt R+1",
+    "garmin_category": "LEG_RAISE",
+    "garmin_name": "WEIGHTED_HANGING_KNEE_RAISE",
+    "intensity": "active",
+    "reps": 15,
+    "weight_lb": 5,
+    "notes": "Extra right-side set"
+   },
+   {
+    "type": "rest",
+    "seconds": 60
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Seated knee lift",
+      "step_name": "Seated knee lift R",
+      "garmin_category": "LEG_RAISE",
+      "garmin_name": "HANGING_SINGLE_LEG_RAISE",
+      "intensity": "active",
+      "reps": 10,
+      "notes": "Sit tall, lift knee off seat, hold 3s"
+     },
+     {
+      "type": "exercise",
+      "title": "Seated knee lift",
+      "step_name": "Seated knee lift L",
+      "garmin_category": "LEG_RAISE",
+      "garmin_name": "HANGING_SINGLE_LEG_RAISE",
+      "intensity": "active",
+      "reps": 10
+     },
+     {
+      "type": "rest",
+      "seconds": 45
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "SL glute bridge",
+      "step_name": "SL glute bridge R",
+      "garmin_category": "HIP_RAISE",
+      "garmin_name": "SINGLE_LEG_HIP_RAISE",
+      "intensity": "active",
+      "reps": 12,
+      "notes": "Squeeze glute at top"
+     },
+     {
+      "type": "exercise",
+      "title": "SL glute bridge",
+      "step_name": "SL glute bridge L",
+      "garmin_category": "HIP_RAISE",
+      "garmin_name": "SINGLE_LEG_HIP_RAISE",
+      "intensity": "active",
+      "reps": 12
+     },
+     {
+      "type": "rest",
+      "seconds": 45
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Side plank",
+      "step_name": "Side plank R",
+      "garmin_category": "PLANK",
+      "garmin_name": "SIDE_PLANK",
+      "intensity": "active",
+      "seconds": 30
+     },
+     {
+      "type": "exercise",
+      "title": "Side plank",
+      "step_name": "Side plank L",
+      "garmin_category": "PLANK",
+      "garmin_name": "SIDE_PLANK",
+      "intensity": "active",
+      "seconds": 30
+     },
+     {
+      "type": "rest",
+      "seconds": 30
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Dead bug",
+      "step_name": "Dead bug",
+      "garmin_category": "HIP_STABILITY",
+      "garmin_name": "DEAD_BUG",
+      "intensity": "active",
+      "reps": 10,
+      "notes": "Low back flat"
+     },
+     {
+      "type": "rest",
+      "seconds": 30
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "SKI2 Hip Endurance",
+  "category": "SKI",
+  "steps": [
+   {
+    "type": "exercise",
+    "title": "Leg swings",
+    "step_name": "Leg swings",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "FORWARD_AND_BACKWARD_LEG_SWINGS",
+    "intensity": "active",
+    "seconds": 120
+   },
+   {
+    "type": "rest",
+    "seconds": 15
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Weighted march",
+      "step_name": "Weighted march",
+      "garmin_category": "WARM_UP",
+      "garmin_name": "WALKING_HIGH_KNEES",
+      "intensity": "active",
+      "seconds": 120,
+      "weight_lb": 5,
+      "notes": "Ankle wts 5 lb, slow. Build 2:00 to 3:00"
+     },
+     {
+      "type": "rest",
+      "seconds": 90
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Step-up w pack",
+      "step_name": "Step-up w pack R",
+      "garmin_category": "SQUAT",
+      "garmin_name": "WEIGHTED_STEP_UP",
+      "intensity": "active",
+      "reps": 10,
+      "notes": "Wear touring pack, drive knee at top"
+     },
+     {
+      "type": "exercise",
+      "title": "Step-up w pack",
+      "step_name": "Step-up w pack L",
+      "garmin_category": "SQUAT",
+      "garmin_name": "WEIGHTED_STEP_UP",
+      "intensity": "active",
+      "reps": 10
+     },
+     {
+      "type": "rest",
+      "seconds": 60
+     }
+    ]
+   },
+   {
+    "type": "exercise",
+    "title": "Step-up w pack",
+    "step_name": "Step-up w pack R+1",
+    "garmin_category": "SQUAT",
+    "garmin_name": "WEIGHTED_STEP_UP",
+    "intensity": "active",
+    "reps": 10,
+    "notes": "Extra right-side set"
+   },
+   {
+    "type": "rest",
+    "seconds": 60
+   },
+   {
+    "type": "repeat",
+    "times": 2,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Knee drive ankle wt",
+      "step_name": "Knee drive ankle wt R",
+      "garmin_category": "LEG_RAISE",
+      "garmin_name": "WEIGHTED_HANGING_KNEE_RAISE",
+      "intensity": "active",
+      "reps": 20,
+      "weight_lb": 5,
+      "notes": "Ankle wts, controlled"
+     },
+     {
+      "type": "exercise",
+      "title": "Knee drive ankle wt",
+      "step_name": "Knee drive ankle wt L",
+      "garmin_category": "LEG_RAISE",
+      "garmin_name": "WEIGHTED_HANGING_KNEE_RAISE",
+      "intensity": "active",
+      "reps": 20,
+      "weight_lb": 5
+     },
+     {
+      "type": "rest",
+      "seconds": 60
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Side-lying leg raise",
+      "step_name": "Side-lying leg raise R",
+      "garmin_category": "HIP_STABILITY",
+      "garmin_name": "SIDE_LYING_LEG_RAISE",
+      "intensity": "active",
+      "reps": 15,
+      "notes": "Glute med, toes forward"
+     },
+     {
+      "type": "exercise",
+      "title": "Side-lying leg raise",
+      "step_name": "Side-lying leg raise L",
+      "garmin_category": "HIP_STABILITY",
+      "garmin_name": "SIDE_LYING_LEG_RAISE",
+      "intensity": "active",
+      "reps": 15
+     },
+     {
+      "type": "rest",
+      "seconds": 30
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 2,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Dead bug",
+      "step_name": "Dead bug",
+      "garmin_category": "HIP_STABILITY",
+      "garmin_name": "DEAD_BUG",
+      "intensity": "active",
+      "reps": 10
+     },
+     {
+      "type": "rest",
+      "seconds": 30
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "SKI3 Mobility Recov",
+  "category": "SKI",
+  "steps": [
+   {
+    "type": "exercise",
+    "title": "Easy bike",
+    "step_name": "Easy bike",
+    "garmin_category": "INDOOR_BIKE",
+    "garmin_name": "STATIONARY_BIKE",
+    "intensity": "active",
+    "seconds": 480,
+    "notes": "Optional. Easy spin to warm up"
+   },
+   {
+    "type": "exercise",
+    "title": "Leg swings",
+    "step_name": "Leg swings",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "FORWARD_AND_BACKWARD_LEG_SWINGS",
+    "intensity": "active",
+    "seconds": 90
+   },
+   {
+    "type": "exercise",
+    "title": "Cat-cow",
+    "step_name": "Cat-cow",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "STRETCH_CAT_COW",
+    "intensity": "active",
+    "reps": 10,
+    "notes": "Arch look up, round look down"
+   },
+   {
+    "type": "repeat",
+    "times": 2,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Kneeling HF stretch",
+      "step_name": "Kneeling HF stretch R",
+      "garmin_category": "WARM_UP",
+      "garmin_name": "STRETCH_LUNGING_HIP_FLEXOR",
+      "intensity": "active",
+      "seconds": 45,
+      "notes": "Tuck pelvis, squeeze glute"
+     },
+     {
+      "type": "exercise",
+      "title": "Kneeling HF stretch",
+      "step_name": "Kneeling HF stretch L",
+      "garmin_category": "WARM_UP",
+      "garmin_name": "STRETCH_LUNGING_HIP_FLEXOR",
+      "intensity": "active",
+      "seconds": 45
+     },
+     {
+      "type": "rest",
+      "seconds": 10
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 2,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "90/90 switches",
+      "step_name": "90/90 switches",
+      "garmin_category": "WARM_UP",
+      "garmin_name": "STRETCH_90_90",
+      "intensity": "active",
+      "reps": 10,
+      "notes": "Gentle, stay out of rotation pain"
+     },
+     {
+      "type": "rest",
+      "seconds": 15
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 2,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Pigeon / figure-4",
+      "step_name": "Pigeon / figure-4 R",
+      "garmin_category": "WARM_UP",
+      "garmin_name": "STRETCH_PIGEON_POSE",
+      "intensity": "active",
+      "seconds": 45
+     },
+     {
+      "type": "exercise",
+      "title": "Pigeon / figure-4",
+      "step_name": "Pigeon / figure-4 L",
+      "garmin_category": "WARM_UP",
+      "garmin_name": "STRETCH_PIGEON_POSE",
+      "intensity": "active",
+      "seconds": 45
+     },
+     {
+      "type": "rest",
+      "seconds": 10
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 2,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Couch stretch",
+      "step_name": "Couch stretch R",
+      "garmin_category": "WARM_UP",
+      "garmin_name": "STRETCH_HIP_FLEXOR_AND_QUAD",
+      "intensity": "active",
+      "seconds": 45,
+      "notes": "Week 3+ only, skip if sharp"
+     },
+     {
+      "type": "exercise",
+      "title": "Couch stretch",
+      "step_name": "Couch stretch L",
+      "garmin_category": "WARM_UP",
+      "garmin_name": "STRETCH_HIP_FLEXOR_AND_QUAD",
+      "intensity": "active",
+      "seconds": 45
+     },
+     {
+      "type": "rest",
+      "seconds": 10
+     }
+    ]
+   },
+   {
+    "type": "exercise",
+    "title": "Knee-wall ankle mob",
+    "step_name": "Knee-wall ankle mob R",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "ANKLE_DORSIFLEXION_WITH_BAND",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "exercise",
+    "title": "Knee-wall ankle mob",
+    "step_name": "Knee-wall ankle mob L",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "ANKLE_DORSIFLEXION_WITH_BAND",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "exercise",
+    "title": "Calf raise",
+    "step_name": "Calf raise",
+    "garmin_category": "CALF_RAISE",
+    "garmin_name": "STANDING_CALF_RAISE",
+    "intensity": "active",
+    "reps": 20
+   }
+  ]
+ },
+ {
+  "name": "SKI4 Trailhead",
+  "category": "SKI",
+  "steps": [
+   {
+    "type": "exercise",
+    "title": "Leg swings",
+    "step_name": "Leg swings",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "FORWARD_AND_BACKWARD_LEG_SWINGS",
+    "intensity": "active",
+    "seconds": 90
+   },
+   {
+    "type": "rest",
+    "seconds": 5
+   },
+   {
+    "type": "exercise",
+    "title": "Walking knee hugs",
+    "step_name": "Walking knee hugs",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "WALKING_KNEE_HUGS",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "rest",
+    "seconds": 5
+   },
+   {
+    "type": "exercise",
+    "title": "Easy march",
+    "step_name": "Easy march",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "WALKING_HIGH_KNEES",
+    "intensity": "active",
+    "seconds": 60,
+    "notes": "No weights, easy high knees"
+   },
+   {
+    "type": "rest",
+    "seconds": 5
+   },
+   {
+    "type": "exercise",
+    "title": "Kneeling HF stretch",
+    "step_name": "Kneeling HF stretch R",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "STRETCH_LUNGING_HIP_FLEXOR",
+    "intensity": "active",
+    "seconds": 20,
+    "notes": "Short and gentle, not a deep stretch"
+   },
+   {
+    "type": "exercise",
+    "title": "Kneeling HF stretch",
+    "step_name": "Kneeling HF stretch L",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "STRETCH_LUNGING_HIP_FLEXOR",
+    "intensity": "active",
+    "seconds": 20
+   }
+  ]
+ },
+ {
+  "name": "SKI5 Uphill",
+  "category": "SKI",
+  "steps": [
+   {
+    "type": "exercise",
+    "title": "Leg swings",
+    "step_name": "Leg swings",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "FORWARD_AND_BACKWARD_LEG_SWINGS",
+    "intensity": "active",
+    "seconds": 90
+   },
+   {
+    "type": "exercise",
+    "title": "Walking knee hugs",
+    "step_name": "Walking knee hugs",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "WALKING_KNEE_HUGS",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "repeat",
+    "times": 4,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Step-up w pack",
+      "step_name": "Step-up w pack R",
+      "garmin_category": "SQUAT",
+      "garmin_name": "WEIGHTED_STEP_UP",
+      "intensity": "active",
+      "reps": 10,
+      "notes": "25-30 lb pack, high box, drive knee"
+     },
+     {
+      "type": "exercise",
+      "title": "Step-up w pack",
+      "step_name": "Step-up w pack L",
+      "garmin_category": "SQUAT",
+      "garmin_name": "WEIGHTED_STEP_UP",
+      "intensity": "active",
+      "reps": 10
+     },
+     {
+      "type": "rest",
+      "seconds": 60
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "SL RDL",
+      "step_name": "SL RDL R",
+      "garmin_category": "DEADLIFT",
+      "garmin_name": "SINGLE_LEG_ROMANIAN_DEADLIFT_WITH_DUMBBELL",
+      "intensity": "active",
+      "reps": 8,
+      "weight_lb": 35
+     },
+     {
+      "type": "exercise",
+      "title": "SL RDL",
+      "step_name": "SL RDL L",
+      "garmin_category": "DEADLIFT",
+      "garmin_name": "SINGLE_LEG_ROMANIAN_DEADLIFT_WITH_DUMBBELL",
+      "intensity": "active",
+      "reps": 8,
+      "weight_lb": 35
+     },
+     {
+      "type": "exercise",
+      "title": "Knee drive ankle wt",
+      "step_name": "Knee drive ankle wt R",
+      "garmin_category": "LEG_RAISE",
+      "garmin_name": "WEIGHTED_HANGING_KNEE_RAISE",
+      "intensity": "active",
+      "reps": 15,
+      "weight_lb": 10
+     },
+     {
+      "type": "exercise",
+      "title": "Knee drive ankle wt",
+      "step_name": "Knee drive ankle wt L",
+      "garmin_category": "LEG_RAISE",
+      "garmin_name": "WEIGHTED_HANGING_KNEE_RAISE",
+      "intensity": "active",
+      "reps": 15,
+      "weight_lb": 10
+     },
+     {
+      "type": "rest",
+      "seconds": 60
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Weighted march",
+      "step_name": "Weighted march",
+      "garmin_category": "WARM_UP",
+      "garmin_name": "WALKING_HIGH_KNEES",
+      "intensity": "active",
+      "seconds": 180,
+      "weight_lb": 10,
+      "notes": "10 lb ankle wts, steady"
+     },
+     {
+      "type": "exercise",
+      "title": "SL calf raise",
+      "step_name": "SL calf raise R",
+      "garmin_category": "CALF_RAISE",
+      "garmin_name": "SINGLE_LEG_STANDING_CALF_RAISE",
+      "intensity": "active",
+      "reps": 15
+     },
+     {
+      "type": "exercise",
+      "title": "SL calf raise",
+      "step_name": "SL calf raise L",
+      "garmin_category": "CALF_RAISE",
+      "garmin_name": "SINGLE_LEG_STANDING_CALF_RAISE",
+      "intensity": "active",
+      "reps": 15
+     },
+     {
+      "type": "rest",
+      "seconds": 60
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 2,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Copenhagen plank",
+      "step_name": "Copenhagen plank R",
+      "garmin_category": "PLANK",
+      "garmin_name": "SIDE_PLANK_WITH_FEET_ON_BENCH",
+      "intensity": "active",
+      "seconds": 20,
+      "notes": "Top leg on bench, short lever ok"
+     },
+     {
+      "type": "exercise",
+      "title": "Copenhagen plank",
+      "step_name": "Copenhagen plank L",
+      "garmin_category": "PLANK",
+      "garmin_name": "SIDE_PLANK_WITH_FEET_ON_BENCH",
+      "intensity": "active",
+      "seconds": 20
+     },
+     {
+      "type": "rest",
+      "seconds": 30
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "SKI6 Downhill",
+  "category": "SKI",
+  "steps": [
+   {
+    "type": "exercise",
+    "title": "Leg swings",
+    "step_name": "Leg swings",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "FORWARD_AND_BACKWARD_LEG_SWINGS",
+    "intensity": "active",
+    "seconds": 90
+   },
+   {
+    "type": "exercise",
+    "title": "Air squat",
+    "step_name": "Air squat",
+    "garmin_category": "SQUAT",
+    "garmin_name": "AIR_SQUAT",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "repeat",
+    "times": 4,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Lateral bound",
+      "step_name": "Lateral bound",
+      "garmin_category": "PLYO",
+      "garmin_name": "LATERAL_LEAP_AND_HOP",
+      "intensity": "active",
+      "reps": 12,
+      "notes": "6 each way, stick landing 2s"
+     },
+     {
+      "type": "rest",
+      "seconds": 45
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Wall sit",
+      "step_name": "Wall sit",
+      "garmin_category": "SQUAT",
+      "garmin_name": "WEIGHTED_WALL_SQUAT",
+      "intensity": "active",
+      "seconds": 60,
+      "weight_lb": 25,
+      "notes": "Plate on lap, thighs parallel"
+     },
+     {
+      "type": "exercise",
+      "title": "Tempo goblet squat",
+      "step_name": "Tempo goblet squat",
+      "garmin_category": "SQUAT",
+      "garmin_name": "GOBLET_SQUAT",
+      "intensity": "active",
+      "reps": 8,
+      "weight_lb": 50,
+      "notes": "4s down, 1s pause"
+     },
+     {
+      "type": "rest",
+      "seconds": 60
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Box jump",
+      "step_name": "Box jump",
+      "garmin_category": "PLYO",
+      "garmin_name": "BOX_JUMP",
+      "intensity": "active",
+      "reps": 5,
+      "notes": "Step down"
+     },
+     {
+      "type": "exercise",
+      "title": "DB side lunge",
+      "step_name": "DB side lunge R",
+      "garmin_category": "LUNGE",
+      "garmin_name": "DUMBBELL_SIDE_LUNGE",
+      "intensity": "active",
+      "reps": 8,
+      "weight_lb": 35
+     },
+     {
+      "type": "exercise",
+      "title": "DB side lunge",
+      "step_name": "DB side lunge L",
+      "garmin_category": "LUNGE",
+      "garmin_name": "DUMBBELL_SIDE_LUNGE",
+      "intensity": "active",
+      "reps": 8,
+      "weight_lb": 35
+     },
+     {
+      "type": "rest",
+      "seconds": 60
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Cable woodchop",
+      "step_name": "Cable woodchop R",
+      "garmin_category": "CHOP",
+      "garmin_name": "CABLE_WOODCHOP",
+      "intensity": "active",
+      "reps": 10
+     },
+     {
+      "type": "exercise",
+      "title": "Cable woodchop",
+      "step_name": "Cable woodchop L",
+      "garmin_category": "CHOP",
+      "garmin_name": "CABLE_WOODCHOP",
+      "intensity": "active",
+      "reps": 10
+     },
+     {
+      "type": "exercise",
+      "title": "Dead bug",
+      "step_name": "Dead bug",
+      "garmin_category": "HIP_STABILITY",
+      "garmin_name": "DEAD_BUG",
+      "intensity": "active",
+      "reps": 10
+     },
+     {
+      "type": "rest",
+      "seconds": 30
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "SKI7 Tour Inside",
+  "category": "SKI",
+  "steps": [
+   {
+    "type": "exercise",
+    "title": "Stair stepper",
+    "step_name": "Stepper warm-up",
+    "garmin_category": "STAIR_STEPPER",
+    "garmin_name": "STAIR_STEPPER",
+    "intensity": "warmup",
+    "seconds": 300,
+    "notes": "Easy, no pack"
+   },
+   {
+    "type": "exercise",
+    "title": "Stair stepper",
+    "step_name": "Stepper with pack",
+    "garmin_category": "STAIR_STEPPER",
+    "garmin_name": "STAIR_STEPPER",
+    "intensity": "active",
+    "seconds": 3000,
+    "weight_lb": 25,
+    "notes": "25 lb pack, Zone 2 skin-track pace"
+   },
+   {
+    "type": "exercise",
+    "title": "Stair stepper",
+    "step_name": "Stepper cool-down",
+    "garmin_category": "STAIR_STEPPER",
+    "garmin_name": "STAIR_STEPPER",
+    "intensity": "cooldown",
+    "seconds": 300
+   }
+  ]
+ },
+ {
+  "name": "SURF1 Paddle",
+  "category": "SURF",
+  "steps": [
+   {
+    "type": "exercise",
+    "title": "Arm circles",
+    "step_name": "Arm circles",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "ARM_CIRCLES",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "exercise",
+    "title": "Band pull-apart",
+    "step_name": "Band pull-apart",
+    "garmin_category": "BANDED_EXERCISES",
+    "garmin_name": "PULL_APART",
+    "intensity": "active",
+    "reps": 15
+   },
+   {
+    "type": "exercise",
+    "title": "Cat-cow",
+    "step_name": "Cat-cow",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "STRETCH_CAT_COW",
+    "intensity": "active",
+    "reps": 8
+   },
+   {
+    "type": "exercise",
+    "title": "Thoracic rotation",
+    "step_name": "Thoracic rotation",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "THORACIC_ROTATION",
+    "intensity": "active",
+    "reps": 16,
+    "notes": "8 each side"
+   },
+   {
+    "type": "repeat",
+    "times": 4,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Pull-up",
+      "step_name": "Pull-up",
+      "garmin_category": "PULL_UP",
+      "garmin_name": "PULL_UP",
+      "intensity": "active",
+      "reps": 8
+     },
+     {
+      "type": "exercise",
+      "title": "Prone Y-T-W",
+      "step_name": "Prone Y-T-W",
+      "garmin_category": "SHOULDER_STABILITY",
+      "garmin_name": "FLOOR_Y_RAISE",
+      "intensity": "active",
+      "reps": 8,
+      "notes": "8 each letter, chest on floor"
+     },
+     {
+      "type": "exercise",
+      "title": "Push-up",
+      "step_name": "Push-up",
+      "garmin_category": "PUSH_UP",
+      "garmin_name": "PUSH_UP",
+      "intensity": "active",
+      "reps": 15
+     },
+     {
+      "type": "rest",
+      "seconds": 60
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Band paddle pull",
+      "step_name": "Band paddle pull",
+      "garmin_category": "BANDED_EXERCISES",
+      "garmin_name": "LATPULL",
+      "intensity": "active",
+      "reps": 20,
+      "notes": "Straight arms, alternate like paddling"
+     },
+     {
+      "type": "exercise",
+      "title": "Superman hold",
+      "step_name": "Superman hold",
+      "garmin_category": "HYPEREXTENSION",
+      "garmin_name": "SUPERMAN_FROM_FLOOR",
+      "intensity": "active",
+      "seconds": 30,
+      "notes": "Chest and arms up, paddle position"
+     },
+     {
+      "type": "rest",
+      "seconds": 45
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Pop-up",
+      "step_name": "Pop-up",
+      "garmin_category": "TOTAL_BODY",
+      "garmin_name": "SQUAT_PLANK_PUSH_UP",
+      "intensity": "active",
+      "reps": 8,
+      "notes": "Prone to stance. R hip: go slow"
+     },
+     {
+      "type": "exercise",
+      "title": "Cobra hold",
+      "step_name": "Cobra hold",
+      "garmin_category": "HYPEREXTENSION",
+      "garmin_name": "COBRA",
+      "intensity": "active",
+      "seconds": 30
+     },
+     {
+      "type": "rest",
+      "seconds": 45
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "SURF2 Pop-up Cond",
+  "category": "SURF",
+  "steps": [
+   {
+    "type": "exercise",
+    "title": "Arm circles",
+    "step_name": "Arm circles",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "ARM_CIRCLES",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "exercise",
+    "title": "Leg swings",
+    "step_name": "Leg swings",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "FORWARD_AND_BACKWARD_LEG_SWINGS",
+    "intensity": "active",
+    "reps": 20,
+    "notes": "10 each leg"
+   },
+   {
+    "type": "exercise",
+    "title": "Inchworm",
+    "step_name": "Inchworm",
+    "garmin_category": "CORE",
+    "garmin_name": "INCHWORM",
+    "intensity": "active",
+    "reps": 5
+   },
+   {
+    "type": "repeat",
+    "times": 5,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Burpee pop-up",
+      "step_name": "Burpee pop-up",
+      "garmin_category": "TOTAL_BODY",
+      "garmin_name": "BURPEE",
+      "intensity": "active",
+      "seconds": 40,
+      "notes": "Land in surf stance each rep"
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     },
+     {
+      "type": "exercise",
+      "title": "Skater hop",
+      "step_name": "Skater hop",
+      "garmin_category": "PLYO",
+      "garmin_name": "LATERAL_SLIDE",
+      "intensity": "active",
+      "seconds": 40
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     },
+     {
+      "type": "exercise",
+      "title": "Band paddle pull",
+      "step_name": "Band paddle pull",
+      "garmin_category": "BANDED_EXERCISES",
+      "garmin_name": "LATPULL",
+      "intensity": "active",
+      "seconds": 40
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     },
+     {
+      "type": "exercise",
+      "title": "Rotational chop",
+      "step_name": "Rotational chop",
+      "garmin_category": "CHOP",
+      "garmin_name": "STANDING_ROTATIONAL_CHOP",
+      "intensity": "active",
+      "seconds": 40,
+      "notes": "Cable or band, switch sides each round"
+     },
+     {
+      "type": "rest",
+      "seconds": 60
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Single-leg balance",
+      "step_name": "Single-leg balance R",
+      "garmin_category": "TOTAL_BODY",
+      "garmin_name": "STANDING_T_ROTATION_BALANCE",
+      "intensity": "active",
+      "seconds": 30,
+      "notes": "Bosu or pad if available"
+     },
+     {
+      "type": "exercise",
+      "title": "Single-leg balance",
+      "step_name": "Single-leg balance L",
+      "garmin_category": "TOTAL_BODY",
+      "garmin_name": "STANDING_T_ROTATION_BALANCE",
+      "intensity": "active",
+      "seconds": 30
+     },
+     {
+      "type": "exercise",
+      "title": "Side plank",
+      "step_name": "Side plank R",
+      "garmin_category": "PLANK",
+      "garmin_name": "SIDE_PLANK",
+      "intensity": "active",
+      "seconds": 30
+     },
+     {
+      "type": "exercise",
+      "title": "Side plank",
+      "step_name": "Side plank L",
+      "garmin_category": "PLANK",
+      "garmin_name": "SIDE_PLANK",
+      "intensity": "active",
+      "seconds": 30
+     },
+     {
+      "type": "rest",
+      "seconds": 30
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "CC01 Combo",
+  "category": "CC",
+  "steps": [
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Side lateral raise",
+      "step_name": "Side lateral raise",
+      "garmin_category": "LATERAL_RAISE",
+      "garmin_name": "DUMBBELL_LATERAL_RAISE",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 10,
+      "notes": "Set 1 of 2. 40s on / 20s off x3 each"
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "B-stance squat",
+      "step_name": "B-stance squat",
+      "garmin_category": "SQUAT",
+      "garmin_name": "WEIGHTED_STAGGERED_SQUAT",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 25,
+      "notes": "Switch lead leg each round"
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Close grip row",
+      "step_name": "Close grip row",
+      "garmin_category": "ROW",
+      "garmin_name": "BENT_OVER_ROW_WITH_DUMBELL",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 40
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Chest press",
+      "step_name": "Chest press",
+      "garmin_category": "BENCH_PRESS",
+      "garmin_name": "DUMBBELL_BENCH_PRESS",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 20
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "RDL",
+      "step_name": "RDL",
+      "garmin_category": "DEADLIFT",
+      "garmin_name": "ROMANIAN_DEADLIFT",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 25,
+      "notes": "Set 2 of 2"
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "ISO hold w bottom curl",
+      "step_name": "ISO hold w bottom curl",
+      "garmin_category": "CURL",
+      "garmin_name": "DUMBBELL_BICEPS_CURL_WITH_STATIC_HOLD",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 12.5
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Overhead triceps ext",
+      "step_name": "Overhead triceps ext",
+      "garmin_category": "TRICEPS_EXTENSION",
+      "garmin_name": "OVERHEAD_DUMBBELL_TRICEPS_EXTENSION",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 25
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Dead bug",
+      "step_name": "Dead bug",
+      "garmin_category": "HIP_STABILITY",
+      "garmin_name": "DEAD_BUG",
+      "intensity": "active",
+      "seconds": 40
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "CC05 Combo",
+  "category": "CC",
+  "steps": [
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Alt Arnold press",
+      "step_name": "Alt Arnold press",
+      "garmin_category": "SHOULDER_PRESS",
+      "garmin_name": "ARNOLD_PRESS",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 15,
+      "notes": "Set 1 of 2. 40s on / 20s off x3 each"
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Goblet squat",
+      "step_name": "Goblet squat",
+      "garmin_category": "SQUAT",
+      "garmin_name": "GOBLET_SQUAT",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 40
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Skiers",
+      "step_name": "Skiers",
+      "garmin_category": "HIP_SWING",
+      "garmin_name": "SINGLE_ARM_DUMBBELL_SWING",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 15,
+      "notes": "DB skier swing"
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Close grip row",
+      "step_name": "Close grip row",
+      "garmin_category": "ROW",
+      "garmin_name": "BENT_OVER_ROW_WITH_DUMBELL",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 40
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Hammer curl",
+      "step_name": "Hammer curl",
+      "garmin_category": "CURL",
+      "garmin_name": "DUMBBELL_HAMMER_CURL",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 15,
+      "notes": "Set 2 of 2"
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "SDL knees soft",
+      "step_name": "SDL knees soft",
+      "garmin_category": "DEADLIFT",
+      "garmin_name": "DUMBBELL_STRAIGHT_LEG_DEADLIFT",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 25
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Triceps press",
+      "step_name": "Triceps press",
+      "garmin_category": "TRICEPS_EXTENSION",
+      "garmin_name": "DUMBBELL_LYING_TRICEPS_EXTENSION",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 20
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Rev crunch to extension",
+      "step_name": "Rev crunch to extension",
+      "garmin_category": "CRUNCH",
+      "garmin_name": "REVERSE_CRUNCH",
+      "intensity": "active",
+      "seconds": 40,
+      "notes": "R hip >3/10: swap to dead bug"
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "CC10 Combo",
+  "category": "CC",
+  "steps": [
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "ISO hold w bottom curl",
+      "step_name": "ISO hold w bottom curl",
+      "garmin_category": "CURL",
+      "garmin_name": "DUMBBELL_BICEPS_CURL_WITH_STATIC_HOLD",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 12.5,
+      "notes": "Set 1 of 2. 40s on / 20s off x3 each"
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Lateral lunge",
+      "step_name": "Lateral lunge",
+      "garmin_category": "LUNGE",
+      "garmin_name": "DUMBBELL_SIDE_LUNGE",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 25
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Overhead triceps ext",
+      "step_name": "Overhead triceps ext",
+      "garmin_category": "TRICEPS_EXTENSION",
+      "garmin_name": "OVERHEAD_DUMBBELL_TRICEPS_EXTENSION",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 25
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Squeeze press",
+      "step_name": "Squeeze press",
+      "garmin_category": "BENCH_PRESS",
+      "garmin_name": "NEUTRAL_GRIP_DUMBBELL_BENCH_PRESS",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 20
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Bent arm lateral raise",
+      "step_name": "Bent arm lateral raise",
+      "garmin_category": "LATERAL_RAISE",
+      "garmin_name": "DUMBBELL_LATERAL_RAISE",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 12.5,
+      "notes": "Set 2 of 2"
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Sumo squat",
+      "step_name": "Sumo squat",
+      "garmin_category": "SQUAT",
+      "garmin_name": "SUMO_SQUAT",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 55
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Supinated grip row",
+      "step_name": "Supinated grip row",
+      "garmin_category": "ROW",
+      "garmin_name": "REVERSE_GRIP_BARBELL_ROW",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 20,
+      "notes": "Dumbbells, palms up"
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Tuck to extension",
+      "step_name": "Tuck to extension",
+      "garmin_category": "CORE",
+      "garmin_name": "OPEN_KNEE_TUCKS",
+      "intensity": "active",
+      "seconds": 40,
+      "notes": "R hip >3/10: swap to dead bug"
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "CC15 Combo",
+  "category": "CC",
+  "steps": [
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Upright row",
+      "step_name": "Upright row",
+      "garmin_category": "SHRUG",
+      "garmin_name": "DUMBBELL_UPRIGHT_ROW",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 12.5,
+      "notes": "Set 1 of 2. 40s on / 20s off x3 each"
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "RDL",
+      "step_name": "RDL",
+      "garmin_category": "DEADLIFT",
+      "garmin_name": "ROMANIAN_DEADLIFT",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 30
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Alt chest press",
+      "step_name": "Alt chest press",
+      "garmin_category": "BENCH_PRESS",
+      "garmin_name": "ALTERNATING_DUMBBELL_CHEST_PRESS",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 25
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Skiers",
+      "step_name": "Skiers",
+      "garmin_category": "HIP_SWING",
+      "garmin_name": "SINGLE_ARM_DUMBBELL_SWING",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 12.5,
+      "notes": "DB skier swing"
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Hammer curl",
+      "step_name": "Hammer curl",
+      "garmin_category": "CURL",
+      "garmin_name": "DUMBBELL_HAMMER_CURL",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 15,
+      "notes": "Set 2 of 2"
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Narrow squat",
+      "step_name": "Narrow squat",
+      "garmin_category": "SQUAT",
+      "garmin_name": "DUMBBELL_SQUAT",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 30,
+      "notes": "Feet hip width"
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Close grip row",
+      "step_name": "Close grip row",
+      "garmin_category": "ROW",
+      "garmin_name": "BENT_OVER_ROW_WITH_DUMBELL",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 40
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Dead bug",
+      "step_name": "Dead bug",
+      "garmin_category": "HIP_STABILITY",
+      "garmin_name": "DEAD_BUG",
+      "intensity": "active",
+      "seconds": 40
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "CC20 Combo",
+  "category": "CC",
+  "steps": [
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Upright row",
+      "step_name": "Upright row",
+      "garmin_category": "SHRUG",
+      "garmin_name": "DUMBBELL_UPRIGHT_ROW",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 12.5,
+      "notes": "Set 1 of 2. 40s on / 20s off x3 each"
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Alt reverse lunge",
+      "step_name": "Alt reverse lunge",
+      "garmin_category": "LUNGE",
+      "garmin_name": "DUMBBELL_REVERSE_LUNGE",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 25,
+      "notes": "R hip >3/10: swap to step-up"
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Pronated grip row",
+      "step_name": "Pronated grip row",
+      "garmin_category": "ROW",
+      "garmin_name": "BENT_OVER_ROW_WITH_DUMBELL",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 20
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Overhead triceps ext",
+      "step_name": "Overhead triceps ext",
+      "garmin_category": "TRICEPS_EXTENSION",
+      "garmin_name": "OVERHEAD_DUMBBELL_TRICEPS_EXTENSION",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 25
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Wide curl",
+      "step_name": "Wide curl",
+      "garmin_category": "CURL",
+      "garmin_name": "DUMBBELL_BICEPS_CURL",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 15,
+      "notes": "Set 2 of 2"
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Lateral lunge",
+      "step_name": "Lateral lunge",
+      "garmin_category": "LUNGE",
+      "garmin_name": "DUMBBELL_SIDE_LUNGE",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 30
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Squeeze press",
+      "step_name": "Squeeze press",
+      "garmin_category": "BENCH_PRESS",
+      "garmin_name": "NEUTRAL_GRIP_DUMBBELL_BENCH_PRESS",
+      "intensity": "active",
+      "seconds": 40,
+      "weight_lb": 20
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Rev crunch to extension",
+      "step_name": "Rev crunch to extension",
+      "garmin_category": "CRUNCH",
+      "garmin_name": "REVERSE_CRUNCH",
+      "intensity": "active",
+      "seconds": 40,
+      "notes": "R hip >3/10: swap to dead bug"
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "TRV1 Hotel Hip",
+  "category": "TRV",
+  "steps": [
+   {
+    "type": "exercise",
+    "title": "Leg swings",
+    "step_name": "Leg swings",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "FORWARD_AND_BACKWARD_LEG_SWINGS",
+    "intensity": "active",
+    "seconds": 120,
+    "notes": "Front-back and side-side, easy"
+   },
+   {
+    "type": "repeat",
+    "times": 4,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Wall march hold",
+      "step_name": "Wall march hold R",
+      "garmin_category": "LEG_RAISE",
+      "garmin_name": "HANGING_KNEE_RAISE",
+      "intensity": "active",
+      "seconds": 40,
+      "notes": "Back to hotel wall, knee above hip, 3/10 max"
+     },
+     {
+      "type": "exercise",
+      "title": "Wall march hold",
+      "step_name": "Wall march hold L",
+      "garmin_category": "LEG_RAISE",
+      "garmin_name": "HANGING_KNEE_RAISE",
+      "intensity": "active",
+      "seconds": 40
+     },
+     {
+      "type": "rest",
+      "seconds": 30
+     }
+    ]
+   },
+   {
+    "type": "exercise",
+    "title": "Wall march hold",
+    "step_name": "Wall march hold R+1",
+    "garmin_category": "LEG_RAISE",
+    "garmin_name": "HANGING_KNEE_RAISE",
+    "intensity": "active",
+    "seconds": 40,
+    "notes": "Extra right-side set"
+   },
+   {
+    "type": "rest",
+    "seconds": 30
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Standing knee drive",
+      "step_name": "Standing knee drive R",
+      "garmin_category": "LEG_RAISE",
+      "garmin_name": "WEIGHTED_HANGING_KNEE_RAISE",
+      "intensity": "active",
+      "reps": 15,
+      "notes": "Ankle wts if packed, else 3s up 3s down"
+     },
+     {
+      "type": "exercise",
+      "title": "Standing knee drive",
+      "step_name": "Standing knee drive L",
+      "garmin_category": "LEG_RAISE",
+      "garmin_name": "WEIGHTED_HANGING_KNEE_RAISE",
+      "intensity": "active",
+      "reps": 15
+     },
+     {
+      "type": "rest",
+      "seconds": 45
+     }
+    ]
+   },
+   {
+    "type": "exercise",
+    "title": "Standing knee drive",
+    "step_name": "Standing knee drive R+1",
+    "garmin_category": "LEG_RAISE",
+    "garmin_name": "WEIGHTED_HANGING_KNEE_RAISE",
+    "intensity": "active",
+    "reps": 15,
+    "notes": "Extra right-side set"
+   },
+   {
+    "type": "rest",
+    "seconds": 45
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Seated knee lift",
+      "step_name": "Seated knee lift R",
+      "garmin_category": "LEG_RAISE",
+      "garmin_name": "HANGING_SINGLE_LEG_RAISE",
+      "intensity": "active",
+      "reps": 10,
+      "notes": "Hotel chair, sit tall, hold 3s"
+     },
+     {
+      "type": "exercise",
+      "title": "Seated knee lift",
+      "step_name": "Seated knee lift L",
+      "garmin_category": "LEG_RAISE",
+      "garmin_name": "HANGING_SINGLE_LEG_RAISE",
+      "intensity": "active",
+      "reps": 10
+     },
+     {
+      "type": "rest",
+      "seconds": 30
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Slow march",
+      "step_name": "Slow march",
+      "garmin_category": "WARM_UP",
+      "garmin_name": "WALKING_HIGH_KNEES",
+      "intensity": "active",
+      "seconds": 120,
+      "notes": "In place, ankle wts if packed. Build to 3:00"
+     },
+     {
+      "type": "rest",
+      "seconds": 60
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "SL glute bridge",
+      "step_name": "SL glute bridge R",
+      "garmin_category": "HIP_RAISE",
+      "garmin_name": "SINGLE_LEG_HIP_RAISE",
+      "intensity": "active",
+      "reps": 12,
+      "notes": "Floor or bed edge, squeeze glute"
+     },
+     {
+      "type": "exercise",
+      "title": "SL glute bridge",
+      "step_name": "SL glute bridge L",
+      "garmin_category": "HIP_RAISE",
+      "garmin_name": "SINGLE_LEG_HIP_RAISE",
+      "intensity": "active",
+      "reps": 12
+     },
+     {
+      "type": "rest",
+      "seconds": 30
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 2,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Side plank",
+      "step_name": "Side plank R",
+      "garmin_category": "PLANK",
+      "garmin_name": "SIDE_PLANK",
+      "intensity": "active",
+      "seconds": 30
+     },
+     {
+      "type": "exercise",
+      "title": "Side plank",
+      "step_name": "Side plank L",
+      "garmin_category": "PLANK",
+      "garmin_name": "SIDE_PLANK",
+      "intensity": "active",
+      "seconds": 30
+     },
+     {
+      "type": "exercise",
+      "title": "Dead bug",
+      "step_name": "Dead bug",
+      "garmin_category": "HIP_STABILITY",
+      "garmin_name": "DEAD_BUG",
+      "intensity": "active",
+      "reps": 10
+     },
+     {
+      "type": "rest",
+      "seconds": 30
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "TRV2 Hotel Full Body",
+  "category": "TRV",
+  "steps": [
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Push-up",
+      "step_name": "Push-up",
+      "garmin_category": "PUSH_UP",
+      "garmin_name": "PUSH_UP",
+      "intensity": "active",
+      "seconds": 40,
+      "notes": "Set 1 of 2. 40s on / 20s off x3 each"
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Tempo air squat",
+      "step_name": "Tempo air squat",
+      "garmin_category": "SQUAT",
+      "garmin_name": "AIR_SQUAT",
+      "intensity": "active",
+      "seconds": 40,
+      "notes": "3s down, 1s pause"
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "SL RDL bodyweight",
+      "step_name": "SL RDL bodyweight",
+      "garmin_category": "DEADLIFT",
+      "garmin_name": "SINGLE_LEG_RDL_CIRCUIT",
+      "intensity": "active",
+      "seconds": 40,
+      "notes": "Switch legs each round, reach long"
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Plank shoulder tap",
+      "step_name": "Plank shoulder tap",
+      "garmin_category": "PLANK",
+      "garmin_name": "PLANK_WITH_ARM_RAISE",
+      "intensity": "active",
+      "seconds": 40,
+      "notes": "Hips still"
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Pike push-up",
+      "step_name": "Pike push-up",
+      "garmin_category": "PUSH_UP",
+      "garmin_name": "PIKE_PUSH_UP",
+      "intensity": "active",
+      "seconds": 40,
+      "notes": "Set 2 of 2. Feet on bed to make it harder"
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Side lunge",
+      "step_name": "Side lunge",
+      "garmin_category": "LUNGE",
+      "garmin_name": "SIDE_LUNGE",
+      "intensity": "active",
+      "seconds": 40,
+      "notes": "Alternate sides"
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Glute bridge",
+      "step_name": "Glute bridge",
+      "garmin_category": "HIP_RAISE",
+      "garmin_name": "HIP_RAISE",
+      "intensity": "active",
+      "seconds": 40,
+      "notes": "Squeeze 2s at top"
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Dead bug",
+      "step_name": "Dead bug",
+      "garmin_category": "HIP_STABILITY",
+      "garmin_name": "DEAD_BUG",
+      "intensity": "active",
+      "seconds": 40
+     },
+     {
+      "type": "rest",
+      "seconds": 20
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "TRV3 Hotel Upper",
+  "category": "TRV",
+  "steps": [
+   {
+    "type": "exercise",
+    "title": "Arm circles",
+    "step_name": "Arm circles",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "ARM_CIRCLES",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "exercise",
+    "title": "Thoracic rotation",
+    "step_name": "Thoracic rotation",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "THORACIC_ROTATION",
+    "intensity": "active",
+    "reps": 16,
+    "notes": "8 each side"
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Push-up",
+      "step_name": "Push-up",
+      "garmin_category": "PUSH_UP",
+      "garmin_name": "PUSH_UP",
+      "intensity": "active",
+      "reps": 25,
+      "notes": "Legs off day. RPE 6"
+     },
+     {
+      "type": "exercise",
+      "title": "Chair dip",
+      "step_name": "Chair dip",
+      "garmin_category": "TRICEPS_EXTENSION",
+      "garmin_name": "BENCH_DIP",
+      "intensity": "active",
+      "reps": 12,
+      "notes": "Sturdy chair or bed edge"
+     },
+     {
+      "type": "exercise",
+      "title": "Prone Y-T-W",
+      "step_name": "Prone Y-T-W",
+      "garmin_category": "SHOULDER_STABILITY",
+      "garmin_name": "FLOOR_Y_RAISE",
+      "intensity": "active",
+      "reps": 8,
+      "notes": "8 each letter"
+     },
+     {
+      "type": "rest",
+      "seconds": 45
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 3,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Pike push-up",
+      "step_name": "Pike push-up",
+      "garmin_category": "PUSH_UP",
+      "garmin_name": "PIKE_PUSH_UP",
+      "intensity": "active",
+      "reps": 8
+     },
+     {
+      "type": "exercise",
+      "title": "Superman",
+      "step_name": "Superman",
+      "garmin_category": "HYPEREXTENSION",
+      "garmin_name": "SUPERMAN_FROM_FLOOR",
+      "intensity": "active",
+      "reps": 10
+     },
+     {
+      "type": "exercise",
+      "title": "Diamond push-up",
+      "step_name": "Diamond push-up",
+      "garmin_category": "PUSH_UP",
+      "garmin_name": "DIAMOND_PUSH_UP",
+      "intensity": "active",
+      "reps": 8
+     },
+     {
+      "type": "rest",
+      "seconds": 45
+     }
+    ]
+   },
+   {
+    "type": "repeat",
+    "times": 2,
+    "steps": [
+     {
+      "type": "exercise",
+      "title": "Side plank",
+      "step_name": "Side plank R",
+      "garmin_category": "PLANK",
+      "garmin_name": "SIDE_PLANK",
+      "intensity": "active",
+      "seconds": 30
+     },
+     {
+      "type": "exercise",
+      "title": "Side plank",
+      "step_name": "Side plank L",
+      "garmin_category": "PLANK",
+      "garmin_name": "SIDE_PLANK",
+      "intensity": "active",
+      "seconds": 30
+     },
+     {
+      "type": "exercise",
+      "title": "Dead bug",
+      "step_name": "Dead bug",
+      "garmin_category": "HIP_STABILITY",
+      "garmin_name": "DEAD_BUG",
+      "intensity": "active",
+      "reps": 10
+     },
+     {
+      "type": "rest",
+      "seconds": 30
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "TRV4 Drive Reset",
+  "category": "TRV",
+  "steps": [
+   {
+    "type": "exercise",
+    "title": "Leg swings",
+    "step_name": "Leg swings",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "FORWARD_AND_BACKWARD_LEG_SWINGS",
+    "intensity": "active",
+    "reps": 20,
+    "notes": "Every stop. 10 each leg, hold the car"
+   },
+   {
+    "type": "exercise",
+    "title": "Walking knee hugs",
+    "step_name": "Walking knee hugs",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "WALKING_KNEE_HUGS",
+    "intensity": "active",
+    "reps": 10
+   },
+   {
+    "type": "exercise",
+    "title": "Standing HF stretch",
+    "step_name": "Standing HF stretch R",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "STRETCH_LUNGING_HIP_FLEXOR",
+    "intensity": "active",
+    "seconds": 30,
+    "notes": "Short stance, tuck pelvis, gentle"
+   },
+   {
+    "type": "exercise",
+    "title": "Standing HF stretch",
+    "step_name": "Standing HF stretch L",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "STRETCH_LUNGING_HIP_FLEXOR",
+    "intensity": "active",
+    "seconds": 30
+   },
+   {
+    "type": "exercise",
+    "title": "Glute bridge",
+    "step_name": "Glute bridge",
+    "garmin_category": "HIP_RAISE",
+    "garmin_name": "HIP_RAISE",
+    "intensity": "active",
+    "reps": 10,
+    "notes": "Optional, if there is grass or a hotel floor"
+   },
+   {
+    "type": "exercise",
+    "title": "Calf raise",
+    "step_name": "Calf raise",
+    "garmin_category": "CALF_RAISE",
+    "garmin_name": "STANDING_CALF_RAISE",
+    "intensity": "active",
+    "reps": 20
+   },
+   {
+    "type": "exercise",
+    "title": "Thoracic rotation",
+    "step_name": "Thoracic rotation",
+    "garmin_category": "WARM_UP",
+    "garmin_name": "THORACIC_ROTATION",
+    "intensity": "active",
+    "reps": 10,
+    "notes": "5 each side"
+   }
+  ]
+ }
+]
