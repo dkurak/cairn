@@ -256,9 +256,6 @@ export default function DayView({ date }: { date: string }) {
             </section>
           )}
 
-          {isToday && <ProgramWeekBanner />}
-          {isToday && <ProgramNudge />}
-          {isToday && <ProgramAhead />}
           {gl && <div className={`banner ${gl.tone}`}><strong>{gl.title}</strong><span>{gl.body}</span></div>}
         </div>
 
@@ -267,6 +264,9 @@ export default function DayView({ date }: { date: string }) {
           <QuickCheck date={date} disabled={isFuture} />
           {isToday ? (
             <>
+              <ProgramWeekBanner />
+              <ProgramNudge />
+              <ProgramAhead />
               <Recap />
               <LogShortcuts />
             </>
