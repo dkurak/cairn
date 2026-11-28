@@ -67,7 +67,7 @@ Same layout for past, today and future; only the contents change. Future days gr
 | Up next (calm-down / plan item / no plan / week done) | `DayView` | today |
 | Done card (what was logged, rundown) | `DayView` | past days |
 | Planned card (disabled Done / Skip, rundown) | `DayView` | future days |
-| Program week banner ("Use the draft" / "Adjust it first" / "Build this week") | `ProgramWeekBanner` in `Programs.tsx` | today (right column, under the quick check-in) |
+| Program week banner ("Use the draft" / "Adjust it first" / "Build this week") | `ProgramWeekBanner` in `Programs.tsx` | today (full width, right under the day strip) |
 | Plan-ahead / re-plan suggestion (reasons, button to the coach, "Not now") | `ProgramNudge.tsx` | today |
 | "You're set" tile: weeks mapped out (dots) + a peek at the next week | `ProgramAhead.tsx` | today, when a plan is in place and no suggestion is showing |
 | Tour green light | `DayView` + `rules.greenLight` | today, only when a tour is close |
@@ -218,3 +218,4 @@ Still open:
 - 2026-11-28 - Program with a planned week no longer offers "Build this week" (Check in / Adjust this week / Use the draft instead); new `ProgramAhead` "you're set" tile; gentler re-plan copy; coach and recap encourage.
 - 2026-11-28 - Program pages share one layout (program card + phases always on top; only the week changes); `PhaseExplorer` (goal, "coming out" feel, weeks, workouts per phase); short day rows; phases carry an optional `outcome`; program-row buttons one size; "You're set" tile is now an entry (links to each week).
 - 2026-11-28 - Today: right column is Quick check-in > program tiles (banner / suggestion / "You're set") > Recap > Log something else; the "You're set" tile is slimmer.
+- 2026-11-28 - Today: program tiles are full width right under the day strip, then the workout; right column is Quick check-in > Log something else > Recap. Quick check-in says "all set - update any time" (one per day, the last answer wins).

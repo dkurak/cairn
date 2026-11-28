@@ -28,7 +28,7 @@ export default function QuickCheck({ date, disabled = false }: { date: string; d
     <section className={`card${disabled ? " off" : ""}`} aria-labelledby="qc-h">
       <div className="top">
         <h2 id="qc-h">Quick check-in{isToday ? "" : ` · ${label}`}</h2>
-        <small>{disabled ? "opens on the day" : unanswered ? (isToday ? `${unanswered} to go` : "not recorded") : "all answered"}</small>
+        <small>{disabled ? "opens on the day" : unanswered ? (isToday ? `${unanswered} to go` : "not recorded") : isToday ? "all set - update any time" : "all answered"}</small>
       </div>
 
       <div className="grid-6">

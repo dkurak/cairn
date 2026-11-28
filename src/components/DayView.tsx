@@ -126,6 +126,14 @@ export default function DayView({ date }: { date: string }) {
         ))}
       </nav>
 
+      {isToday && (
+        <div className="stack">
+          <ProgramWeekBanner />
+          <ProgramNudge />
+          <ProgramAhead />
+        </div>
+      )}
+
       <div className="two">
         <div className="stack">
           {isToday && doneToday && (
@@ -264,11 +272,8 @@ export default function DayView({ date }: { date: string }) {
           <QuickCheck date={date} disabled={isFuture} />
           {isToday ? (
             <>
-              <ProgramWeekBanner />
-              <ProgramNudge />
-              <ProgramAhead />
-              <Recap />
               <LogShortcuts />
+              <Recap />
             </>
           ) : (
             <SectionCard title="Notes">
