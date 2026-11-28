@@ -56,7 +56,8 @@ export type Plan = {
   program_week?: number | null;
 };
 
-export type ProgramPhase = { name: string; weeks: number; focus: string };
+/** `focus` = the goal in a sentence; `outcome` = how you should feel coming out of it. */
+export type ProgramPhase = { name: string; weeks: number; focus: string; outcome?: string };
 export type ProgramPrefs = { session_minutes?: number; variety?: string; rest_days?: string; equipment?: string; limits?: string };
 export type ProgramStatus = "idea" | "active" | "paused" | "done";
 /** Milestone checks the app can evaluate from the log (or mark by hand). */
