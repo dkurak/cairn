@@ -2,7 +2,8 @@
 import { useMemo, useState } from "react";
 import { useApp } from "@/components/AppProvider";
 import RecentList from "@/components/RecentList";
-import { PainTrend, Spark, StatTile, StackedBars, TypeHeatmap, TypeLegend } from "@/components/charts/Charts";
+import { StatTile, StackedBars, TypeHeatmap, TypeLegend } from "@/components/charts/Charts";
+import Flares from "@/components/Flares";
 import Link from "next/link";
 import { addDays } from "@/lib/rules";
 import { allSessions, areaSeries, computeStats, GROUPS, groupInfo, RANGES, weekStart, type RangeKey } from "@/lib/stats";
@@ -123,35 +124,7 @@ export default function History() {
         <TypeLegend keys={present} />
       </SectionCard>
 
-      <SectionCard title="Pain">
-        <PainTrend win={st.win} sessions={st.painSessions} checks={primaryChecks} checkLabel={primary?.name ?? "Daily check"} />
-      </SectionCard>
-
-      <SectionCard title="Body areas">
-        {activeAreas.length ? (
-          <div className="areas">
-            {activeAreas.map((a) => {
-              const pts = areaSeries(a, data.checks, st.win);
-              const first = pts[0], last = pts[pts.length - 1];
-              const d = first && last ? last.pain - first.pain : 0;
-              return (
-                <div className="row-a" key={a.id}>
-                  <span>
-                    <strong>{a.name}</strong><br />
-                    {last ? (
-                      <span className="meta">
-                        <PainChip p={last.pain} />{" "}
-                        {pts.length > 1 ? <>{d === 0 ? "no change" : `${d < 0 ? "down" : "up"} ${Math.abs(d)}`} since {md(first.date)}</> : "first check"}
-                      </span>
-                    ) : <span className="meta">no checks in this range</span>}
-                  </span>
-                  <Spark values={pts.map((p) => p.pain)} label={a.name} />
-                </div>
-              );
-            })}
-          </div>
-        ) : <span className="empty">Track an area on the Body tab to see its trend here.</span>}
-      </SectionCard>
+      <Flares data={data} win={st.win} today={today} />
 
       {st.tours.length > 0 && (
         <SectionCard title="Tours">

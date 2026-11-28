@@ -553,3 +553,8 @@ details.more { display: grid; gap: 8px; }
 .weekstrip .dots { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; }
 .weekstrip .dots i { width: 12px; height: 12px; border-radius: 4px; display: block; }
 .loglimit { display: flex; gap: 8px; align-items: center; }
+.flarearea { display: grid; gap: 8px; padding: 12px 0; border-top: 1px solid var(--line); }
+.episodes { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.episodes li { display: grid; grid-template-columns: 52px 1fr; gap: 10px; align-items: baseline; }
+.episodes .pk { font-family: var(--font-display); font-size: 1.1rem; color: var(--bad); }
+.painstrip { border-radius: 4px; overflow: hidden; }
