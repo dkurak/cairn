@@ -1,6 +1,7 @@
 "use client";
 import { useTip, TipBubble } from "./Tip";
-import type { WeekBucket, Window } from "@/lib/stats";
+import type { Bucket, GroupKey, WeekBucket, Window } from "@/lib/stats";
+import { GROUPS, groupInfo } from "@/lib/stats";
 import { addDays } from "@/lib/rules";
 import { weekStart } from "@/lib/stats";
 import { painClass } from "@/lib/rules";
@@ -215,5 +216,92 @@ export function PainLine({ points, label }: { points: PainPt[] & { at?: string }
       <text x={L} y={H - 6}>{md(pts[0].date)}</text>
       <text x={W - R} y={H - 6} textAnchor="end">{md(pts[pts.length - 1].date)}</text>
     </svg>
+  );
+}
+
+/* ---------- sessions per week / month, stacked by activity type ---------- */
+export function StackedBars({ series, bucket, currentStart }: { series: Bucket[]; bucket: "week" | "month"; currentStart: string }) {
+  const { ref, tip, show, hide } = useTip();
+  const W = 560, H = 210, L = 26, R = 6, T = 14, B = 26;
+  const max = Math.max(4, ...series.map((b) => b.total));
+  const top = max % 2 ? max + 1 : max;
+  const slot = (W - L - R) / Math.max(1, series.length);
+  const bw = Math.max(6, Math.min(48, slot - 4));
+  const y = (v: number) => T + (1 - v / top) * (H - T - B);
+  const every = Math.ceil(series.length / 8);
+  const labelOf = (d: string) => (bucket === "week" ? md(d) : parse(d).toLocaleDateString(undefined, { month: "short" }));
+  const tipText = (b: Bucket) => `${bucket === "week" ? "Week of " : ""}${bucket === "week" ? md(b.start) : parse(b.start).toLocaleDateString(undefined, { month: "long", year: "numeric" })}: ${b.total} session${b.total === 1 ? "" : "s"}${GROUPS.filter((g) => b.counts[g.key]).map((g) => ` · ${g.label} ${b.counts[g.key]}`).join("")}`;
+  return (
+    <div ref={ref} className="rel">
+      <svg className="viz" viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label={`Sessions per ${bucket} by activity type`}>
+        {[0, top / 2, top].map((v) => (
+          <g key={v}><line x1={L} x2={W - R} y1={y(v)} y2={y(v)} stroke="var(--line)" strokeWidth="1" /><text x={L - 6} y={y(v) + 4} textAnchor="end">{Math.round(v)}</text></g>
+        ))}
+        {series.map((b, i) => {
+          const x = L + i * slot + (slot - bw) / 2;
+          let acc = 0;
+          const isNow = b.start === currentStart || (bucket === "month" && b.start === currentStart.slice(0, 7) + "-01");
+          return (
+            <g key={b.start} onMouseEnter={(e) => b.total && show(e, tipText(b))} onMouseLeave={hide} onClick={(e) => b.total && show(e, tipText(b))}>
+              <rect x={L + i * slot} y={T} width={slot} height={H - T - B} fill="transparent" tabIndex={b.total ? 0 : undefined} aria-label={tipText(b)} />
+              {GROUPS.filter((g) => b.counts[g.key]).map((g) => {
+                const n = b.counts[g.key] as number;
+                const y1 = y(acc + n), y0 = y(acc);
+                acc += n;
+                return <rect key={g.key} x={x} y={y1} width={bw} height={Math.max(1, y0 - y1 - 2)} rx="2" fill={g.color} opacity={isNow ? 1 : 0.9} />;
+              })}
+              {(i % every === 0 || isNow) && <text x={x + bw / 2} y={H - 8} textAnchor="middle">{labelOf(b.start)}</text>}
+            </g>
+          );
+        })}
+      </svg>
+      <TipBubble tip={tip} />
+    </div>
+  );
+}
+
+export function TypeLegend({ keys }: { keys?: GroupKey[] }) {
+  const list = keys ? GROUPS.filter((g) => keys.includes(g.key)) : GROUPS;
+  return <ul className="legend" aria-label="Activity types">{list.map((g) => <li key={g.key}><span className="sw" style={{ background: g.color }} aria-hidden="true" />{g.label}</li>)}</ul>;
+}
+
+/* ---------- calendar heatmap coloured by activity type ---------- */
+export function TypeHeatmap({ win, perDay, names, today }: { win: Window; perDay: Map<string, GroupKey[]>; names: Map<string, string[]>; today: string }) {
+  const { ref, tip, show, hide } = useTip();
+  const cell = win.buckets <= 8 ? 28 : win.buckets <= 20 ? 18 : 14, gap = win.buckets <= 8 ? 5 : 3, left = 30, top = 18;
+  const W = left + win.buckets * (cell + gap), H = top + 7 * (cell + gap);
+  const days = ["Mon", "", "Wed", "", "Fri", "", ""];
+  const gridStart = weekStart(win.start);
+  const cols = Array.from({ length: win.buckets }, (_, w) => Array.from({ length: 7 }, (_, d) => addDays(gridStart, w * 7 + d)));
+  let lastMonth = "";
+  return (
+    <div ref={ref} className="rel" style={{ maxWidth: W }}>
+      <svg className="viz" viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Activity by day, coloured by type">
+        {days.map((d, i) => d && <text key={i} x={left - 5} y={top + i * (cell + gap) + cell / 2 + 4} textAnchor="end">{d}</text>)}
+        {cols.map((col, w) => {
+          const m = parse(col[0]).toLocaleDateString(undefined, { month: "short" });
+          const showM = m !== lastMonth; lastMonth = m;
+          return (
+            <g key={w}>
+              {showM && <text x={left + w * (cell + gap)} y={10}>{m}</text>}
+              {col.map((d, i) => {
+                if (d > today || d < win.start) return null;
+                const gs = perDay.get(d) ?? [];
+                const label = `${parse(d).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })} · ${gs.length ? (names.get(d) ?? []).join(", ") : "no session"}`;
+                const x = left + w * (cell + gap), yy = top + i * (cell + gap);
+                const c1 = gs[0] ? groupInfo(gs[0]).color : "var(--bg)";
+                return (
+                  <g key={d} tabIndex={gs.length ? 0 : undefined} aria-label={label} onMouseEnter={(e) => show(e, label)} onClick={(e) => show(e, label)} onFocus={(e) => show({ clientX: e.currentTarget.getBoundingClientRect().left, clientY: e.currentTarget.getBoundingClientRect().top }, label)} onMouseLeave={hide}>
+                    <rect x={x} y={yy} width={cell} height={cell} rx="3" fill={c1} stroke={gs.length ? "none" : "var(--line)"} strokeWidth=".6" />
+                    {gs[1] && <polygon points={`${x + cell},${yy} ${x + cell},${yy + cell} ${x},${yy + cell}`} fill={groupInfo(gs[1]).color} stroke="var(--surface)" strokeWidth="1" />}
+                  </g>
+                );
+              })}
+            </g>
+          );
+        })}
+      </svg>
+      <TipBubble tip={tip} />
+    </div>
   );
 }

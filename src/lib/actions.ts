@@ -41,6 +41,8 @@ export async function loadAll(sb: SupabaseClient, userId: string): Promise<AppDa
   const programWeeks = await sb.from("program_weeks").select("*").eq("user_id", userId).order("week");
   // drafts and revisions need 0009: probe for the status column
   const weekPlans = await sb.from("program_weeks").select("status").limit(1);
+  // imported watch activities need migration 0010
+  const activities = await sb.from("activities").select("id, date, name, seconds, log_entry_id").eq("user_id", userId).order("date", { ascending: false }).limit(5000);
   if (!goals.error && goals.data) Object.assign(profile.data as object, goals.data);
   return {
     profile: profile.data as AppData["profile"],
@@ -54,6 +56,7 @@ export async function loadAll(sb: SupabaseClient, userId: string): Promise<AppDa
     exports: (exports.error ? [] : exports.data) as AppData["exports"],
     programs: (programs.error ? [] : programs.data ?? []) as AppData["programs"],
     programWeeks: (programWeeks.error ? [] : programWeeks.data ?? []) as AppData["programWeeks"],
+    activities: (activities.error ? [] : activities.data ?? []) as AppData["activities"],
     weekPlansReady: !weekPlans.error,
   };
 }
