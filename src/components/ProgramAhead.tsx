@@ -21,8 +21,7 @@ export default function ProgramAhead() {
       <nav className="weekdots" aria-label="Jump to a week">
         {weeks.map((w) => <Link key={w} href={programHref(p.id, w)} className={w < pos.week ? "past" : w === pos.week ? "now" : a.planned.includes(w) ? "planned" : ""} title={`Week ${w}`} aria-label={`Week ${w}`} />)}
       </nav>
-      <span>Coming up: <Link href={programHref(p.id, a.next.week)}>Week {a.next.week}{a.next.phase ? ` · ${a.next.phase}` : ""}{a.next.start && a.next.end ? ` · ${dateRange(a.next.start, a.next.end)}` : ""}</Link>{a.next.titles.length ? ` - ${a.next.titles.slice(0, 4).join(", ")}${a.next.titles.length > 4 ? "..." : ""}` : ""}. Change it any time - the plan bends with you.</span>
-      <div className="row"><Link href={programHref(p.id)}>See the whole plan ›</Link></div>
+      <span>Next: <Link href={programHref(p.id, a.next.week)}>Week {a.next.week}{a.next.phase ? ` · ${a.next.phase}` : ""}{a.next.start && a.next.end ? ` · ${dateRange(a.next.start, a.next.end)}` : ""}</Link> · <Link href={programHref(p.id)}>See the plan ›</Link></span>
     </div>
   );
 }
