@@ -4,7 +4,7 @@
 > an API route or a database migration updates this file in the same change. Add a line to the
 > [Changelog](#9-changelog) at the bottom. (The rule is also in `CLAUDE.md`, so cloud sessions follow it too.)
 
-As of 2026-11-28, migrations 0001-0009. (0008 `program_weeks` and 0009 draft weeks + week versions must be applied in Supabase for planning ahead; without them the app falls back to the old behavior and the program pages say so.)
+As of 2026-11-28, migrations 0001-0010. (0008 `program_weeks` and 0009 draft weeks + week versions must be applied in Supabase for planning ahead; without them the app falls back to the old behavior and the program pages say so.)
 
 ---
 
@@ -169,7 +169,10 @@ Coach tools (`/api/chat`): `log_session`, `pain_check`, `add_pain_area`, `propos
 | 0006 | `profiles.goals` |
 | 0007 | `programs`, `plans.program_id / program_week` |
 | 0008 | `program_weeks` (every program week kept as planned; saved when a plan is written for a program week) |
+| 0010 | `activities` (imported watch activities, one row each; gym strength lives only here) |
 | 0009 | `program_weeks.status` (draft / live), `revision`, `note`; `program_week_versions` (written by trigger, like workout versions) |
+
+Garmin history import (private data in git-ignored `data/garmin-watch`, `data/garmin-export`): `python3 scripts/garmin_sessions.py <Activity folder> data/garmin-export/activities.json`, then `npm run garmin:import` (dry run) / `-- --apply`. Skiing, running, biking, hiking, swimming become log entries (notes start with "Garmin"; anything already logged that day is left alone); gym strength stays out of the log. Re-runnable.
 
 Library modules (`src/lib`): `actions.ts` (all writes, shared by browser and coach), `rules.ts` (up next, green light, dates), `stats.ts` (History numbers), `format.ts` (dates), `programWeeks.ts` (pure rules: week plan, matching logged sessions to planned days, week status, program health, the nudge, coach prompts), `programs.ts` / `programInput.ts` (program position, `phaseAtWeek`, `weekRange`, `weekActivity`, phases, "done when" checks), `proposals.ts`, `review.ts` (digest for the coach), `types.ts`, `garmin/*` (`.fit` writer, steps, zip, status).
 
@@ -222,3 +225,4 @@ Still open:
 - 2026-11-28 - Today: program tiles are full width right under the day strip, then the workout; right column is Quick check-in > Log something else > Recap. Quick check-in says "all set - update any time" (one per day, the last answer wins).
 - 2026-11-28 - Instant taps: `run(fn, fail, optimistic)` and `lib/optimistic.ts`; check-ins, plan ticks, phase, At home, entry edit/delete, pain areas and program status update the screen immediately. Slower multi-step actions (log, skip, next week, use a draft) still wait for the save.
 - 2026-11-28 - Today: "Log something else" moved inside the workout tile (Up next and Done cards) as one quiet row; the separate tile is gone.
+- 2026-11-28 - Garmin history import: `scripts/garmin_sessions.py` (reads watch .fit session summaries), `scripts/garmin-import.mts`, migration 0010 `activities`; 83 activities (Jan-Nov 2026) imported as log entries.
