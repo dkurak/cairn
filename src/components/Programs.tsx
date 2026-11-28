@@ -8,6 +8,7 @@ import { adoptDraftWeek } from "@/lib/actions";
 import { activePlan } from "@/lib/rules";
 import { shortDate as fmtDate } from "@/lib/format";
 import { ConfirmButton, SectionCard, Tag } from "./ui";
+import { optProgramGone, optProgramStatus } from "@/lib/optimistic";
 import type { Program, ProgramStatus } from "@/lib/types";
 
 const STATUS: Record<ProgramStatus, string> = { active: "Active", paused: "Paused", idea: "Idea", done: "Done" };
@@ -26,8 +27,8 @@ export function useProgramActions() {
       const restart = status === "active" && (!p.start_date || p.status !== "paused");
       const { error } = await sb.from("programs").update({ status, ...(restart ? { start_date: new Date().toISOString().slice(0, 10) } : {}) }).eq("id", p.id);
       if (error) throw error;
-    });
-  const remove = (p: Program) => void run(async () => { const { error } = await sb.from("programs").delete().eq("id", p.id); if (error) throw error; });
+    }, undefined, optProgramStatus(p.id, status));
+  const remove = (p: Program) => void run(async () => { const { error } = await sb.from("programs").delete().eq("id", p.id); if (error) throw error; }, undefined, optProgramGone(p.id));
   const finish = (p: Program, early: boolean) => askCoach(early
     ? `I think my "${p.title}" is done - can we call it complete? Here's how it's going: `
     : `All my "${p.title}" checks are met - let's call it done. How it went: `, false);

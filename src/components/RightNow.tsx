@@ -4,6 +4,7 @@ import { ConfirmButton, SectionCard } from "./ui";
 import { canResumeTravel, restartTravelSet, setPhase } from "@/lib/actions";
 import { primaryArea } from "@/lib/rules";
 import { shortDate as fmt } from "@/lib/format";
+import { optPhase } from "@/lib/optimistic";
 
 /** Where you're training and what mode you're in: the two switches that change what the plan shows. */
 export default function RightNow() {
@@ -42,8 +43,8 @@ export default function RightNow() {
             </span>
             <div className="row">
               {state.phase === "calm"
-                ? <button onClick={() => run(() => setPhase(sb, state, "build"))}>Start the plan</button>
-                : <button onClick={() => run(() => setPhase(sb, state, "calm"))}>Flared? Back to calm-down</button>}
+                ? <button onClick={() => run(() => setPhase(sb, state, "build"), undefined, optPhase("build"))}>Start the plan</button>
+                : <button onClick={() => run(() => setPhase(sb, state, "calm"), undefined, optPhase("calm"))}>Flared? Back to calm-down</button>}
             </div>
           </div>
         )}

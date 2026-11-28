@@ -9,6 +9,7 @@ import { PageHeader, SectionCard } from "@/components/ui";
 import { markDone, startNextWeek, unmarkDone } from "@/lib/actions";
 import { activePlan, doneMap, greenLight, upNext } from "@/lib/rules";
 import { shortDate as fmt } from "@/lib/format";
+import { optDone } from "@/lib/optimistic";
 
 /** What you're working toward (programs, goals), this week, and the two switches (where, and rehab mode). Everything you've done lives in History. */
 export default function Plan() {
@@ -44,7 +45,7 @@ export default function Plan() {
                 return (
                   <li key={it.key} className={d ? "done" : current ? "current" : ""}>
                     <button type="button" className="tick" title={d ? "Undo" : "Mark done"} aria-label={d ? `Undo ${it.title}` : `Mark ${it.title} done`}
-                      onClick={() => void run(() => (d ? unmarkDone(sb, state, it.key) : markDone(sb, state, it.key, today)))}>
+                      onClick={() => void run(() => (d ? unmarkDone(sb, state, it.key) : markDone(sb, state, it.key, today)), undefined, optDone(it.key, d ? null : today))}>
                       {d ? (d === "skipped" ? "–" : "✓") : i + 1}
                     </button>
                     <span className="day">{it.day}</span>

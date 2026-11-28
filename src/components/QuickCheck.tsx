@@ -4,6 +4,7 @@ import { useApp } from "./AppProvider";
 import { addPainArea, saveDailyFeel, savePainCheck } from "@/lib/actions";
 import { checkOn, checksFor, trendNote } from "@/lib/rules";
 import { FeelPicker, PainPicker } from "./ui";
+import { optFeel, optPain } from "@/lib/optimistic";
 
 // one tap per question: None / Aware / Sharp / Bad  ->  0 / 2 / 5 / 8 (fine-tune with the 0-10 row)
 const BANDS = [
@@ -33,7 +34,7 @@ export default function QuickCheck({ date, disabled = false }: { date: string; d
 
       <div className="grid-6">
         <strong>{isToday ? "How are you feeling overall?" : "How did you feel overall?"}</strong>
-        <FeelPicker wide allowClear={false} disabled={disabled} value={feel ?? null} label="Overall feeling" onChange={(f) => f && void run(() => saveDailyFeel(sb, uid, f, date))} />
+        <FeelPicker wide allowClear={false} disabled={disabled} value={feel ?? null} label="Overall feeling" onChange={(f) => f && void run(() => saveDailyFeel(sb, uid, f, date), undefined, optFeel(date, f))} />
         {!disabled && feel === "Rough" && <button className="link self-start" onClick={() => askCoach("I'm feeling rough today. What should I do - lighter workout or rest?")}>Talk it through with the coach</button>}
       </div>
 
@@ -47,11 +48,11 @@ export default function QuickCheck({ date, disabled = false }: { date: string; d
             </div>
             <div className="quick" role="group" aria-label={`${a.name} today`}>
               {BANDS.map((b) => (
-                <button key={b.label} aria-pressed={cur != null && b.test(cur)} disabled={disabled} onClick={() => run(() => savePainCheck(sb, uid, a.id, b.value, date))}>{b.label}</button>
+                <button key={b.label} aria-pressed={cur != null && b.test(cur)} disabled={disabled} onClick={() => run(() => savePainCheck(sb, uid, a.id, b.value, date), undefined, optPain(a.id, date, b.value))}>{b.label}</button>
               ))}
             </div>
             {exact === a.id ? (
-              <PainPicker value={cur ?? null} allowClear={false} label={`${a.name} exact pain, 0 to 10`} onChange={(v) => v != null && void run(() => savePainCheck(sb, uid, a.id, v, date))} />
+              <PainPicker value={cur ?? null} allowClear={false} label={`${a.name} exact pain, 0 to 10`} onChange={(v) => v != null && void run(() => savePainCheck(sb, uid, a.id, v, date), undefined, optPain(a.id, date, v))} />
             ) : (
               <div className="row">
                 <button className="link small" disabled={disabled} onClick={() => setExact(a.id)}>{cur != null ? `${cur}/10 - change exact number` : "Exact number (0-10)"}</button>

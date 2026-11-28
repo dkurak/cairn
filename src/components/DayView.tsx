@@ -16,6 +16,7 @@ import { deleteEntry, setPhase, skipUpNext, startNextWeek, updateEntry } from "@
 import { firstTrackedDay } from "@/lib/stats";
 import { activeProgram } from "@/lib/programs";
 import { activePlan, addDays, checksFor, defaultWorkoutName, greenLight, itemWorkoutIds, painClass, primaryArea, projectedItems, sortedLog, tours, upNext } from "@/lib/rules";
+import { optEntry, optEntryGone, optPhase } from "@/lib/optimistic";
 
 const first = (t: string) => t.replace(/ .*/, "");
 
@@ -174,7 +175,7 @@ export default function DayView({ date }: { date: string }) {
                   )}
                   <div className="row"><button className="primary" onClick={doNext}>Done - log it</button></div>
                   <WorkoutRundowns workouts={todayWorkouts} />
-                  <div className="row"><button className="link" onClick={() => run(() => setPhase(sb, state, "build"))}>Everyday pain is 3/10 or less - start the plan</button></div>
+                  <div className="row"><button className="link" onClick={() => run(() => setPhase(sb, state, "build"), undefined, optPhase("build"))}>Everyday pain is 3/10 or less - start the plan</button></div>
                 </>
               )}
               {next.type === "item" && (
@@ -283,9 +284,9 @@ export default function DayView({ date }: { date: string }) {
                   limit={20}
                   editingId={editingId}
                   setEditingId={setEditingId}
-                  onSave={(id, patch) => run(() => updateEntry(sb, id, patch), "Couldn't save that. Try again.").then((ok) => ok && setEditingId(null))}
+                  onSave={(id, patch) => run(() => updateEntry(sb, id, patch), "Couldn't save that. Try again.", optEntry(id, patch)).then((ok) => ok && setEditingId(null))}
           workouts={workouts}
-                  onDelete={(id) => run(() => deleteEntry(sb, id), "Couldn't delete. Try again.")}
+                  onDelete={(id) => run(() => deleteEntry(sb, id), "Couldn't delete. Try again.", optEntryGone(id))}
                 />
               ) : <span className="empty">{isFuture ? "Nothing to note yet." : "No notes for this day. Tap an entry to add one."}</span>}
             </SectionCard>

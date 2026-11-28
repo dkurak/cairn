@@ -19,7 +19,8 @@ type Ctx = {
   today: string;
   status: string;
   setStatus: (s: string) => void;
-  run: (fn: () => Promise<unknown>, fail?: string) => Promise<boolean>;
+  /** Do a write, then refresh. Pass `optimistic` to show the change instantly; a failed write puts the real data back. */
+  run: (fn: () => Promise<unknown>, fail?: string, optimistic?: (d: AppData) => AppData) => Promise<boolean>;
   openLog: (s: SheetSpec) => void;
   openTravel: () => void;
   saveProposal: (p: Proposal) => Promise<boolean>;
@@ -53,14 +54,16 @@ export default function AppProvider({ initial, children }: { initial: AppData; c
   const uid = initial.state.user_id;
   const today = todayISO();
 
-  const run = useCallback(async (fn: () => Promise<unknown>, fail = "Couldn't save that. Try again.") => {
+  const run = useCallback(async (fn: () => Promise<unknown>, fail = "Couldn't save that. Try again.", optimistic?: (d: AppData) => AppData) => {
     setStatus("");
+    if (optimistic) setData(optimistic);
     try {
       await fn();
       setData(await loadAll(sb, uid));
       return true;
     } catch (e) {
       console.error("save failed:", e);
+      if (optimistic) { try { setData(await loadAll(sb, uid)); } catch { /* keep what we have */ } }
       // a missing database update is worth saying plainly
       setStatus(e instanceof Error && /migration/.test(e.message) ? e.message : fail);
       return false;

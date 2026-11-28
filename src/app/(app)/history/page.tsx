@@ -8,6 +8,7 @@ import { deleteEntry, updateEntry } from "@/lib/actions";
 import { primaryArea, sortedLog } from "@/lib/rules";
 import { shortDate as md } from "@/lib/format";
 import { PageHeader, PainChip, SectionCard } from "@/components/ui";
+import { optEntry, optEntryGone } from "@/lib/optimistic";
 
 export default function History() {
   const { data, sb, today, run, openLog } = useApp();
@@ -138,9 +139,9 @@ export default function History() {
           onLogDay={(d) => openLog({ whats: ["Rest"], rest: true, date: d })}
           editingId={editingId}
           setEditingId={setEditingId}
-          onSave={(id, patch) => run(() => updateEntry(sb, id, patch), "Couldn't save that. Try again.").then((ok) => ok && setEditingId(null))}
+          onSave={(id, patch) => run(() => updateEntry(sb, id, patch), "Couldn't save that. Try again.", optEntry(id, patch)).then((ok) => ok && setEditingId(null))}
           workouts={data.workouts}
-          onDelete={(id) => run(() => deleteEntry(sb, id), "Couldn't delete. Try again.")}
+          onDelete={(id) => run(() => deleteEntry(sb, id), "Couldn't delete. Try again.", optEntryGone(id))}
         />
       </SectionCard>
     </div>
