@@ -16,7 +16,7 @@ export default function Body() {
   return (
     <div className="page">
       <PageHeader title="Body" coach={{ text: "I want to give you an update on how my body is doing." }} />
-      <p className="note" style={{ margin: 0 }}>Track what hurts and how it&apos;s changing. The coach reads this when it suggests changes to your workouts.</p>
+      <p className="note m0">Track what hurts and how it&apos;s changing. The coach reads this when it suggests changes to your workouts.</p>
 
       <div className="two">
         <PainCard

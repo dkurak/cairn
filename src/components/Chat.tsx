@@ -155,7 +155,7 @@ export default function Chat() {
 
   return (
     <div className="chat-page">
-      <div className="chat-log card" ref={logRef} aria-live="polite" style={{ padding: 12 }}>
+      <div className="chat-log card" ref={logRef} aria-live="polite">
         <div className="msg ai">{INTRO}</div>
         {rows.map((m) =>
           m.proposal ? (

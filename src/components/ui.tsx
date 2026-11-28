@@ -35,8 +35,8 @@ export function AskCoachButton({ text, send = false, children = "Ask coach", pri
 export function PageHeader({ title, back, coach, children }: { title: ReactNode; back?: ReactNode; coach?: { text: string; send?: boolean; label?: string }; children?: ReactNode }) {
   return (
     <div className="page-head">
-      <div style={{ display: "grid", gap: 2, minWidth: 0 }}>{back}<h1>{title}</h1></div>
-      <div className="row" style={{ flexWrap: "nowrap" }}>
+      <div className="head-left">{back}<h1>{title}</h1></div>
+      <div className="row nowrap">
         {children}
         {coach && <AskCoachButton text={coach.text} send={coach.send}>{coach.label ?? "Ask coach"}</AskCoachButton>}
       </div>

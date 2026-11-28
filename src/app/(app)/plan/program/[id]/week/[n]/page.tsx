@@ -73,9 +73,9 @@ export default function ProgramWeekPage() {
   return (
     <div className="page">
       <PageHeader title={`Week ${week}${total ? ` of ${total}` : ""}`} back={back} coach={{ text: `Let's talk about week ${week} of my "${p.title}" program: ` }}>
-        <div className="row" style={{ flexWrap: "nowrap", gap: 4 }}>
-          {prev ? <Link href={prev} className="iconlink" aria-label="Previous week">‹</Link> : <span className="iconlink" style={{ opacity: 0.3 }} aria-hidden="true">‹</span>}
-          {next ? <Link href={next} className="iconlink" aria-label="Next week">›</Link> : <span className="iconlink" style={{ opacity: 0.3 }} aria-hidden="true">›</span>}
+        <div className="row nowrap gap-4">
+          {prev ? <Link href={prev} className="iconlink" aria-label="Previous week">‹</Link> : <span className="iconlink dim" aria-hidden="true">‹</span>}
+          {next ? <Link href={next} className="iconlink" aria-label="Next week">›</Link> : <span className="iconlink dim" aria-hidden="true">›</span>}
         </div>
       </PageHeader>
 
@@ -86,7 +86,7 @@ export default function ProgramWeekPage() {
               {status && <Tag>{status === "now" ? "This week" : status === "past" ? "Done" : "Upcoming"}</Tag>}
               {phase && (isActive || phaseIndex >= 0) && <Tag>{`Phase ${phaseIndex + 1} of ${phases.length}`}</Tag>}
             </div>
-            {phase?.focus && <p style={{ margin: 0 }}>{phase.focus}</p>}
+            {phase?.focus && <p className="m0">{phase.focus}</p>}
             {status !== "future" && (
               <>
                 {planned > 0 && (

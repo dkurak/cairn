@@ -46,7 +46,7 @@ export default function ProgramPage() {
       <div className="two">
         <div className="stack">
           <SectionCard title="Overview" aside={<Tag>{STATUS[p.status]}</Tag>}>
-            {p.goal && <p style={{ margin: 0 }}>{p.goal}</p>}
+            {p.goal && <p className="m0">{p.goal}</p>}
             <span className="note">{positionLabel(p, pos, crit ?? undefined)}</span>
             {isActive && pos.totalWeeks && (
               <div className="meter" role="progressbar" aria-label="Weeks done" aria-valuemin={0} aria-valuemax={pos.totalWeeks} aria-valuenow={Math.min(pos.week - 1, pos.totalWeeks)}>
@@ -61,8 +61,8 @@ export default function ProgramPage() {
               {p.preferences?.session_minutes && <div><dt>Session length</dt><dd>{p.preferences.session_minutes} min</dd></div>}
               {p.preferences?.equipment && <div><dt>Equipment</dt><dd>{p.preferences.equipment}</dd></div>}
             </dl>
-            {p.notes && <p className="note" style={{ margin: 0 }}>{p.notes}</p>}
-            {p.status === "done" && p.outcome && <p style={{ margin: 0 }}><strong>How it went:</strong> {p.outcome}</p>}
+            {p.notes && <p className="note m0">{p.notes}</p>}
+            {p.status === "done" && p.outcome && <p className="m0"><strong>How it went:</strong> {p.outcome}</p>}
             {crit && <CriteriaList crit={crit} />}
             <div className="row">
               {isActive ? (

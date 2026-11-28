@@ -43,7 +43,7 @@ export default function WorkoutHistory({ w }: { w: Workout }) {
               <strong>v{v.version}</strong> · {when(v.changed_at)}
               {v.change_note ? <span className="history-note"> - {v.change_note}</span> : null}
             </span>
-            <span className="row" style={{ flexWrap: "nowrap" }}>
+            <span className="row nowrap">
               {v.version === w.version && <Tag>Current</Tag>}
               {v.version === onWatch && <Tag>On watch</Tag>}
             </span>

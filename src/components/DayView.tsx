@@ -105,11 +105,11 @@ export default function DayView({ date }: { date: string }) {
   return (
     <div className="page">
       <div className="page-head">
-        <div className="row" style={{ gap: 6 }}>
+        <div className="row gap-6">
           <Link href={hrefFor(addDays(date, -1))} className="iconlink" aria-label="Previous day">‹</Link>
           <h1>{head}</h1>
           <Link href={hrefFor(addDays(date, 1))} className="iconlink" aria-label="Next day">›</Link>
-          {!isToday && <Link href="/" style={{ marginLeft: 6 }}>Back to today</Link>}
+          {!isToday && <Link href="/" className="ml-6">Back to today</Link>}
         </div>
         <button className="askbtn" onClick={() => askCoach(isToday ? "What should I focus on today?" : `Can we talk about ${head}? `, isToday)}>Ask coach</button>
       </div>
@@ -199,11 +199,11 @@ export default function DayView({ date }: { date: string }) {
           )}
 
           {isPast && (
-            <section className={`card next ${trained(date) ? "done-today" : ""}`} style={trained(date) ? undefined : { borderColor: "var(--line)" }}>
-              <div className="label" style={trained(date) ? undefined : { color: "var(--muted)" }}>{trained(date) ? "✓ " : ""}Done · {dow(date)} {md(date)}</div>
+            <section className={`card next ${trained(date) ? "done-today" : "quiet"}`}>
+              <div className={`label${trained(date) ? "" : " muted"}`}>{trained(date) ? "✓ " : ""}Done · {dow(date)} {md(date)}</div>
               {dayEntries.length ? (
                 <>
-                  <div className="title" style={dayEntries.every((e) => e.kind === "rest") ? { color: "var(--muted)" } : undefined}>{dayEntries.map((e) => e.what).join(" + ")}</div>
+                  <div className={`title${dayEntries.every((e) => e.kind === "rest") ? " muted" : ""}`}>{dayEntries.map((e) => e.what).join(" + ")}</div>
                   <ul className="list">
                     {dayEntries.map((e) => (
                       <li key={e.id}>
@@ -217,12 +217,12 @@ export default function DayView({ date }: { date: string }) {
               ) : (
                 tracked(date) ? (
                   <>
-                    <div className="title" style={{ color: "var(--muted)" }}>Rest day</div>
+                    <div className="title muted">Rest day</div>
                     <div className="note">Nothing logged, so it counts as a rest day. Did something? Add it below.</div>
                   </>
                 ) : (
                   <>
-                    <div className="title" style={{ color: "var(--muted)" }}>Before tracking</div>
+                    <div className="title muted">Before tracking</div>
                     <div className="note">You hadn&apos;t started logging yet. You can still add something for this day.</div>
                   </>
                 )
@@ -234,10 +234,10 @@ export default function DayView({ date }: { date: string }) {
           )}
 
           {isFuture && (
-            <section className="card next" style={{ borderColor: "var(--line)" }}>
+            <section className="card next quiet">
               {plannedItem ? (
                 <>
-                  <div className="label" style={{ color: "var(--muted)" }}>Planned · {plannedItem.day}</div>
+                  <div className="label muted">Planned · {plannedItem.day}</div>
                   <div className="title">{plannedItem.title}</div>
                   <div className="note">{plannedItem.note}</div>
                   <div className="row"><button className="primary" disabled>Done - log it</button><button disabled>Skip</button></div>
@@ -246,7 +246,7 @@ export default function DayView({ date }: { date: string }) {
                 </>
               ) : (
                 <>
-                  <div className="label" style={{ color: "var(--muted)" }}>Planned</div>
+                  <div className="label muted">Planned</div>
                   <div className="title">Nothing planned yet</div>
                   <div className="row"><button className="primary" onClick={() => askCoach(`Help me plan ${head}.`)}>Plan it with the coach</button></div>
                 </>

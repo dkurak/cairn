@@ -34,7 +34,7 @@ export default function WorkoutPage() {
       <div className="two">
         <SectionCard title="Workout" aside={workoutSummary(w)}>
           <div className="row"><Tag>{w.category}</Tag><Tag>v{w.version}</Tag>{w.owner_id ? <Tag>Yours</Tag> : <Tag>Shared</Tag>}<WatchChip w={w} /></div>
-          {w.notes && <p className="note" style={{ margin: 0 }}>{w.notes}</p>}
+          {w.notes && <p className="note m0">{w.notes}</p>}
           <Rundown workout={w} />
           <WorkoutActions w={w} />
         </SectionCard>

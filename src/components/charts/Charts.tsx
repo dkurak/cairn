@@ -14,12 +14,12 @@ export function StatTile({ label, value, sub, delta }: {
 }) {
   const arrow = delta?.dir === "up" ? "▲" : delta?.dir === "down" ? "▼" : "■";
   return (
-    <div className="card" style={{ gap: 4, alignContent: "start" }}>
-      <span className="meta" style={{ fontSize: ".85rem" }}>{label}</span>
-      <span style={{ fontFamily: "var(--font-display)", fontSize: "2.4rem", lineHeight: 1, fontWeight: 700 }}>{value}</span>
-      {sub && <span className="meta" style={{ fontSize: ".85rem" }}>{sub}</span>}
+    <div className="card stat">
+      <span className="meta stat-label">{label}</span>
+      <span className="stat-value">{value}</span>
+      {sub && <span className="meta stat-sub">{sub}</span>}
       {delta && (
-        <span style={{ fontSize: ".82rem", fontWeight: 600, color: delta.good == null ? "var(--muted)" : delta.good ? "var(--good)" : "var(--warn)" }}>
+        <span className={`stat-delta${delta.good == null ? "" : delta.good ? " good" : " warn"}`}>
           <span aria-hidden="true">{arrow} </span>{delta.text}
         </span>
       )}
@@ -45,7 +45,7 @@ export function WeeklyBars({ weekly, currentStart, from }: { weekly: WeekBucket[
     return `M${x},${y(0)} v${-(h - r)} a${r},${r} 0 0 1 ${r},${-r} h${bw - 2 * r} a${r},${r} 0 0 1 ${r},${r} v${h - r} z`;
   };
   return (
-    <div ref={ref} style={{ position: "relative" }}>
+    <div ref={ref} className="rel">
       <svg className="viz" viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Sessions per week">
         {[0, top / 2, top].map((v) => (
           <g key={v}><line x1={L} x2={W - R} y1={y(v)} y2={y(v)} stroke="var(--line)" strokeWidth="1" /><text x={L - 6} y={y(v) + 4} textAnchor="end">{Math.round(v)}</text></g>
@@ -63,7 +63,7 @@ export function WeeklyBars({ weekly, currentStart, from }: { weekly: WeekBucket[
                   onClick={(e) => showAtEl(e.currentTarget, `Week of ${md(shown(w.start))} · ${w.count} · ${w.names.slice(0, 3).join(", ")}${w.names.length > 3 ? "…" : ""}`)}
                   onMouseLeave={hide} onBlur={hide} />
               )}
-              {w.count > 0 && (w === best || isNow) && <text x={x + bw / 2} y={y(w.count) - 4} textAnchor="middle" style={{ fill: "var(--ink)", fontWeight: 700 }}>{w.count}</text>}
+              {w.count > 0 && (w === best || isNow) && <text x={x + bw / 2} y={y(w.count) - 4} textAnchor="middle" className="t-strong">{w.count}</text>}
               {i % every === 0 && <text x={x + bw / 2} y={H - 8} textAnchor="middle">{md(shown(w.start))}</text>}
             </g>
           );
@@ -79,14 +79,14 @@ export function MixBars({ rows }: { rows: { label: string; count: number }[] }) 
   if (!rows.length) return <p className="empty">Nothing logged in this range.</p>;
   const max = rows[0].count, total = rows.reduce((s, r) => s + r.count, 0);
   return (
-    <div style={{ display: "grid", gap: 8 }}>
+    <div className="mixlist">
       {rows.map((r) => (
-        <div key={r.label} style={{ display: "grid", gridTemplateColumns: "minmax(86px, 34%) 1fr auto", gap: 10, alignItems: "center" }}>
-          <span style={{ fontSize: ".92rem" }}>{r.label}</span>
-          <span style={{ background: "var(--bg)", borderRadius: 4, height: 14, display: "block" }}>
-            <span style={{ display: "block", height: 14, width: `${Math.max(6, (r.count / max) * 100)}%`, background: "var(--accent)", borderRadius: "0 4px 4px 0" }} />
+        <div key={r.label} className="mixrow">
+          <span className="mixlabel">{r.label}</span>
+          <span className="mixtrack">
+            <span className="mixfill" style={{ width: `${Math.max(6, (r.count / max) * 100)}%` }} />
           </span>
-          <span className="meta" style={{ fontVariantNumeric: "tabular-nums", fontSize: ".88rem" }}><strong style={{ color: "var(--ink)" }}>{r.count}</strong> · {Math.round((r.count / total) * 100)}%</span>
+          <span className="meta mixcount"><strong>{r.count}</strong> · {Math.round((r.count / total) * 100)}%</span>
         </div>
       ))}
     </div>
@@ -107,31 +107,31 @@ export function PainTrend({ win, sessions, checks, checkLabel }: { win: Window; 
   const ticks = [0, 1, 2, 3, 4].map((i) => addDays(win.start, Math.round((span / 4) * i)));
   const last = (a: PainPt[]) => a[a.length - 1];
   return (
-    <div ref={ref} style={{ position: "relative" }}>
-      <div className="row" style={{ gap: 14, fontSize: ".88rem" }} aria-label="Legend">
-        <span><span aria-hidden="true" style={{ display: "inline-block", width: 14, height: 3, background: "var(--s1)", verticalAlign: "middle", marginRight: 6 }} />During sessions</span>
-        <span><span aria-hidden="true" style={{ display: "inline-block", width: 14, height: 3, background: "var(--s2)", verticalAlign: "middle", marginRight: 6 }} />{checkLabel} (daily)</span>
+    <div ref={ref} className="rel">
+      <div className="row legend" aria-label="Legend">
+        <span><span aria-hidden="true" className="swatch s1" />During sessions</span>
+        <span><span aria-hidden="true" className="swatch s2" />{checkLabel} (daily)</span>
       </div>
       <svg className="viz" viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Pain over time: during sessions and daily checks">
         <rect x={L} y={y(3)} width={W - L - R} height={y(0) - y(3)} fill="var(--good-bg)" />
-        <text x={W - R + 6} y={y(1.5) + 4} style={{ fill: "var(--good)" }}>≤3 green</text>
+        <text x={W - R + 6} y={y(1.5) + 4} className="t-good">≤3 green</text>
         {[0, 3, 6, 10].map((v) => <g key={v}><line x1={L} x2={W - R} y1={y(v)} y2={y(v)} stroke="var(--line)" /><text x={L - 6} y={y(v) + 4} textAnchor="end">{v}</text></g>)}
         {C.length > 1 && <path d={line(C)} fill="none" stroke="var(--s2)" strokeWidth="2" strokeLinejoin="round" />}
         {S.length > 1 && <path d={line(S)} fill="none" stroke="var(--s1)" strokeWidth="2" strokeLinejoin="round" />}
         {C.map((p) => <circle key={"c" + p.date} cx={x(p.date)} cy={y(p.p)} r="5.5" fill="var(--s2)" stroke="var(--surface)" strokeWidth="2" onMouseEnter={(e) => show(e, `${md(p.date)} · ${checkLabel} ${p.p}/10`)} onClick={(e) => show(e, `${md(p.date)} · ${checkLabel} ${p.p}/10`)} onMouseLeave={hide} />)}
         {S.map((p, i) => <circle key={"s" + i} cx={x(p.date)} cy={y(p.p)} r="6" fill="var(--s1)" stroke="var(--surface)" strokeWidth="2" onMouseEnter={(e) => show(e, `${md(p.date)} · during session ${p.p}/10`)} onClick={(e) => show(e, `${md(p.date)} · during session ${p.p}/10`)} onMouseLeave={hide} />)}
-        {last(C) && <text x={x(last(C).date) + 8} y={y(last(C).p) - 6} style={{ fill: "var(--ink)", fontWeight: 700 }}>{last(C).p}</text>}
-        {last(S) && <text x={x(last(S).date) + 8} y={y(last(S).p) + 14} style={{ fill: "var(--ink)", fontWeight: 700 }}>{last(S).p}</text>}
+        {last(C) && <text x={x(last(C).date) + 8} y={y(last(C).p) - 6} className="t-strong">{last(C).p}</text>}
+        {last(S) && <text x={x(last(S).date) + 8} y={y(last(S).p) + 14} className="t-strong">{last(S).p}</text>}
         {ticks.map((d, i) => <text key={i} x={x(d)} y={H - 8} textAnchor={i === 0 ? "start" : i === ticks.length - 1 ? "end" : "middle"}>{md(d)}</text>)}
       </svg>
       <TipBubble tip={tip} />
-      <details style={{ marginTop: 6 }}>
-        <summary className="meta" style={{ cursor: "pointer" }}>View as table</summary>
-        <table style={{ width: "100%", fontSize: ".85rem", borderCollapse: "collapse", marginTop: 6 }}>
+      <details className="mt-6">
+        <summary className="meta">View as table</summary>
+        <table className="tbl">
           <thead><tr><th align="left">Date</th><th align="left">Type</th><th align="right">Pain</th></tr></thead>
           <tbody>
             {[...S.map((p) => ({ ...p, t: "Session" })), ...C.map((p) => ({ ...p, t: checkLabel }))].sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, 40).map((r, i) => (
-              <tr key={i} style={{ borderTop: "1px solid var(--line)" }}><td>{md(r.date)}</td><td>{r.t}</td><td align="right">{r.p}/10</td></tr>
+              <tr key={i}><td>{md(r.date)}</td><td>{r.t}</td><td align="right">{r.p}/10</td></tr>
             ))}
           </tbody>
         </table>
@@ -151,7 +151,7 @@ export function Heatmap({ win, perDay, today }: { win: Window; perDay: Map<strin
   const cols = Array.from({ length: win.buckets }, (_, w) => Array.from({ length: 7 }, (_, d) => addDays(gridStart, w * 7 + d)));
   let lastMonth = "";
   return (
-    <div ref={ref} style={{ position: "relative", maxWidth: W }}>
+    <div ref={ref} className="rel" style={{ maxWidth: W }}>
       <svg className="viz" viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Sessions per day">
         {days.map((d, i) => d && <text key={i} x={left - 5} y={top + i * (cell + gap) + cell / 2 + 4} textAnchor="end">{d}</text>)}
         {cols.map((col, w) => {
@@ -179,7 +179,7 @@ export function Heatmap({ win, perDay, today }: { win: Window; perDay: Map<strin
 
 /* ---------- sparkline ---------- */
 export function Spark({ values, label }: { values: number[]; label: string }) {
-  if (values.length < 2) return <span className="meta" style={{ fontSize: ".85rem" }}>not enough checks yet</span>;
+  if (values.length < 2) return <span className="meta small">not enough checks yet</span>;
   const W = 140, H = 36, p = 4;
   const x = (i: number) => p + (i / (values.length - 1)) * (W - 2 * p);
   const y = (v: number) => p + ((10 - v) / 10) * (H - 2 * p);

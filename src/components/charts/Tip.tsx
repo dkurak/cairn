@@ -21,7 +21,7 @@ export function useTip() {
 export function TipBubble({ tip }: { tip: { x: number; y: number; text: string } | null }) {
   if (!tip) return null;
   return (
-    <div role="status" style={{ position: "absolute", left: tip.x, top: tip.y - 8, transform: "translate(-50%, -100%)", background: "var(--ink)", color: "var(--bg)", padding: "6px 10px", borderRadius: 8, fontSize: ".82rem", pointerEvents: "none", whiteSpace: "nowrap", zIndex: 3, boxShadow: "0 2px 8px rgba(0,0,0,.2)" }}>
+    <div role="status" className="tipbubble" style={{ left: tip.x, top: tip.y - 8 }}>
       {tip.text}
     </div>
   );

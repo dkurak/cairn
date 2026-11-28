@@ -36,7 +36,6 @@ flowchart TD
   pweek --> workout
 
   today -. same layout .- day
-  plan -->|"Upcoming | Past"| plan
   coach --> chat["/api/chat"]
   library --> garmin["/api/garmin (.fit / zip)"]
   today --> recap["/api/recap"]
@@ -76,18 +75,17 @@ Same layout for past, today and future; only the contents change. Future days gr
 | Log something else (tour / workout / rest) | `DayView` | today |
 | Notes (that day's entries, editable) | `RecentList.tsx` | other days |
 
-### Plan `/plan` (Upcoming | Past)
+### Plan `/plan`
+What you're working toward, this week, and the two switches. Everything you've done lives in History.
+
 | Tile | Component | Notes |
 |---|---|---|
-| Program week banner | `ProgramWeekBanner` | |
+| Program week banner | `ProgramWeekBanner` | only when the active program has moved to a week with no plan |
 | Programs (active program, phase bar, Check in / Pause / This week, saved bank) | `Programs.tsx`, `PhaseBar.tsx` | the title and each phase link into the program and its weeks |
+| This week / Travel set (checklist, tap a number to mark done) + link to History | `plan/page.tsx` | left column |
+| Next-tour banner | `plan/page.tsx` | right column, only when relevant |
 | Goals | `plan/page.tsx` | text the coach keeps (`profiles.goals`) |
-| This week / Travel set (checklist, tap a number to mark done) | `plan/page.tsx` | |
-| Next-tour banner | `plan/page.tsx` | always findable here |
-| Where are you training? (trip details, edit, start over) | `plan/page.tsx` | |
-| "<primary area> flared?" / Calm-down | `plan/page.tsx` | follows the person's primary pain area; the flared card only shows if they have one |
-| Log something else | `LogShortcuts` (`ui.tsx`) | same block as Today |
-| **Past:** full log, day-grouped, editable | `RecentList.tsx` | up to 400 days |
+| **Right now**: where you're training (home or trip details, edit, start over) and the rehab mode for the primary pain area ("Flared? Back to calm-down" / "Start the plan") | `RightNow.tsx` | the rehab row only shows for someone with a primary pain area (or in calm-down) |
 
 ### Program `/plan/program/[id]`
 Overview (goal, progress meter, facts: type, started, event day, days a week, session length, equipment; "done when" checks for milestones; Build this week / Change program / Pause / Mark done) - Phases (the clickable phase bar, then one tile per phase with its focus and week links) - Weeks (every week with dates, "Planned" or "Current plan", and This week / Done / Upcoming).
@@ -126,6 +124,7 @@ Account: signed-in line, sign out, set a password. Login: password form, or "ema
 | `QuickCheck` | one-tap daily check-in | DayView |
 | `PainCard` | per-area pain card (uses `PainLine`) | Body |
 | `FeelPill` / `VertPill` | Rough / OK / Good / Great and vert pills | DayView, RecentList, program pages |
+| `RightNow` | where you're training + rehab mode (one card) | Plan |
 | `Programs` / `PhaseBar` | program card, saved bank, phase strip (links when given `hrefFor`); `useProgramActions`, `CriteriaList` | Plan, program page, DayView (banner), ProposalCard |
 | `ProposalCard` | coach suggestions as before/after cards with Save / Discard (workout, plan, program, program update) | Chat |
 | `Recap` | AI recap tile, cached per device | DayView |
@@ -162,6 +161,7 @@ Library modules (`src/lib`): `actions.ts` (all writes, shared by browser and coa
 
 ## 7. UI conventions
 - Page: `.page` > `PageHeader` (h1, the page's control, and the coach button) > `.two` columns of `.stack`s of `SectionCard`s. A few cards stay hand-written because their header is special (the Up next card, quick check-in, recap, stat tiles, login).
+- Styling: no one-off `style={{...}}`. Use the utility classes in `globals.css` (`m0`, `muted`, `small`, `nowrap`, `gap-6`, `self-start`, `between`, `strike`, `tbl`, `textinput`, ...) or a named component class. Inline style is only for computed values (bar widths, `flex-grow` by weeks, tooltip position); there are 7 today.
 - Small labels: `PainChip` / `FeelPill` / `VertPill` show a **value**; `Tag` shows a **label** (category, status).
 - Pain colours: 0-3 green, 4-6 amber, 7-10 red (`painClass`). Feel: Rough red, OK grey, Good green, Great solid green.
 - Rest days are grey and dashed; tours use the accent colour; days before tracking began are faded.
@@ -181,11 +181,11 @@ Done (2026-11-28):
 - [x] "Log something else" is one shared block (`LogShortcuts`)
 - [x] Dave-specific defaults removed: "<area> flared?" follows the primary pain area, "Log a workout" starts on the last workout logged, the log sheet says "Pain during", the chat placeholder uses a real workout (checked by signing in as a brand-new member: no hip wording on any screen)
 - [x] Program pages with clickable phases, a week page and a workout page; program weeks kept (0008)
+- [x] Plan page slimmed from 8 tiles in two tabs to 4 (Programs, This week, Goals, Right now): travel and rehab mode merged into `RightNow`, the duplicate "Log something else" and the Past tab removed
+- [x] One editable full log (History > Log). Plan > Past is gone; the day page lists that day's entries and Body shows notes only
+- [x] Inline styles: 90 down to 7, all computed (checked with a pixel diff of 9 pages before and after: identical)
 
 Still open:
-- [ ] Three lists of the same log (Plan > Past, History > Log, Body > Recent notes): keep one editable list
-- [ ] Slim the Plan page (program, goals, week, trip, rehab mode, log shortcuts)
-- [ ] 89 inline `style={{...}}` objects (26 in the charts) should become classes
 - [ ] Hand-written cards that could use `SectionCard` with a richer header: QuickCheck, Recap, StatTile
 - [ ] Plan ahead: let the coach draft several future program weeks at once (the week page can already show them once saved)
 - [ ] `review.ts` still has its own small date helpers (server-side, kept so the coach text is stable)
@@ -193,3 +193,4 @@ Still open:
 ## 9. Changelog
 - 2026-11-28 - Initial site map and component inventory; cleanup backlog from the audit.
 - 2026-11-28 - Shared components (`ui.tsx`, `format.ts`, `WorkoutTile`); new routes `/library/[id]`, `/plan/program/[id]`, `/plan/program/[id]/week/[n]`; clickable phases; migration 0008 `program_weeks`; Dave-specific defaults removed; backlog updated.
+- 2026-11-28 - Plan page slimmed to 4 tiles (new `RightNow`; Past tab and duplicate log shortcuts removed); inline styles 90 to 7 via utility classes, verified identical by pixel diff; backlog updated.

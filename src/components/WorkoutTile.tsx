@@ -58,7 +58,7 @@ export default function WorkoutTile({ w, variant = "row", open = false, onToggle
         <span className="wtile-head"><strong>{w.name}{w.owner_id ? " (yours)" : ""}</strong>{status && <Tag>{status}</Tag>}</span>
         <span className="meta">{workoutSummary(w)}</span>
         {note && <span className="meta">{note}</span>}
-        <span className="row" style={{ gap: 6 }}><Tag>{w.category}</Tag><WatchChip w={w} /></span>
+        <span className="row gap-6"><Tag>{w.category}</Tag><WatchChip w={w} /></span>
       </Link>
     );
   }
@@ -66,10 +66,10 @@ export default function WorkoutTile({ w, variant = "row", open = false, onToggle
     <li className="wrow">
       <button className="rowbtn" aria-expanded={open} onClick={onToggle}>
         <strong>{w.name}{w.owner_id ? " (yours)" : ""}</strong>
-        <span className="row" style={{ flexWrap: "nowrap" }}><WatchChip w={w} /><Tag>{w.category}</Tag></span>
+        <span className="row nowrap"><WatchChip w={w} /><Tag>{w.category}</Tag></span>
       </button>
       {open && (
-        <div className="stack" style={{ paddingBottom: 8 }}>
+        <div className="stack pb-8">
           <Rundown workout={w} />
           <WorkoutActions w={w} history={history} onHistory={onHistory} />
           <Link href={`/library/${w.id}`}>Open the full page</Link>

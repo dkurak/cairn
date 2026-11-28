@@ -64,13 +64,13 @@ export default function RecentList({ log, limit = 7, editingId, setEditingId, on
     <ul className="log">
       {days.map(({ date, items }) => (
         <li key={date} className="day">
-          <span className="date">{fmtDate(date)}<br /><span style={{ fontSize: ".75rem" }}>{dow(date)}</span></span>
+          <span className="date">{fmtDate(date)}<br /><span className="dow">{dow(date)}</span></span>
           <div className={`items${items.length > 1 ? " multi" : ""}`}>
             {items.length > 1 && <span className="grouplabel">{items.length} sessions</span>}
             {items.length === 0 && (
               <div className="item rest">
                 <span>
-                  <strong style={{ color: "var(--muted)", fontWeight: 600 }}>Rest day</strong>
+                  <strong className="restday">Rest day</strong>
                   {restChips(date).map((c) => <span key={c.id} className="meta"> · {c.name} <Chip p={c.p} /></span>)}
                 </span>
                 {onLogDay && <button className="del" onClick={() => onLogDay(date)}>Log something</button>}
@@ -111,7 +111,7 @@ export default function RecentList({ log, limit = 7, editingId, setEditingId, on
                       </>
                     )}
                     <div className="field"><label htmlFor="note-edit">Notes</label><textarea id="note-edit" maxLength={500} value={draft.notes} onChange={(ev) => set({ notes: ev.target.value })} /></div>
-                    <div className="row" style={{ justifyContent: "space-between" }}>
+                    <div className="row between">
                       <ConfirmButton className="danger" confirmLabel="Tap again to delete" onConfirm={() => onDelete(e.id)}>Delete</ConfirmButton>
                       <span className="row">
                         <button type="button" onClick={() => setEditingId(null)}>Cancel</button>

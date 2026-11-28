@@ -26,12 +26,12 @@ export default function History() {
   return (
     <div className="page">
       <PageHeader title="History" coach={{ text: "Looking at my training over this period, what do you notice and what should I change?" }} />
-      <div className="seg" role="group" aria-label="Time range" style={{ justifySelf: "start", maxWidth: "100%" }}>
+      <div className="seg self-start" role="group" aria-label="Time range">
         {RANGES.map((r) => <button key={r.key} aria-pressed={range === r.key} onClick={() => setRange(r.key)}>{r.label}</button>)}
       </div>
 
       {st.win.clamped && (
-        <p className="note" style={{ margin: 0 }}>Tracking started {md(st.win.start)}, so that&apos;s where this view begins. It fills out as you keep logging.</p>
+        <p className="note m0">Tracking started {md(st.win.start)}, so that&apos;s where this view begins. It fills out as you keep logging.</p>
       )}
 
       {!hasData && (
@@ -65,10 +65,10 @@ export default function History() {
         <SectionCard title="Sessions per week">
           <WeeklyBars weekly={st.weekly} currentStart={weekStart(today)} from={st.win.start} />
           <details>
-            <summary className="meta" style={{ cursor: "pointer" }}>View as table</summary>
-            <table style={{ width: "100%", fontSize: ".85rem", borderCollapse: "collapse", marginTop: 6 }}>
+            <summary className="meta">View as table</summary>
+            <table className="tbl">
               <thead><tr><th align="left">Week of</th><th align="right">Sessions</th></tr></thead>
-              <tbody>{[...st.weekly].reverse().map((w) => <tr key={w.start} style={{ borderTop: "1px solid var(--line)" }}><td>{md(w.start < st.win.start ? st.win.start : w.start)}</td><td align="right">{w.count}</td></tr>)}</tbody>
+              <tbody>{[...st.weekly].reverse().map((w) => <tr key={w.start}><td>{md(w.start < st.win.start ? st.win.start : w.start)}</td><td align="right">{w.count}</td></tr>)}</tbody>
             </table>
           </details>
         </SectionCard>
@@ -113,12 +113,12 @@ export default function History() {
 
       {st.tours.length > 0 && (
         <SectionCard title="Tours">
-          <table style={{ width: "100%", fontSize: ".92rem", borderCollapse: "collapse" }}>
+          <table className="tbl lg">
             <thead><tr><th align="left">Date</th><th align="right">Vert</th><th align="right">During</th><th align="right">Next AM</th></tr></thead>
             <tbody>
               {st.tours.map((t) => (
-                <tr key={t.id} style={{ borderTop: "1px solid var(--line)" }}>
-                  <td style={{ padding: "8px 0" }}>{md(t.date)}</td>
+                <tr key={t.id}>
+                  <td>{md(t.date)}</td>
                   <td align="right">{t.vert_ft ? `${t.vert_ft.toLocaleString()} ft` : "-"}</td>
                   <td align="right">{t.pain_during != null ? <PainChip p={t.pain_during} /> : "-"}</td>
                   <td align="right">{t.pain_next_am != null ? <PainChip p={t.pain_next_am} /> : "-"}</td>
