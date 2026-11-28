@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useApp } from "@/components/AppProvider";
+import { PageHeader, SectionCard } from "@/components/ui";
 
 export default function Account() {
   const { sb, data } = useApp();
@@ -27,25 +28,23 @@ export default function Account() {
 
   return (
     <div className="page">
-      <div className="page-head"><h1>Account</h1></div>
-      <section className="card">
-        <h2>Signed in</h2>
+      <PageHeader title="Account" />
+      <SectionCard title="Signed in">
         <span>{data.profile.display_name} · {email}</span>
         <div className="row">
           <button onClick={async () => { await sb.auth.signOut(); location.href = "/login"; }}>Sign out</button>
         </div>
-      </section>
-      <form className="card" onSubmit={save}>
-        <h2>Set a password</h2>
+      </SectionCard>
+      <SectionCard title="Set a password" onSubmit={save}>
         <span className="note">So you can sign in on your phone without waiting for an email.</span>
         <input type="text" autoComplete="username" value={email} readOnly hidden aria-hidden="true" />
         <label htmlFor="pw1">New password</label>
-        <input id="pw1" type="password" autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} style={{ font: "inherit", padding: 12, borderRadius: 10, border: "1px solid var(--line)", background: "var(--bg)", color: "var(--ink)" }} />
+        <input id="pw1" type="password" autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} className="textinput" />
         <label htmlFor="pw2">Again</label>
-        <input id="pw2" type="password" autoComplete="new-password" value={pw2} onChange={(e) => setPw2(e.target.value)} style={{ font: "inherit", padding: 12, borderRadius: 10, border: "1px solid var(--line)", background: "var(--bg)", color: "var(--ink)" }} />
+        <input id="pw2" type="password" autoComplete="new-password" value={pw2} onChange={(e) => setPw2(e.target.value)} className="textinput" />
         <button className="primary" disabled={busy}>Save password</button>
         {msg && <span className={msg.ok ? "note" : "status"} role="status">{msg.text}</span>}
-      </form>
+      </SectionCard>
     </div>
   );
 }

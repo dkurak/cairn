@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useApp } from "./AppProvider";
+import { defaultWorkoutName } from "@/lib/rules";
 import ProposalCard from "./ProposalCard";
 import { useDictation, useSpeech } from "./voice";
 import type { CoachRow } from "@/lib/types";
@@ -154,7 +155,7 @@ export default function Chat() {
 
   return (
     <div className="chat-page">
-      <div className="chat-log card" ref={logRef} aria-live="polite" style={{ padding: 12 }}>
+      <div className="chat-log card" ref={logRef} aria-live="polite">
         <div className="msg ai">{INTRO}</div>
         {rows.map((m) =>
           m.proposal ? (
@@ -178,7 +179,7 @@ export default function Chat() {
         ))}
       </div>
       <form className="chat-form" onSubmit={(e) => { e.preventDefault(); const t = text; setText(""); void send(t); }}>
-        <input ref={inputRef} value={text} onChange={(e) => setText(e.target.value)} autoComplete="off" placeholder={dictation.listening ? "Listening…" : "Did SKI1, pain 3…"} aria-label="Message the coach" />
+        <input ref={inputRef} value={text} onChange={(e) => setText(e.target.value)} autoComplete="off" placeholder={dictation.listening ? "Listening…" : `Did ${defaultWorkoutName(data)}, pain 3…`} aria-label="Message the coach" />
         {speech.supported && (
           <button type="button" className={`iconbtn ${readAll ? "on" : ""}`} onClick={speech.speaking ? speech.cancel : toggleReadAll}
             aria-pressed={readAll} aria-label={speech.speaking ? "Stop reading" : readAll ? "Stop reading replies aloud" : "Read replies aloud"} title={speech.speaking ? "Stop" : readAll ? "Reading replies aloud" : "Read replies aloud"}>

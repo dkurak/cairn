@@ -1,15 +1,11 @@
 "use client";
 import { useState } from "react";
 import type { Feel, LogEntry, PainArea, PainCheck, Workout } from "@/lib/types";
-import { FEELS } from "@/lib/types";
-import { addDays, painClass, sortedLog } from "@/lib/rules";
+import { addDays, sortedLog } from "@/lib/rules";
 import FeelPill, { VertPill } from "./FeelPill";
+import { ConfirmButton, FeelPicker, PainChip as Chip, PainPicker } from "./ui";
+import { shortDate as fmtDate, weekday as dow } from "@/lib/format";
 
-const parse = (iso: string) => { const [y, m, d] = iso.split("-").map(Number); return new Date(y, m - 1, d); };
-const fmtDate = (iso: string) => parse(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-const dow = (iso: string) => parse(iso).toLocaleDateString(undefined, { weekday: "short" });
-const Chip = ({ p, label }: { p: number | null; label?: string }) =>
-  p == null ? null : <span className={`chip ${painClass(p)}`}>{label ? `${label} ` : ""}{p}/10</span>;
 
 export type EntryPatch = Partial<Pick<LogEntry, "what" | "kind" | "workout_id" | "date" | "feel" | "pain_during" | "pain_next_am" | "vert_ft" | "notes">>;
 const EXTRA = ["Tour", "Rest", "Run", "Bike", "Hike", "Other"];
@@ -35,7 +31,6 @@ type Draft = { what: string; date: string; feel: Feel | null; pain: number | nul
  *  Tap an entry to edit everything about it (and delete it from there). */
 export default function RecentList({ log, limit = 7, editingId, setEditingId, onSave, onDelete, workouts, areas, checks, onLogDay }: Props) {
   const [draft, setDraft] = useState<Draft | null>(null);
-  const [confirmDel, setConfirmDel] = useState(false);
   const entries = sortedLog(log);
   if (!entries.length) return <p className="empty">Nothing logged yet. Your first Done will show up here.</p>;
 
@@ -50,7 +45,7 @@ export default function RecentList({ log, limit = 7, editingId, setEditingId, on
 
   const open = (e: LogEntry) => {
     if (e.id === editingId) { setEditingId(null); return; }
-    setEditingId(e.id); setConfirmDel(false);
+    setEditingId(e.id);
     setDraft({ what: e.what, date: e.date, feel: e.feel, pain: e.pain_during, am: e.pain_next_am, vert: e.vert_ft ? String(e.vert_ft) : "", notes: e.notes ?? "" });
   };
   const save = (e: LogEntry) => {
@@ -69,13 +64,13 @@ export default function RecentList({ log, limit = 7, editingId, setEditingId, on
     <ul className="log">
       {days.map(({ date, items }) => (
         <li key={date} className="day">
-          <span className="date">{fmtDate(date)}<br /><span style={{ fontSize: ".75rem" }}>{dow(date)}</span></span>
+          <span className="date">{fmtDate(date)}<br /><span className="dow">{dow(date)}</span></span>
           <div className={`items${items.length > 1 ? " multi" : ""}`}>
             {items.length > 1 && <span className="grouplabel">{items.length} sessions</span>}
             {items.length === 0 && (
               <div className="item rest">
                 <span>
-                  <strong style={{ color: "var(--muted)", fontWeight: 600 }}>Rest day</strong>
+                  <strong className="restday">Rest day</strong>
                   {restChips(date).map((c) => <span key={c.id} className="meta"> · {c.name} <Chip p={c.p} /></span>)}
                 </span>
                 {onLogDay && <button className="del" onClick={() => onLogDay(date)}>Log something</button>}
@@ -100,34 +95,24 @@ export default function RecentList({ log, limit = 7, editingId, setEditingId, on
                     <div className="field"><label htmlFor="ed-date">Date</label><input id="ed-date" type="date" value={draft.date} onChange={(ev) => set({ date: ev.target.value })} /></div>
                     <div className="field">
                       <span className="lbl">How you felt</span>
-                      <div className="pills" role="group" aria-label="How you felt">
-                        {FEELS.map((f) => <button type="button" key={f} aria-pressed={draft.feel === f} onClick={() => set({ feel: draft.feel === f ? null : f })}>{f}</button>)}
-                      </div>
+                      <FeelPicker value={draft.feel} onChange={(f) => set({ feel: f })} />
                     </div>
                     <div className="field">
                       <span className="lbl">Pain during (0-10)</span>
-                      <div className="pills pain11" role="group" aria-label="Pain during">
-                        {Array.from({ length: 11 }, (_, i) => <button type="button" key={i} aria-pressed={draft.pain === i} onClick={() => set({ pain: draft.pain === i ? null : i })}>{i}</button>)}
-                      </div>
+                      <PainPicker value={draft.pain} onChange={(v) => set({ pain: v })} label="Pain during" />
                     </div>
                     {draft.what === "Tour" && (
                       <>
                         <div className="field">
                           <span className="lbl">Next-morning pain (0-10)</span>
-                          <div className="pills pain11" role="group" aria-label="Next morning pain">
-                            {Array.from({ length: 11 }, (_, i) => <button type="button" key={i} aria-pressed={draft.am === i} onClick={() => set({ am: draft.am === i ? null : i })}>{i}</button>)}
-                          </div>
+                          <PainPicker value={draft.am} onChange={(v) => set({ am: v })} label="Next morning pain" />
                         </div>
                         <div className="field"><label htmlFor="ed-vert">Vert (ft)</label><input id="ed-vert" type="number" inputMode="numeric" min={0} step={50} value={draft.vert} onChange={(ev) => set({ vert: ev.target.value })} /></div>
                       </>
                     )}
                     <div className="field"><label htmlFor="note-edit">Notes</label><textarea id="note-edit" maxLength={500} value={draft.notes} onChange={(ev) => set({ notes: ev.target.value })} /></div>
-                    <div className="row" style={{ justifyContent: "space-between" }}>
-                      <button
-                        type="button"
-                        className="danger"
-                        onClick={() => { if (confirmDel) { setConfirmDel(false); onDelete(e.id); } else { setConfirmDel(true); setTimeout(() => setConfirmDel(false), 4000); } }}
-                      >{confirmDel ? "Tap again to delete" : "Delete"}</button>
+                    <div className="row between">
+                      <ConfirmButton className="danger" confirmLabel="Tap again to delete" onConfirm={() => onDelete(e.id)}>Delete</ConfirmButton>
                       <span className="row">
                         <button type="button" onClick={() => setEditingId(null)}>Cancel</button>
                         <button type="button" className="primary" onClick={() => save(e)}>Save</button>

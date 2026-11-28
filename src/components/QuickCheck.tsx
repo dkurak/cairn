@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useApp } from "./AppProvider";
 import { addPainArea, saveDailyFeel, savePainCheck } from "@/lib/actions";
 import { checkOn, checksFor, trendNote } from "@/lib/rules";
-import { FEELS } from "@/lib/types";
+import { FeelPicker, PainPicker } from "./ui";
 
 // one tap per question: None / Aware / Sharp / Bad  ->  0 / 2 / 5 / 8 (fine-tune with the 0-10 row)
 const BANDS = [
@@ -25,26 +25,22 @@ export default function QuickCheck({ date, disabled = false }: { date: string; d
   const unanswered = areas.filter((a) => !checkOn(data.checks, a.id, date)).length + (feel ? 0 : 1);
 
   return (
-    <section className="card" aria-labelledby="qc-h" style={disabled ? { opacity: 0.55 } : undefined}>
+    <section className={`card${disabled ? " off" : ""}`} aria-labelledby="qc-h">
       <div className="top">
         <h2 id="qc-h">Quick check-in{isToday ? "" : ` · ${label}`}</h2>
         <small>{disabled ? "opens on the day" : unanswered ? (isToday ? `${unanswered} to go` : "not recorded") : "all answered"}</small>
       </div>
 
-      <div style={{ display: "grid", gap: 6 }}>
+      <div className="grid-6">
         <strong>{isToday ? "How are you feeling overall?" : "How did you feel overall?"}</strong>
-        <div className="quick" role="group" aria-label="Overall feeling today">
-          {FEELS.map((f) => (
-            <button key={f} aria-pressed={feel === f} disabled={disabled} onClick={() => run(() => saveDailyFeel(sb, uid, f, date))}>{f}</button>
-          ))}
-        </div>
-        {!disabled && feel === "Rough" && <button className="link" style={{ justifySelf: "start" }} onClick={() => askCoach("I'm feeling rough today. What should I do - lighter workout or rest?")}>Talk it through with the coach</button>}
+        <FeelPicker wide allowClear={false} disabled={disabled} value={feel ?? null} label="Overall feeling" onChange={(f) => f && void run(() => saveDailyFeel(sb, uid, f, date))} />
+        {!disabled && feel === "Rough" && <button className="link self-start" onClick={() => askCoach("I'm feeling rough today. What should I do - lighter workout or rest?")}>Talk it through with the coach</button>}
       </div>
 
       {areas.map((a) => {
         const cur = checkOn(data.checks, a.id, date)?.pain;
         return (
-          <div key={a.id} style={{ display: "grid", gap: 6, paddingTop: 8, borderTop: "1px solid var(--line)" }}>
+          <div key={a.id} className="areablock">
             <div className="top">
               <strong>{isToday ? `How's your ${a.name.toLowerCase()}?` : `${a.name}`}</strong>
               {isToday && <small>{trendNote(data.checks, a.id)}</small>}
@@ -55,16 +51,12 @@ export default function QuickCheck({ date, disabled = false }: { date: string; d
               ))}
             </div>
             {exact === a.id ? (
-              <div className="pills" style={{ display: "grid", gridTemplateColumns: "repeat(11, minmax(0, 1fr))", gap: 4 }} role="group" aria-label={`${a.name} exact pain, 0 to 10`}>
-                {Array.from({ length: 11 }, (_, i) => (
-                  <button key={i} type="button" aria-pressed={cur === i} onClick={() => run(() => savePainCheck(sb, uid, a.id, i, date))} style={{ minWidth: 0, padding: "10px 0", borderRadius: 8 }}>{i}</button>
-                ))}
-              </div>
+              <PainPicker value={cur ?? null} allowClear={false} label={`${a.name} exact pain, 0 to 10`} onChange={(v) => v != null && void run(() => savePainCheck(sb, uid, a.id, v, date))} />
             ) : (
               <div className="row">
-                <button className="link" disabled={disabled} style={{ fontSize: ".85rem" }} onClick={() => setExact(a.id)}>{cur != null ? `${cur}/10 - change exact number` : "Exact number (0-10)"}</button>
+                <button className="link small" disabled={disabled} onClick={() => setExact(a.id)}>{cur != null ? `${cur}/10 - change exact number` : "Exact number (0-10)"}</button>
                 {!disabled && cur != null && cur >= 4 && (
-                  <button className="link" style={{ fontSize: ".85rem" }} onClick={() => askCoach(`My ${a.name} is ${cur}/10 today. What should I change in my workouts?`)}>Ask coach what to change</button>
+                  <button className="link small" onClick={() => askCoach(`My ${a.name} is ${cur}/10 today. What should I change in my workouts?`)}>Ask coach what to change</button>
                 )}
               </div>
             )}
@@ -78,7 +70,7 @@ export default function QuickCheck({ date, disabled = false }: { date: string; d
           <button type="submit">Add</button>
         </form>
       ) : (
-        <button className="link" style={{ justifySelf: "start" }} onClick={() => setAdding(true)}>+ Anything else hurting?</button>
+        <button className="link self-start" onClick={() => setAdding(true)}>+ Anything else hurting?</button>
       )}
     </section>
   );

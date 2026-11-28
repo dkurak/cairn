@@ -3,7 +3,8 @@ import { useState } from "react";
 import type { PainArea, PainCheck, LogEntry } from "@/lib/types";
 import { PAIN_SCALE } from "@/lib/types";
 import { checkOn, checksFor, trendNote } from "@/lib/rules";
-import PainChart, { type PainPoint } from "./PainChart";
+import { PainLine, type PainPt } from "./charts/Charts";
+import { PainPicker, SectionCard } from "./ui";
 
 type Props = {
   areas: PainArea[];
@@ -22,39 +23,27 @@ export default function PainCard({ areas, checks, log, today, hint, onCheck, onA
   const active = areas.filter((a) => a.active);
   const pending = active.filter((a) => !checkOn(checks, a.id, today));
 
-  const pointsFor = (a: PainArea): PainPoint[] => [
+  const pointsFor = (a: PainArea): PainPt[] => [
     ...checksFor(checks, a.id).map((c) => ({ date: c.date, p: c.pain })),
     // sessions count toward the primary area's trend
     ...(a.is_primary ? log.filter((e) => e.pain_during != null).map((e) => ({ date: e.date, at: e.created_at, p: e.pain_during as number })) : []),
   ];
 
   return (
-    <section className={`card ${pending.length ? "" : ""}`} aria-labelledby="pain-h">
-      <div className="top">
-        <h2 id="pain-h">Pain check</h2>
-        <small>{pending.length ? `${pending.length} to check today` : active.length ? "all checked today" : ""}</small>
-      </div>
+    <SectionCard title="Pain check" aside={pending.length ? `${pending.length} to check today` : active.length ? "all checked today" : ""}>
       {hint && <span className="note">{hint}</span>}
       {!active.length && <p className="empty">Anything hurting? Add an area (or tell the coach, e.g. &quot;my low back is sore&quot;) and tap a number each day. You&apos;ll see the trend here.</p>}
-      {active.map((a) => {
-        const today_ = checkOn(checks, a.id, today);
-        const pts = pointsFor(a);
-        return (
-          <div key={a.id} style={{ display: "grid", gap: 6, paddingTop: 8, borderTop: "1px solid var(--line)" }}>
-            <div className="top">
-              <strong>{a.name}</strong>
-              <small>{trendNote(checks, a.id)}</small>
-            </div>
-            <div className="pills" id={a.is_primary ? "am-pills" : undefined} style={{ display: "grid", gridTemplateColumns: "repeat(11, minmax(0, 1fr))", gap: 4 }} role="group" aria-label={`${a.name} pain today, 0 to 10`}>
-              {Array.from({ length: 11 }, (_, i) => (
-                <button key={i} type="button" aria-pressed={today_?.pain === i} onClick={() => onCheck(a.id, i)} style={{ minWidth: 0, padding: "10px 0", borderRadius: 8 }}>{i}</button>
-              ))}
-            </div>
-            {pts.length >= 2 && <PainChart points={pts} label={a.name} />}
-            <button className="link" style={{ justifySelf: "start", fontSize: ".85rem" }} onClick={() => onResolve(a.id)}>Mostly better - stop tracking {a.name}</button>
+      {active.map((a) => (
+        <div key={a.id} className="areablock">
+          <div className="top">
+            <strong>{a.name}</strong>
+            <small>{trendNote(checks, a.id)}</small>
           </div>
-        );
-      })}
+          <PainPicker value={checkOn(checks, a.id, today)?.pain ?? null} allowClear={false} label={`${a.name} pain today, 0 to 10`} onChange={(v) => v != null && onCheck(a.id, v)} />
+          <PainLine points={pointsFor(a)} label={a.name} />
+          <button className="link self-start small" onClick={() => onResolve(a.id)}>Mostly better - stop tracking {a.name}</button>
+        </div>
+      ))}
       <span className="scale">{PAIN_SCALE}</span>
       {adding ? (
         <form className="chat-form" onSubmit={(e) => { e.preventDefault(); if (name.trim()) { onAdd(name.trim()); setName(""); setAdding(false); } }}>
@@ -62,8 +51,8 @@ export default function PainCard({ areas, checks, log, today, hint, onCheck, onA
           <button type="submit">Add</button>
         </form>
       ) : (
-        <button className="link" style={{ justifySelf: "start" }} onClick={() => setAdding(true)}>+ Track another area</button>
+        <button className="link self-start" onClick={() => setAdding(true)}>+ Track another area</button>
       )}
-    </section>
+    </SectionCard>
   );
 }

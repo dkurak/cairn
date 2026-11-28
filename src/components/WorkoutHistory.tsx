@@ -2,9 +2,10 @@
 import { useEffect, useState } from "react";
 import { useApp } from "./AppProvider";
 import Rundown from "./Rundown";
+import { Tag } from "./ui";
 import type { Workout, WorkoutVersion } from "@/lib/types";
+import { stampDate as when } from "@/lib/format";
 
-const when = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
 /** Version list for one workout. Tap a version to see it; restore an older one if you can edit it. */
 export default function WorkoutHistory({ w }: { w: Workout }) {
@@ -42,9 +43,9 @@ export default function WorkoutHistory({ w }: { w: Workout }) {
               <strong>v{v.version}</strong> · {when(v.changed_at)}
               {v.change_note ? <span className="history-note"> - {v.change_note}</span> : null}
             </span>
-            <span className="row" style={{ flexWrap: "nowrap" }}>
-              {v.version === w.version && <span className="tag">Current</span>}
-              {v.version === onWatch && <span className="tag">On watch</span>}
+            <span className="row nowrap">
+              {v.version === w.version && <Tag>Current</Tag>}
+              {v.version === onWatch && <Tag>On watch</Tag>}
             </span>
           </button>
           {open === v.version && (

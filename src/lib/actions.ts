@@ -35,6 +35,8 @@ export async function loadAll(sb: SupabaseClient, userId: string): Promise<AppDa
   const goals = await sb.from("profiles").select("goals, goals_updated_at").eq("id", userId).single();
   // goal programs need migration 0007
   const programs = await sb.from("programs").select("*").eq("user_id", userId).order("created_at", { ascending: false });
+  // saved program weeks need migration 0008; without it week pages fall back to the current plan
+  const programWeeks = await sb.from("program_weeks").select("*").eq("user_id", userId).order("week");
   if (!goals.error && goals.data) Object.assign(profile.data as object, goals.data);
   return {
     profile: profile.data as AppData["profile"],
@@ -47,6 +49,7 @@ export async function loadAll(sb: SupabaseClient, userId: string): Promise<AppDa
     checkins: checkins.data as AppData["checkins"],
     exports: (exports.error ? [] : exports.data) as AppData["exports"],
     programs: (programs.error ? [] : programs.data ?? []) as AppData["programs"],
+    programWeeks: (programWeeks.error ? [] : programWeeks.data ?? []) as AppData["programWeeks"],
   };
 }
 

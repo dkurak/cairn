@@ -26,7 +26,7 @@ function WorkoutDiff({ p, data }: { p: WorkoutProposal; data: AppData }) {
             {b.rows.map((r, j) => {
               const added = !!base && !oldRows.has(rowKey(r));
               return (
-                <li key={j} style={added ? { background: "var(--good-bg)", margin: "0 -6px", padding: "9px 6px" } : undefined}>
+                <li key={j} className={added ? "added" : undefined}>
                   <span className="ex">{added ? "+ " : ""}{r[0]}</span><span className="sr">{r[1]}</span>{r[2] ? <span className="tip">{r[2]}</span> : null}
                 </li>
               );
@@ -37,15 +37,15 @@ function WorkoutDiff({ p, data }: { p: WorkoutProposal; data: AppData }) {
       {(notesChanged || (!base && p.notes)) && (
         <div className="block">
           <div className="block-label">Notes</div>
-          {notesChanged && base?.notes ? <div className="note" style={{ textDecoration: "line-through" }}>{base.notes}</div> : null}
-          <div className="note" style={notesChanged ? { background: "var(--good-bg)" } : undefined}>{p.notes || "(none)"}</div>
+          {notesChanged && base?.notes ? <div className="note strike">{base.notes}</div> : null}
+          <div className={notesChanged ? "note changed" : "note"}>{p.notes || "(none)"}</div>
         </div>
       )}
       {p.steps && <span className="note">Watch: {target === "new" ? "a new .fit to download" : "flagged \"Update watch\" in the Library after you save"}.{p.garmin_warnings?.length ? ` ${p.garmin_warnings.join(". ")}.` : ""}</span>}
       {removed.length > 0 && (
-        <div className="block" style={{ borderLeftColor: "var(--bad)" }}>
-          <div className="block-label" style={{ color: "var(--bad)" }}>Removed</div>
-          <ul className="rundown">{removed.map((r, i) => <li key={i} style={{ textDecoration: "line-through", color: "var(--muted)" }}><span className="ex">{r[0]}</span><span className="sr">{r[1]}</span></li>)}</ul>
+        <div className="block removed">
+          <div className="block-label">Removed</div>
+          <ul className="rundown">{removed.map((r, i) => <li key={i} className="strike muted"><span className="ex">{r[0]}</span><span className="sr">{r[1]}</span></li>)}</ul>
         </div>
       )}
     </>
@@ -156,7 +156,7 @@ function ProgramUpdateBody({ p, data }: { p: ProgramUpdateProposal; data: AppDat
               return <li key={i} className={c.kind === "manual" && c.met ? "met" : ""}><span className="box" aria-hidden="true">{c.kind === "manual" && c.met ? "✓" : ""}</span><span>{added ? <strong>+ {c.label}</strong> : c.label}</span><span className="meta">{added ? "new" : ""}</span></li>;
             })}
             {(b.criteria ?? []).filter((c) => !a.criteria!.some((x) => critKey(x) === critKey(c))).map((c, i) => (
-              <li key={`r${i}`} style={{ color: "var(--muted)" }}><span className="box" aria-hidden="true" /><s>{c.label}</s><span className="meta">removed</span></li>
+              <li key={`r${i}`} className="muted"><span className="box" aria-hidden="true" /><s>{c.label}</s><span className="meta">removed</span></li>
             ))}
           </ul>
         </div>
@@ -178,7 +178,7 @@ export default function ProposalCard({ proposal, data, status = "open", onSave, 
     : `Suggested ${proposal.kind === "travel" ? "travel" : "weekly"} plan${proposal.program_week ? ` · program week ${proposal.program_week}` : ""}${nNew ? ` + ${nNew} new workout${nNew > 1 ? "s" : ""}` : ""}`;
 
   return (
-    <div className="msg ai" style={{ maxWidth: "100%", border: "1px solid var(--line)", display: "grid", gap: 8 }}>
+    <div className="msg ai proposal">
       <strong>{heading}</strong>
       {proposal.reason && <span className="note">{proposal.reason}</span>}
       {proposal.type === "workout" ? (

@@ -1,5 +1,6 @@
 import type { AppData, LogEntry, PainArea, PainCheck, Workout } from "./types";
 import { addDays } from "./rules";
+import { parseISO as parse, toISO as iso } from "./format";
 
 export type RangeKey = "4w" | "13w" | "52w" | "max";
 export const RANGES: { key: RangeKey; label: string; weeks: number }[] = [
@@ -9,8 +10,6 @@ export const RANGES: { key: RangeKey; label: string; weeks: number }[] = [
   { key: "max", label: "Max", weeks: 0 }, // everything since the first tracked day
 ];
 
-const parse = (iso: string) => { const [y, m, d] = iso.split("-").map(Number); return new Date(y, m - 1, d, 12); };
-const iso = (d: Date) => { const x = new Date(d); x.setHours(12); return x.toISOString().slice(0, 10); };
 /** Monday of the week containing the date */
 export const weekStart = (isoDate: string) => {
   const d = parse(isoDate);

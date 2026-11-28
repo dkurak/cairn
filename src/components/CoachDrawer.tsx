@@ -15,7 +15,7 @@ export default function CoachDrawer() {
   return (
     <aside className={`coach-drawer${coachOpen ? " open" : ""}`} aria-label="Cairn coach" aria-hidden={!coachOpen} inert={!coachOpen}>
       <div className="drawer-head">
-        <h2 style={{ color: "var(--ink)" }}>Cairn coach</h2>
+        <h2>Cairn coach</h2>
         <button className="link" onClick={() => setCoachOpen(false)} aria-label="Close coach">Close</button>
       </div>
       <Chat />

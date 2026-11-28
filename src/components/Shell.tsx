@@ -64,7 +64,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
       <div className="content">
-        {status && <div className="status" role="status" style={{ padding: "8px 16px" }}>{status}</div>}
+        {status && <div className="status topstatus" role="status">{status}</div>}
         {children}
       </div>
 

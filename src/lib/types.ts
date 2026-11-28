@@ -140,6 +140,9 @@ export type CoachRow = {
 
 export type Profile = { id: string; display_name: string; role: "admin" | "member"; goals?: string; goals_updated_at?: string | null };
 
+/** One week of a program as it was planned (0008). */
+export type ProgramWeek = { id: string; program_id: string; week: number; plan_kind: "home" | "travel"; items: PlanItem[]; created_at: string; updated_at: string };
+
 export type AppData = {
   profile: Profile;
   workouts: Workout[];
@@ -151,6 +154,7 @@ export type AppData = {
   checkins: DailyCheckin[];
   exports: GarminExport[];
   programs: Program[];
+  programWeeks: ProgramWeek[];
 };
 
 export const PAIN_SCALE =
