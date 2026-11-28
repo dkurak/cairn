@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useApp } from "@/components/AppProvider";
 import ProgramNudge from "@/components/ProgramNudge";
+import ProgramAhead from "@/components/ProgramAhead";
 import Programs, { ProgramWeekBanner } from "@/components/Programs";
 import RightNow from "@/components/RightNow";
 import { PageHeader, SectionCard } from "@/components/ui";
@@ -27,6 +28,7 @@ export default function Plan() {
 
       <ProgramWeekBanner />
       <ProgramNudge />
+      <ProgramAhead />
       <Programs />
 
       <div className="two">

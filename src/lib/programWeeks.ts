@@ -3,7 +3,7 @@
 import type { AppData, LogEntry, PlanItem, Program, ProgramWeek, Workout } from "./types";
 import { addDays, activePlan } from "./rules";
 import { daysBetween, shortDate } from "./format";
-import { programPosition, weekRange } from "./programs";
+import { phaseAtWeek, programPosition, weekRange } from "./programs";
 
 // ---------- which plan does a week have? ----------
 export type WeekSource = "draft" | "live" | "current" | "none";
@@ -171,12 +171,30 @@ export function programNudge(data: AppData, p: Program, today: string): ProgramN
   // already re-planned since the last trigger? stay quiet
   const lastDraft = drafted.map((r) => r.updated_at.slice(0, 10)).sort().pop() as string;
   if (health.since && lastDraft >= health.since) return null;
-  return { kind: "replan", key: `${p.id}|replan|${health.since ?? "now"}`, title: "Re-plan the rest of the program?", reasons: health.reasons, weeks: remaining };
+  return { kind: "replan", key: `${p.id}|replan|${health.since ?? "now"}`, title: "Want to re-plan the rest?", reasons: [...health.reasons, "Plans bend - no pressure, it only takes a tap."], weeks: remaining };
+}
+
+export type ProgramAhead = { total: number; planned: number[]; allPlanned: boolean; next: { week: number; phase: string | null; start: string | null; end: string | null; titles: string[] } | null };
+
+/** What's mapped out ahead: which weeks have a plan (draft or live) and a peek at the next one. Null when there's nothing to celebrate yet. */
+export function programAhead(data: AppData, p: Program, today: string): ProgramAhead | null {
+  if (p.status !== "active" || !data.weekPlansReady) return null;
+  const pos = programPosition(p, today);
+  if (pos.over || !pos.totalWeeks) return null;
+  const planned = Array.from({ length: pos.totalWeeks }, (_, i) => i + 1).filter((w) => w >= pos.week && weekPlan(data, p, w, today).items.length > 0);
+  const later = remainingWeeks(p, today).filter((w) => w <= pos.totalWeeks!);
+  if (!later.length || !later.some((w) => planned.includes(w))) return null;
+  const nw = later.find((w) => planned.includes(w))!;
+  const range = weekRange(p, nw);
+  return {
+    total: pos.totalWeeks, planned, allPlanned: later.every((w) => planned.includes(w)),
+    next: { week: nw, phase: phaseAtWeek(p, nw).phase?.name ?? null, start: range?.start ?? null, end: range?.end ?? null, titles: weekPlan(data, p, nw, today).items.filter((i) => i.kind !== "rest").map((i) => i.title) },
+  };
 }
 
 /** One line for the coach, so it can bring this up in conversation. */
-export function nudgeLine(n: ProgramNudge | null): string {
-  if (!n) return "No plan-ahead or re-plan suggestion right now.";
+export function nudgeLine(n: ProgramNudge | null, ahead?: ProgramAhead | null): string {
+  if (!n) return ahead ? `PLAN IS IN PLACE: ${ahead.planned.length} of ${ahead.total} weeks are mapped out. Celebrate that briefly (they can see what's ahead), encourage them, and nudge one small next step (today's session or a look at next week). They're fluid: never guilt a miss or a change - changing the plan is normal and just a re-plan away.` : "No plan-ahead or re-plan suggestion right now.";
   return n.kind === "plan_ahead"
     ? `SUGGEST PLANNING AHEAD: ${n.title}. Offer to draft them all (propose_program_weeks); don't do it until they say yes.`
     : `SUGGEST A RE-PLAN: ${n.reasons.join("; ")}. Mention it briefly and offer to re-plan the later weeks (propose_program_weeks, mode replan); don't do it until they say yes.`;

@@ -498,3 +498,8 @@ svg.viz text.t-good { fill: var(--good); }
 .reasons { margin: 0; padding-left: 18px; }
 .weekrows .tags { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 .row.actions > .primary { flex: none; }
+.weekdots { display: flex; gap: 4px; }
+.weekdots span { flex: 1; max-width: 36px; height: 8px; border-radius: 4px; background: var(--line); }
+.weekdots .past { background: var(--accent); }
+.weekdots .now { background: var(--accent); outline: 2px solid var(--accent); outline-offset: 1px; }
+.weekdots .planned { background: color-mix(in srgb, var(--accent) 45%, var(--line)); }

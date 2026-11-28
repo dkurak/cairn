@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useApp } from "./AppProvider";
 import PhaseBar from "./PhaseBar";
 import { activeProgram, effectivePhases, evaluateCriteria, needsNewWeek, positionLabel, programPosition } from "@/lib/programs";
-import { programHealth, storedWeek } from "@/lib/programWeeks";
+import { programHealth, storedWeek, weekPlan } from "@/lib/programWeeks";
 import { adoptDraftWeek } from "@/lib/actions";
 import { activePlan } from "@/lib/rules";
 import { shortDate as fmtDate } from "@/lib/format";
@@ -85,6 +85,8 @@ export default function Programs() {
         const pos = programPosition(active);
         const crit = active.kind === "milestone" ? evaluateCriteria(active, data) : null;
         const health = data.weekPlansReady ? programHealth(data, active, today) : null;
+        const wk = weekPlan(data, active, pos.week, today);
+        const planned = wk.source !== "none" && wk.items.length > 0;
         return (
           <>
             <div className="program-head"><Link href={programHref(active.id)} className="title">{active.title}</Link><span className="row nowrap gap-6">{health && health.state !== "unknown" && <Tag tone={health.tone}>{health.label}</Tag>}<Tag>{active.kind === "milestone" ? "Milestone" : "Active"}</Tag></span></div>
@@ -99,8 +101,11 @@ export default function Programs() {
               </div>
             )}
             <div className="row">
-              <button className="primary" onClick={() => askCoach(pos.over ? `My "${active.title}" program is over. Here's how it went: ` : `Build week ${pos.week} of my "${active.title}" program.`, !pos.over)}>{pos.over ? "How did it go?" : "This week"}</button>
-              <button onClick={() => askCoach(`Check in on my "${active.title}" program - am I on track?`)}>Check in</button>
+              {pos.over || !planned
+                ? <button className="primary" onClick={() => askCoach(pos.over ? `My "${active.title}" program is over. Here's how it went: ` : `Build week ${pos.week} of my "${active.title}" program.`, !pos.over)}>{pos.over ? "How did it go?" : "Build this week"}</button>
+                : <button className="primary" onClick={() => askCoach(`Check in on my "${active.title}" program - am I on track?`)}>Check in</button>}
+              {!pos.over && !planned ? <button onClick={() => askCoach(`Check in on my "${active.title}" program - am I on track?`)}>Check in</button> : null}
+              {!pos.over && planned && <button onClick={() => askCoach(`Adjust week ${pos.week} of my "${active.title}" program: `, false)}>Adjust this week</button>}
               <button onClick={() => setStatus(active, "paused")}>Pause</button>
               {pos.over && <button onClick={() => setStatus(active, "done")}>Mark done</button>}
               {crit && !crit.allMet && <button onClick={() => finish(active, true)}>Call it done</button>}

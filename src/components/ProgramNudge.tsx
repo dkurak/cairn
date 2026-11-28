@@ -20,7 +20,7 @@ export default function ProgramNudge() {
   const dismiss = () => { const next = [...dismissed, n.key].slice(-50); try { localStorage.setItem(STORE, JSON.stringify(next)); } catch { /* ignore */ } setDismissed(next); };
 
   return (
-    <div className="banner warn" role="status">
+    <div className="banner" role="status">
       <strong>{n.title}</strong>
       {n.reasons.length === 1 ? <span>{n.reasons[0]}</span> : <ul className="reasons">{n.reasons.map((r, i) => <li key={i}>{r}</li>)}</ul>}
       <div className="row">
