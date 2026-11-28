@@ -121,6 +121,7 @@ Account: signed-in line, sign out, set a password. Login: password form, or "ema
 | `Shell` | top bar, tabs, slide-out menu | `(app)/layout` |
 | `DayView` | the day screen | `/`, `/day/[date]` |
 | `ui.tsx` | the small shared pieces: `PainChip` (a value), `Tag` (a label), `SectionCard`, `PageHeader`, `AskCoachButton`, `ConfirmButton`, `PainPicker`, `FeelPicker`, `LogShortcuts` | every screen |
+| `lib/optimistic.ts` | pure "what the screen looks like the instant you tap" helpers; pass one as the 3rd argument of `run(...)` (check-ins, ticks, phase, travel off, entry edit/delete, areas, program pause/start/delete). A failed save reloads the real data | everywhere `run` is used |
 | `lib/format.ts` | the one set of date helpers (`shortDate`, `weekday`, `dayHeading`, `dateRange`, ...) | everywhere |
 | `WorkoutTile` | one way to show a workout: `row` (expands, Library) and `card` (links to the workout page); also `WorkoutActions` and `WorkoutRundowns` | Library, program week, DayView |
 | `RecentList` | day-grouped log with rest-day rows and the full entry editor (delete lives in the editor) | DayView, Plan, History |
@@ -219,3 +220,4 @@ Still open:
 - 2026-11-28 - Program pages share one layout (program card + phases always on top; only the week changes); `PhaseExplorer` (goal, "coming out" feel, weeks, workouts per phase); short day rows; phases carry an optional `outcome`; program-row buttons one size; "You're set" tile is now an entry (links to each week).
 - 2026-11-28 - Today: right column is Quick check-in > program tiles (banner / suggestion / "You're set") > Recap > Log something else; the "You're set" tile is slimmer.
 - 2026-11-28 - Today: program tiles are full width right under the day strip, then the workout; right column is Quick check-in > Log something else > Recap. Quick check-in says "all set - update any time" (one per day, the last answer wins).
+- 2026-11-28 - Instant taps: `run(fn, fail, optimistic)` and `lib/optimistic.ts`; check-ins, plan ticks, phase, At home, entry edit/delete, pain areas and program status update the screen immediately. Slower multi-step actions (log, skip, next week, use a draft) still wait for the save.

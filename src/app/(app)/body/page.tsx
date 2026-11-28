@@ -5,6 +5,7 @@ import { PageHeader, SectionCard } from "@/components/ui";
 import { addPainArea, savePainCheck, setAreaActive } from "@/lib/actions";
 import { checksFor, primaryArea } from "@/lib/rules";
 import { shortDate as fmt } from "@/lib/format";
+import { optAreaActive, optPain } from "@/lib/optimistic";
 
 export default function Body() {
   const { data, sb, uid, today, run } = useApp();
@@ -25,9 +26,9 @@ export default function Body() {
           log={log}
           today={today}
           hint={null}
-          onCheck={(areaId, pain) => run(() => savePainCheck(sb, uid, areaId, pain, today))}
+          onCheck={(areaId, pain) => run(() => savePainCheck(sb, uid, areaId, pain, today), undefined, optPain(areaId, today, pain))}
           onAdd={(name) => run(() => addPainArea(sb, uid, name))}
-          onResolve={(areaId) => run(() => setAreaActive(sb, areaId, false))}
+          onResolve={(areaId) => run(() => setAreaActive(sb, areaId, false), undefined, optAreaActive(areaId, false))}
         />
         <div className="stack">
           <SectionCard title="Recent notes">
@@ -52,7 +53,7 @@ export default function Body() {
                 {resolved.map((a) => (
                   <li key={a.id}>
                     <span>{a.name}<br /><span className="meta">last check {checksFor(checks, a.id)[0] ? `${fmt(checksFor(checks, a.id)[0].date)}: ${checksFor(checks, a.id)[0].pain}/10` : "none"}</span></span>
-                    <button className="link" onClick={() => run(() => setAreaActive(sb, a.id, true))}>Track again</button>
+                    <button className="link" onClick={() => run(() => setAreaActive(sb, a.id, true), undefined, optAreaActive(a.id, true))}>Track again</button>
                   </li>
                 ))}
               </ul>

@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useApp } from "./AppProvider";
 import { setTravel } from "@/lib/actions";
+import { optTravel } from "@/lib/optimistic";
 
 const ICONS: Record<string, React.ReactNode> = {
   today: <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4" /></svg>,
@@ -57,7 +58,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         </div>
         <div className="right">
           <div className="seg" role="group" aria-label="Where are you training?">
-            <button aria-pressed={!state.travel} onClick={() => state.travel && run(() => setTravel(sb, state, false))}>At home</button>
+            <button aria-pressed={!state.travel} onClick={() => state.travel && run(() => setTravel(sb, state, false), undefined, optTravel(false))}>At home</button>
             <button aria-pressed={state.travel} onClick={() => !state.travel && openTravel()}>Traveling</button>
           </div>
           <Link href="/account" className="avatar" aria-label="Account" title={profile.display_name}>{initial}</Link>
