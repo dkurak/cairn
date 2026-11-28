@@ -108,7 +108,7 @@ Built around **versatility** (how varied your training is), with weekly bars on 
 3. **Sessions per week / month, stacked by activity type** (`StackedBars` + `TypeLegend`, with a table view) and a one-line read ("7 types; Gym is 57%; not done in 4 weeks: Run, Hike...").
 4. **By activity**: one row per type with count, share, "last done", tour vert and miles.
 5. **Activity calendar** (`TypeHeatmap`): each day coloured by type (two sessions = split square).
-6. Pain (`PainTrend`), Body areas (`Spark`), Tours table, **Recent log** (14 days, "Show 30 more days").
+6. **Flare-ups** (`Flares.tsx`, `lib/flares.ts`): pain as episodes, not a line. Per tracked area: "Calm N days" or "Flared N/10", a day strip (calm / aware / flare / no check), and its flare episodes (a flare = a day at 4/10+; days within 3 of each other are one episode) with peak and length. After a flare the primary area is tested by a tour (3/10 or less during, 0 next morning), then "Call it settled" resolves the area (undo from Body, Track again). Then the Tours table and **Recent log** (14 days, "Show 30 more days").
 Activity types come from `groupOf` in `lib/stats.ts`: Gym & strength (library workouts and watch gym sessions), Backcountry ski, Resort ski, Bike, Run, Hike, Swim, Other. Each has a fixed colour (`--g1`..`--g7`, the validated categorical palette). Watch gym sessions (`activities` table, migration 0010) count on days nothing gym-like was logged. Charts: `charts/Charts.tsx`; numbers: `lib/stats.ts`.
 
 ### Library `/library`
@@ -234,3 +234,4 @@ Still open:
 - 2026-11-28 - Today: "Log something else" moved inside the workout tile (Up next and Done cards) as one quiet row; the separate tile is gone.
 - 2026-11-28 - Garmin history import: `scripts/garmin_sessions.py` (reads watch .fit session summaries), `scripts/garmin-import.mts`, migration 0010 `activities`; 83 activities (Jan-Nov 2026) imported as log entries.
 - 2026-11-28 - History redesigned around variety: This week strip, Variety KPI, stacked sessions by activity type (weekly or monthly), By activity rows with last-done, typed calendar, shorter recent log; activity groups and colours in `lib/stats.ts`; `activities` loaded in `loadAll`.
+- 2026-11-28 - History: the continuous pain chart and Body-areas sparklines are replaced by Flare-ups (episodes, calm streak, tour validation, "Call it settled"); `lib/flares.ts`.
