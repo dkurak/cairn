@@ -33,16 +33,17 @@ export function categoryOf(e: LogEntry, workouts: Workout[]): string {
 }
 export const categoryLabel = (c: string) => CATEGORY_LABEL[c] ?? c;
 
-// ---------- activity groups: the "versatility" view. One colour per group, always the same one. ----------
+// ---------- activity groups: the "versatility" view. One colour per group, always the same one.
+// Families share a hue and sit side by side: ski (blues: backcountry dark, resort light), cardio (oranges: bike, run, hike). ----------
 export type GroupKey = "gym" | "tour" | "resort" | "bike" | "run" | "hike" | "swim" | "other";
 export const GROUPS: { key: GroupKey; label: string; color: string }[] = [
-  { key: "gym", label: "Gym & strength", color: "var(--g1)" },
-  { key: "tour", label: "Backcountry ski", color: "var(--g2)" },
-  { key: "resort", label: "Resort ski", color: "var(--g3)" },
-  { key: "bike", label: "Bike", color: "var(--g4)" },
-  { key: "run", label: "Run", color: "var(--g5)" },
-  { key: "hike", label: "Hike", color: "var(--g6)" },
-  { key: "swim", label: "Swim", color: "var(--g7)" },
+  { key: "gym", label: "Gym & strength", color: "var(--gymc)" },
+  { key: "tour", label: "Backcountry ski", color: "var(--ski1)" },
+  { key: "resort", label: "Resort ski", color: "var(--ski2)" },
+  { key: "bike", label: "Bike", color: "var(--car1)" },
+  { key: "run", label: "Run", color: "var(--car2)" },
+  { key: "hike", label: "Hike", color: "var(--car3)" },
+  { key: "swim", label: "Swim", color: "var(--swimc)" },
   { key: "other", label: "Other", color: "var(--muted)" },
 ];
 export const groupInfo = (k: GroupKey) => GROUPS.find((g) => g.key === k)!;

@@ -212,9 +212,9 @@ a { color: var(--accent); }
 a:visited { color: var(--accent); }
 
 /* ---------- data-viz series (validated pair: blue + orange; brand teal stays for single-series charts) ---------- */
-:root { --s1: #257de0; --s2: #f47230; --g1: #257de0; --g2: #f47230; --g3: #00b894; --g4: #f2a600; --g5: #ee7fac; --g6: #008a17; --g7: #6a4ce2; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --s1: #338ced; --s2: #e76624; --g1: #338ced; --g2: #e76624; --g3: #00a888; --g4: #d28e05; --g5: #e24d8b; --g6: #0aac23; --g7: #9887ef; } }
-:root[data-theme="dark"] { --s1: #338ced; --s2: #e76624; --g1: #338ced; --g2: #e76624; --g3: #00a888; --g4: #d28e05; --g5: #e24d8b; --g6: #0aac23; --g7: #9887ef; }
+:root { --s1: #257de0; --s2: #f47230; --g1: #257de0; --g2: #f47230; --g3: #00b894; --g4: #f2a600; --g5: #ee7fac; --g6: #008a17; --g7: #6a4ce2; --ski1: #1a5fb4; --ski2: #72aaf0; --car1: #d9541a; --car2: #f08a4b; --car3: #f7b98a; --gymc: #6a4ce2; --swimc: #00a888; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --s1: #338ced; --s2: #e76624; --g1: #338ced; --g2: #e76624; --g3: #00a888; --g4: #d28e05; --g5: #e24d8b; --g6: #0aac23; --g7: #9887ef; --ski1: #338ced; --ski2: #8dbcf3; --car1: #e76624; --car2: #f0905a; --car3: #f5b48a; --gymc: #9887ef; --swimc: #00a888; } }
+:root[data-theme="dark"] { --s1: #338ced; --s2: #e76624; --g1: #338ced; --g2: #e76624; --g3: #00a888; --g4: #d28e05; --g5: #e24d8b; --g6: #0aac23; --g7: #9887ef; --ski1: #338ced; --ski2: #8dbcf3; --car1: #e76624; --car2: #f0905a; --car3: #f5b48a; --gymc: #9887ef; --swimc: #00a888; }
 .nav.six { grid-template-columns: repeat(6, 1fr); }
 @media (min-width: 900px) { .nav.six { grid-template-columns: 1fr; } }
 .kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
