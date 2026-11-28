@@ -20,7 +20,7 @@ export async function proxy(request: NextRequest) {
   );
   const { data } = await supabase.auth.getClaims();
   const path = request.nextUrl.pathname;
-  const open = path.startsWith("/zz-preview") || path.startsWith("/login") || path.startsWith("/auth");
+  const open = path.startsWith("/login") || path.startsWith("/auth");
   if (!data?.claims && !open) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
