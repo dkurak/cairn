@@ -141,7 +141,13 @@ export type CoachRow = {
 export type Profile = { id: string; display_name: string; role: "admin" | "member"; goals?: string; goals_updated_at?: string | null };
 
 /** One week of a program as it was planned (0008). */
-export type ProgramWeek = { id: string; program_id: string; week: number; plan_kind: "home" | "travel"; items: PlanItem[]; created_at: string; updated_at: string };
+/** One week of a program as it was planned (0008). status/revision/note arrive with 0009: until then every week reads as live, revision 1. */
+export type ProgramWeek = {
+  id: string; program_id: string; week: number; plan_kind: "home" | "travel"; items: PlanItem[]; created_at: string; updated_at: string;
+  status?: "draft" | "live"; revision?: number; note?: string;
+};
+/** An earlier version of a program week (0009). */
+export type ProgramWeekVersion = { id: string; program_week_id: string; revision: number; status: "draft" | "live"; items: PlanItem[]; note: string; changed_at: string };
 
 export type AppData = {
   profile: Profile;
@@ -155,6 +161,8 @@ export type AppData = {
   exports: GarminExport[];
   programs: Program[];
   programWeeks: ProgramWeek[];
+  /** false until migration 0009 is applied (no draft weeks or revisions yet) */
+  weekPlansReady: boolean;
 };
 
 export const PAIN_SCALE =

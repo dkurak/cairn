@@ -20,7 +20,7 @@ export default function Recap() {
   const lastLog = data.log.reduce((a, e) => (e.created_at > a ? e.created_at : a), "");
   const lastCheck = data.checks.reduce((a, c) => (c.date > a ? c.date : a), "");
   const prog = activeProgram(data);
-  const key = [today, data.log.length, lastLog, data.checks.length, lastCheck, data.profile.goals_updated_at ?? "", prog?.id ?? "", prog?.updated_at ?? "", data.state.travel].join("|");
+  const key = [today, data.log.length, lastLog, data.checks.length, lastCheck, data.profile.goals_updated_at ?? "", prog?.id ?? "", prog?.updated_at ?? "", data.programWeeks.length, data.state.travel].join("|");
 
   const load = useCallback(async (force = false) => {
     if (!force) {

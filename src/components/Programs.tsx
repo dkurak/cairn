@@ -3,6 +3,8 @@ import Link from "next/link";
 import { useApp } from "./AppProvider";
 import PhaseBar from "./PhaseBar";
 import { activeProgram, effectivePhases, evaluateCriteria, needsNewWeek, positionLabel, programPosition } from "@/lib/programs";
+import { programHealth, storedWeek } from "@/lib/programWeeks";
+import { adoptDraftWeek } from "@/lib/actions";
 import { activePlan } from "@/lib/rules";
 import { shortDate as fmtDate } from "@/lib/format";
 import { ConfirmButton, SectionCard, Tag } from "./ui";
@@ -46,16 +48,25 @@ export function CriteriaList({ crit }: { crit: NonNullable<ReturnType<typeof eva
 
 /** "Week 4 of Jan 18 big ski day (Build) - get this week's plan" when the program has moved on. */
 export function ProgramWeekBanner() {
-  const { data, askCoach } = useApp();
+  const { data, sb, run, askCoach } = useApp();
   const due = needsNewWeek(data, data.state.travel ? undefined : activePlan(data));
   if (!due || data.state.travel) return null;
   const { program: p, pos } = due;
+  const draft = storedWeek(data, p.id, pos.week);
+  const hasDraft = !!draft && (draft.status ?? "live") === "draft";
   return (
     <div className="banner good">
       <strong>Week {pos.week}{pos.totalWeeks ? ` of ${pos.totalWeeks}` : ""} · {p.title}</strong>
-      <span>{pos.phase ? `${pos.phase}: ${pos.phaseFocus}. ` : ""}Time for this week&apos;s plan.</span>
+      <span>{pos.phase ? `${pos.phase}: ${pos.phaseFocus}. ` : ""}{hasDraft ? "This week was drafted ahead. Use it as is, or have the coach adjust it to what you've done." : "Time for this week's plan."}</span>
       <div className="row">
-        <button className="primary" onClick={() => askCoach(`Build week ${pos.week} of my "${p.title}" program.`)}>Build this week</button>
+        {hasDraft ? (
+          <>
+            <button className="primary" onClick={() => run(() => adoptDraftWeek(sb, data, p, pos.week), "Couldn't start that week. Try again.")}>Use the draft</button>
+            <button onClick={() => askCoach(`Rewrite week ${pos.week} of my "${p.title}" program, starting from the draft and what I've actually done since.`)}>Adjust it first</button>
+          </>
+        ) : (
+          <button className="primary" onClick={() => askCoach(`Build week ${pos.week} of my "${p.title}" program.`)}>Build this week</button>
+        )}
         <Link href={programHref(p.id, pos.week)}>See the week</Link>
       </div>
     </div>
@@ -63,7 +74,7 @@ export function ProgramWeekBanner() {
 }
 
 export default function Programs() {
-  const { data, askCoach } = useApp();
+  const { data, today, askCoach } = useApp();
   const { setStatus, remove, finish } = useProgramActions();
   const active = activeProgram(data);
   const bank = data.programs.filter((p) => p.status !== "active");
@@ -73,9 +84,10 @@ export default function Programs() {
       {active ? (() => {
         const pos = programPosition(active);
         const crit = active.kind === "milestone" ? evaluateCriteria(active, data) : null;
+        const health = data.weekPlansReady ? programHealth(data, active, today) : null;
         return (
           <>
-            <div className="program-head"><Link href={programHref(active.id)} className="title">{active.title}</Link><Tag>{active.kind === "milestone" ? "Milestone" : "Active"}</Tag></div>
+            <div className="program-head"><Link href={programHref(active.id)} className="title">{active.title}</Link><span className="row nowrap gap-6">{health && health.state !== "unknown" && <Tag tone={health.tone}>{health.label}</Tag>}<Tag>{active.kind === "milestone" ? "Milestone" : "Active"}</Tag></span></div>
             <span className="note">{positionLabel(active, pos, crit ?? undefined)}</span>
             {active.goal && <span>{active.goal}</span>}
             <PhaseBar phases={effectivePhases(active)} current={pos.phaseIndex} week={pos.week} hrefFor={(start, i) => programHref(active.id, i === pos.phaseIndex ? pos.week : start)} />

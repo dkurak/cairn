@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { addPainArea, creditUpNext, loadAll, setGoals, logEntries, markDone, savePainCheck, setPhase, setTravel, skipUpNext, startNextWeek, clampPain } from "@/lib/actions";
 import { activePlan, checksFor, doneMap, itemWorkoutIds, primaryArea, sortedLog, todayISO, tours, upNext } from "@/lib/rules";
-import type { PlanProposal, ProgramProposal, Proposal, WorkoutProposal } from "@/lib/proposals";
+import type { PlanProposal, ProgramProposal, ProgramWeeksProposal, Proposal, WorkoutProposal } from "@/lib/proposals";
+import { nudgeLine, programHealth, programNudge, storedWeek } from "@/lib/programWeeks";
 import { digest, digestLine } from "@/lib/review";
 import { activeProgram, needsNewWeek, programLine, programPosition } from "@/lib/programs";
 import { parseCriteria, parsePhases, parsePrefs, programChanges } from "@/lib/programInput";
@@ -77,7 +78,13 @@ ${(() => {
   const hp = data.plans.find((x) => x.kind === "home");
   if (!ap) return "No active program.";
   const due = needsNewWeek(data, hp);
-  return `Home plan is ${hp?.program_id === ap.id ? `week ${hp.program_week} of "${ap.title}"` : `not written for "${ap.title}"`}.${due ? ` It's now week ${due.pos.week} (${due.pos.phase ?? "-"}): offer to build this week's plan.` : ""}`;
+  const draft = storedWeek(data, ap.id, programPosition(ap).week);
+  const rows = data.programWeeks.filter((w) => w.program_id === ap.id);
+  const health = data.weekPlansReady ? programHealth(data, ap, todayISO()) : null;
+  return `Home plan is ${hp?.program_id === ap.id ? `week ${hp.program_week} of "${ap.title}"` : `not written for "${ap.title}"`}.${due ? ` It's now week ${due.pos.week} (${due.pos.phase ?? "-"}): ${draft && (draft.status ?? "live") === "draft" ? "a draft for this week exists (offer to use it or adjust it), " : ""}offer to build this week's plan.` : ""}
+Program weeks kept: ${data.weekPlansReady ? (rows.length ? rows.map((w) => `wk ${w.week} ${w.status ?? "live"}${w.revision && w.revision > 1 ? ` (rev ${w.revision})` : ""}: ${w.items.map((i) => i.title).join(" / ")}`).join("; ") : "none yet") : "not available yet (needs a database update)"}.
+How the program is going: ${health ? `${health.label}${health.reasons.length ? " - " + health.reasons.join("; ") : ""}` : "n/a"}.
+${nudgeLine(programNudge(data, ap, todayISO()))}`;
 })()}
 Training summary:
 - ${[5, 14, 28].map((d) => digestLine(digest(data, d))).join("\n- ")}
@@ -104,6 +111,8 @@ How to work:
   rehab or anything that's done when the body says so (kind "milestone"): no fixed end. Set criteria the app can check from their log, e.g. pain_streak (daily checks of the area <= 1 for 7 days in a row), sessions (4 sessions with pain <= 2 in the last 10 days), tour (a short tour with pain <= 3 during and 0 next morning) - plus manual ones if needed. target_date is only a hoped-for date. Phases run in order and the last one holds until the checks are met, e.g. Calm (settle, isometrics) > Load (strength back, pain <= 2) > Return (short tour, then normal plan). An injury mid-program: offer a rehab milestone that pauses the current program and resumes it when done.
   Phase weeks must add up to the program length. With activate true, also build week 1 in the same turn (propose_workout for anything new, then propose_plan_change) - it's bundled into the program card. Keep their pain rule and hip swaps in every phase.
 - Running a program: each new week, build that week's plan from the active program's current phase, their log and pain trend, with propose_plan_change (it's tied to the program week automatically). Progress loads week to week, ease off when pain or feel says so, and say in a line what changed vs last week. Check-ins report against the active program too (week, phase, on track or not). To switch, pause, finish or restart a program, call set_program_status. If an event date has passed, ask how it went and offer to mark it done.
+- Planning ahead: when they ask to see or plan the later weeks (or accept the suggestion above), call propose_program_weeks ONCE with every remaining week of the active program: each week's full plan (5-7 days incl. rest), following that week's phase focus, building load week to week, using their equipment, limits and preferences, preferring library workouts (propose_workout first for any new one). Say in two lines what the arc is. Drafts are suggestions: they never replace the plan being followed now, and they get re-planned as the person does or misses things.
+- Re-planning: when they ask (or accept the suggestion above), look at "How the program is going" and the training summary, then call propose_program_weeks with mode "replan" for only the later weeks that should change (after the current one), each with its full new plan. Say plainly in the reason what you saw (e.g. missed Mon and Tue, hip 5/10 on the tour) and what you changed (e.g. cut volume 20%, held the tour at 1,500 ft). To change the current week use propose_plan_change instead. Never re-plan on your own: suggest it in one line and wait.
 - Pivots: when plans change mid-program (new date, a check is wrong or too easy, phases need stretching, fewer days a week, a manual check is now met), call propose_program_update with ONLY the fields that change - don't start a new program for an adjustment. Phases and criteria are full lists when you send them; preferences merge. Progress (start date, current week, checks so far) carries on. Say in one line why. If the change also affects this week, follow with propose_plan_change.
 - Finishing a milestone: when the program line says ALL MET, tell them and offer to call it done. They can also call it done early - it's their call; say plainly which checks are still unproven (e.g. "hip's been 0-1 for 3 days, the usual bar is 7 plus a clean short tour") and let them decide. When done, ask in a few words how it went (save as outcome), then offer to resume the program it paused and, if they're in the calm phase, to switch to build.
 - Building a week from a description ("3 strength days, 2 easy, a tour Saturday", "more upper body this week"): if one or two things that change the plan are missing (days available, equipment, time per session), ask them first in one message. Otherwise build it: prefer workouts already in the library; create new ones with propose_workout only when nothing fits (full rundown, hip swaps in tips); then call propose_plan_change once with the whole week. You can name the new workouts you just proposed in the plan - they are bundled into one card and saved together. Say in 2-4 lines how the week serves their goals and their pain rule.
@@ -194,6 +203,43 @@ const TOOLS: Anthropic.Tool[] = [
         },
       },
       required: ["kind", "reason", "items"],
+    },
+  },
+  {
+    name: "propose_program_weeks",
+    description: "Plan ahead for the ACTIVE goal program: draft one or more LATER weeks (after the current one) in a single card, or re-plan the remaining weeks from what they've actually done (mode \"replan\"). Give each week's FULL plan. Drafts never change the plan they're following now - use propose_plan_change for the current week. Workouts must be library names, or names of new workouts you proposed with propose_workout. Nothing is saved until the person taps Save.",
+    input_schema: {
+      type: "object",
+      properties: {
+        mode: { type: "string", enum: ["plan_ahead", "replan"], description: "plan_ahead (default) or replan" },
+        reason: { type: "string", description: "Plan ahead: the arc in a line. Replan: what you saw (missed days, pain) and what you changed." },
+        weeks: {
+          type: "array",
+          description: "Later weeks only, each with its full plan",
+          items: {
+            type: "object",
+            properties: {
+              week: { type: "integer", description: "Program week number (after the current week)" },
+              items: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    day: { type: "string", description: "Mon, Tue, ... or a label" },
+                    title: { type: "string" },
+                    workouts: { type: "array", items: { type: "string" } },
+                    kind: { type: "string", enum: ["workout", "tour", "rest"] },
+                    note: { type: "string" },
+                  },
+                  required: ["day", "title"],
+                },
+              },
+            },
+            required: ["week", "items"],
+          },
+        },
+      },
+      required: ["reason", "weeks"],
     },
   },
   {
@@ -310,6 +356,35 @@ export async function POST(req: Request) {
   const actions: string[] = [];
   const proposals: Proposal[] = [];
   let data = await loadAll(sb, userId);
+
+  /** Turn the coach's loose plan items into PlanItems: library names to ids, names of workouts proposed this turn (or still open in chat) to "new:<name>". */
+  async function resolveItems(rawItems: unknown, bundled: WorkoutProposal[], bundledFrom: string[]) {
+    const items: PlanItem[] = [];
+    const missing: string[] = [];
+    const findNew = async (n: string) => {
+      const here = proposals.find((p): p is WorkoutProposal => p.type === "workout" && !p.base_id && p.name.toLowerCase() === n.toLowerCase());
+      if (here) return { p: here, msgId: null as string | null };
+      const { data: open } = await sb.from("coach_messages").select("id, proposal").eq("user_id", userId!).eq("proposal_status", "open").not("proposal", "is", null).order("created_at", { ascending: false }).limit(30);
+      const row = (open ?? []).find((r: any) => r.proposal?.type === "workout" && !r.proposal.base_id && String(r.proposal.name).toLowerCase() === n.toLowerCase());
+      return row ? { p: row.proposal as WorkoutProposal, msgId: row.id as string } : null;
+    };
+    const raw = (Array.isArray(rawItems) ? rawItems : []).slice(0, 14);
+    for (const [idx, it] of raw.entries() as IterableIterator<[number, any]>) {
+      const ids: string[] = [];
+      for (const n of (Array.isArray(it.workouts) ? it.workouts : []) as string[]) {
+        const w = data.workouts.find((x) => x.name === n) ?? data.workouts.find((x) => x.name.toLowerCase() === String(n).toLowerCase());
+        if (w) { ids.push(w.id); continue; }
+        const nw = await findNew(String(n));
+        if (!nw) { missing.push(n); continue; }
+        if (!bundled.includes(nw.p)) bundled.push(nw.p);
+        if (nw.msgId && !bundledFrom.includes(nw.msgId)) bundledFrom.push(nw.msgId);
+        ids.push(`new:${nw.p.name}`);
+      }
+      const kind = it.kind === "tour" || it.kind === "rest" ? it.kind : "workout";
+      items.push({ key: `p${idx + 1}`, day: String(it.day ?? "").slice(0, 20), title: String(it.title ?? "").slice(0, 80), workout_ids: ids, kind, note: String(it.note ?? "").slice(0, 300) });
+    }
+    return { items, missing };
+  }
 
   async function runTool(name: string, i: Input): Promise<unknown> {
     switch (name) {
@@ -438,32 +513,9 @@ export async function POST(req: Request) {
         return digest(data, days);
       }
       case "propose_plan_change": {
-        const items: PlanItem[] = [];
-        const missing: string[] = [];
         const bundled: WorkoutProposal[] = [];
         const bundledFrom: string[] = []; // earlier cards (open) that this plan now includes
-        const findNew = async (n: string) => {
-          const here = proposals.find((p): p is WorkoutProposal => p.type === "workout" && !p.base_id && p.name.toLowerCase() === n.toLowerCase());
-          if (here) return { p: here, msgId: null as string | null };
-          const { data: open } = await sb.from("coach_messages").select("id, proposal").eq("user_id", userId!).eq("proposal_status", "open").not("proposal", "is", null).order("created_at", { ascending: false }).limit(30);
-          const row = (open ?? []).find((r: any) => r.proposal?.type === "workout" && !r.proposal.base_id && String(r.proposal.name).toLowerCase() === n.toLowerCase());
-          return row ? { p: row.proposal as WorkoutProposal, msgId: row.id as string } : null;
-        };
-        const rawItems = (Array.isArray(i.items) ? i.items : []).slice(0, 14);
-        for (const [idx, it] of rawItems.entries() as IterableIterator<[number, any]>) {
-          const ids: string[] = [];
-          for (const n of (Array.isArray(it.workouts) ? it.workouts : []) as string[]) {
-            const w = data.workouts.find((x) => x.name === n) ?? data.workouts.find((x) => x.name.toLowerCase() === String(n).toLowerCase());
-            if (w) { ids.push(w.id); continue; }
-            const nw = await findNew(String(n));
-            if (!nw) { missing.push(n); continue; }
-            if (!bundled.includes(nw.p)) bundled.push(nw.p);
-            if (nw.msgId && !bundledFrom.includes(nw.msgId)) bundledFrom.push(nw.msgId);
-            ids.push(`new:${nw.p.name}`);
-          }
-          const kind = it.kind === "tour" || it.kind === "rest" ? it.kind : "workout";
-          items.push({ key: `p${idx + 1}`, day: String(it.day ?? "").slice(0, 20), title: String(it.title ?? "").slice(0, 80), workout_ids: ids, kind, note: String(it.note ?? "").slice(0, 300) });
-        }
+        const { items, missing } = await resolveItems(i.items, bundled, bundledFrom);
         if (missing.length) return { ok: false, reason: `These workouts don't exist yet: ${[...new Set(missing)].join(", ")}. Propose each with propose_workout first (no base_workout), then name it here.` };
         if (!items.length) return { ok: false, reason: "need at least one item" };
         // the bundled workouts live on the plan card now, not as separate cards
@@ -481,6 +533,38 @@ export async function POST(req: Request) {
         if (ap) { plan.program_id = ap.id; plan.program_week = programPosition(ap).week; }
         proposals.push(plan);
         return { ok: true, note: `Shown to the person as one card${bundled.length ? ` with ${bundled.length} new workout(s) bundled in` : ""}${ap ? ` (week ${plan.program_week} of "${ap.title}")` : ""}. It is NOT saved until they tap Save.` };
+      }
+      case "propose_program_weeks": {
+        const ap = activeProgram(data);
+        if (!ap) return { ok: false, reason: "There's no active program. Start or resume one first." };
+        if (!data.weekPlansReady) return { ok: false, reason: "Planning ahead needs a database update (migration 0009) that hasn't been applied yet. Tell the person." };
+        const pos = programPosition(ap);
+        const last = pos.totalWeeks ?? pos.week + 8;
+        const rawWeeks = (Array.isArray(i.weeks) ? i.weeks : []).slice(0, 12) as { week?: unknown; items?: unknown }[];
+        const bad = rawWeeks.map((w) => Number(w.week)).filter((n) => !Number.isInteger(n) || n <= pos.week || n > last);
+        if (bad.length) return { ok: false, reason: `Weeks must be after the current week (${pos.week}) and at most ${last}. Got ${bad.join(", ")}. To change the current week use propose_plan_change.` };
+        if (!rawWeeks.length) return { ok: false, reason: "need at least one week" };
+        const bundled: WorkoutProposal[] = [];
+        const bundledFrom: string[] = [];
+        const missing: string[] = [];
+        const weeks: ProgramWeeksProposal["weeks"] = [];
+        for (const w of rawWeeks) {
+          const r = await resolveItems(w.items, bundled, bundledFrom);
+          missing.push(...r.missing);
+          if (!r.items.length) return { ok: false, reason: `Week ${w.week} has no days. Give each week its full plan.` };
+          if (weeks.some((x) => x.week === Number(w.week))) continue; // one plan per week
+          weeks.push({ week: Number(w.week), items: r.items });
+        }
+        if (missing.length) return { ok: false, reason: `These workouts don't exist yet: ${[...new Set(missing)].join(", ")}. Propose each with propose_workout first (no base_workout), then name it here.` };
+        weeks.sort((a, b) => a.week - b.week);
+        for (const b of bundled) { const k = proposals.indexOf(b); if (k >= 0) proposals.splice(k, 1); }
+        const earlier = proposals.findIndex((p) => p.type === "program_weeks");
+        if (earlier >= 0) proposals.splice(earlier, 1); // one card per turn
+        proposals.push({
+          type: "program_weeks", reason: String(i.reason ?? "").slice(0, 400), mode: i.mode === "replan" ? "replan" : "plan_ahead",
+          program_id: ap.id, title: ap.title, weeks, ...(bundled.length ? { new_workouts: bundled, bundled_from: bundledFrom } : {}),
+        });
+        return { ok: true, note: `Shown as one card with ${weeks.length} week${weeks.length === 1 ? "" : "s"} (${weeks.map((w) => w.week).join(", ")})${bundled.length ? ` and ${bundled.length} new workout(s) bundled in` : ""}. They are drafts and NOT saved until the person taps Save. The current week's plan is untouched.` };
       }
       case "set_phase":
         await setPhase(sb, data.state, i.phase === "build" ? "build" : "calm");

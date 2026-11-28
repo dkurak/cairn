@@ -59,7 +59,19 @@ export type ProgramUpdateProposal = {
   before: Partial<ProgramFields>;
   after: Partial<ProgramFields>;
 };
-export type Proposal = WorkoutProposal | PlanProposal | ProgramProposal | ProgramUpdateProposal;
+/** Later weeks of the active program, drafted ahead (plan_ahead) or redrafted from what actually happened (replan). Drafts never touch the plan being followed now. */
+export type ProgramWeeksProposal = {
+  type: "program_weeks";
+  reason: string;
+  mode: "plan_ahead" | "replan";
+  program_id: string;
+  title: string; // the program's title when proposed, for the card
+  weeks: { week: number; items: PlanItem[] }[];
+  /** new workouts designed for these weeks, saved together with them (workout_ids may hold "new:<name>") */
+  new_workouts?: WorkoutProposal[];
+  bundled_from?: string[];
+};
+export type Proposal = WorkoutProposal | PlanProposal | ProgramProposal | ProgramUpdateProposal | ProgramWeeksProposal;
 
 /**
  * Where a workout proposal lands when saved.

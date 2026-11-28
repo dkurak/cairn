@@ -8,6 +8,7 @@ import { ProgramWeekBanner } from "./Programs";
 import { WorkoutRundowns } from "./WorkoutTile";
 import RecentList from "./RecentList";
 import FeelPill, { VertPill } from "./FeelPill";
+import ProgramNudge from "./ProgramNudge";
 import { LogShortcuts, PainChip as Chip, SectionCard } from "./ui";
 import { parseISO as parse, weekday as dow, shortDate as md } from "@/lib/format";
 import { deleteEntry, setPhase, skipUpNext, startNextWeek, updateEntry } from "@/lib/actions";
@@ -255,6 +256,7 @@ export default function DayView({ date }: { date: string }) {
           )}
 
           {isToday && <ProgramWeekBanner />}
+          {isToday && <ProgramNudge />}
           {gl && <div className={`banner ${gl.tone}`}><strong>{gl.title}</strong><span>{gl.body}</span></div>}
         </div>
 

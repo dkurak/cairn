@@ -1,7 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { AppData, EntryKind, Feel, LogEntry, Phase, PlanState, TravelInfo } from "./types";
+import type { AppData, EntryKind, Feel, LogEntry, Phase, PlanItem, PlanState, Program, ProgramWeekVersion, TravelInfo } from "./types";
 import { FEELS } from "./types";
 import { activePlan, doneMap, itemWorkoutIds, nextInCycle, planOf, primaryArea, todayISO, upNext } from "./rules";
+import { programPosition } from "./programs";
+import { storedWeek } from "./programWeeks";
 
 // All mutations live here so the browser (UI) and the server (chat tools) behave the same.
 // RLS keeps every call scoped to the signed-in user.
@@ -37,6 +39,8 @@ export async function loadAll(sb: SupabaseClient, userId: string): Promise<AppDa
   const programs = await sb.from("programs").select("*").eq("user_id", userId).order("created_at", { ascending: false });
   // saved program weeks need migration 0008; without it week pages fall back to the current plan
   const programWeeks = await sb.from("program_weeks").select("*").eq("user_id", userId).order("week");
+  // drafts and revisions need 0009: probe for the status column
+  const weekPlans = await sb.from("program_weeks").select("status").limit(1);
   if (!goals.error && goals.data) Object.assign(profile.data as object, goals.data);
   return {
     profile: profile.data as AppData["profile"],
@@ -50,6 +54,7 @@ export async function loadAll(sb: SupabaseClient, userId: string): Promise<AppDa
     exports: (exports.error ? [] : exports.data) as AppData["exports"],
     programs: (programs.error ? [] : programs.data ?? []) as AppData["programs"],
     programWeeks: (programWeeks.error ? [] : programWeeks.data ?? []) as AppData["programWeeks"],
+    weekPlansReady: !weekPlans.error,
   };
 }
 
@@ -222,3 +227,93 @@ export async function deleteEntry(sb: SupabaseClient, id: string) {
 }
 
 export { activePlan, doneMap, nextInCycle, planOf, primaryArea };
+
+// ---------- plans and program weeks ----------
+
+/**
+ * Insert or update a row. Newer columns (change_note from 0005, program_id/program_week from 0007) may not
+ * exist yet if a migration hasn't run: drop the column the database complains about and try again.
+ */
+export async function writeRow(sb: SupabaseClient, table: string, row: Record<string, unknown>, id?: string) {
+  let r = { ...row };
+  for (let tries = 0; tries < 4; tries++) {
+    const res = await (id ? sb.from(table).update(r).eq("id", id).select("id").single() : sb.from(table).insert(r).select("id").single());
+    if (!res.error) return res.data as { id: string };
+    const col = res.error.message.match(/'(\w+)' column|column "?(?:\w+\.)?(\w+)"? does not exist/);
+    const name = col?.[1] ?? col?.[2];
+    if (!name || !(name in r)) throw res.error;
+    const { [name]: _, ...rest } = r;
+    r = rest;
+  }
+  throw new Error(`Couldn't save to ${table}`);
+}
+
+type WeekRow = { user_id: string; program_id: string; week: number; plan_kind: "home" | "travel"; items: PlanItem[]; status: "draft" | "live"; note: string };
+
+/** Keep a copy of a live program week. Before 0009 there's no status/note column, before 0008 no table: carry on quietly. */
+export async function upsertLiveWeek(sb: SupabaseClient, row: WeekRow) {
+  let r: Record<string, unknown> = { ...row };
+  let res = await sb.from("program_weeks").upsert(r, { onConflict: "program_id,week" });
+  if (res.error && /status|note|revision/.test(res.error.message ?? "") && !/relation/.test(res.error.message ?? "")) {
+    const { status: _s, note: _n, ...rest } = r;
+    r = rest;
+    res = await sb.from("program_weeks").upsert(r, { onConflict: "program_id,week" });
+  }
+  if (res.error && !/program_weeks/.test(res.error.message ?? "")) throw res.error;
+}
+
+/** Make a plan the one being followed: writes the plan row, resets the checklist, and keeps a copy for the program week. */
+export async function writeLivePlan(sb: SupabaseClient, uid: string, a: { existing?: { id: string } | null; kind: "home" | "travel"; items: PlanItem[]; program_id?: string | null; program_week?: number | null; note?: string }) {
+  const link = a.kind === "home" ? { program_id: a.program_id ?? null, program_week: a.program_week ?? null } : {};
+  const row = a.existing
+    ? await writeRow(sb, "plans", { items: a.items, ...link }, a.existing.id)
+    : await writeRow(sb, "plans", { owner_id: uid, name: a.kind === "travel" ? "Travel" : "My week", kind: a.kind, items: a.items, ...link });
+  await patchState(sb, uid, a.kind === "home" ? { active_home_plan_id: row.id, done: {} } : { active_travel_plan_id: row.id, travel_done: {} });
+  if (a.program_id && a.program_week) {
+    await upsertLiveWeek(sb, { user_id: uid, program_id: a.program_id, week: a.program_week, plan_kind: a.kind, items: a.items, status: "live", note: a.note ?? "" });
+  }
+  return row.id;
+}
+
+/** Writes draft weeks. Never touches a live week, never a week that's already here or past. Needs migration 0009. */
+export async function saveWeekDrafts(sb: SupabaseClient, uid: string, programId: string, drafts: { week: number; items: PlanItem[] }[], opts: { currentWeek: number; note: string; kind?: "home" | "travel" }) {
+  const need = new Error("Planning ahead needs a database update (migration 0009) first.");
+  const weeks = drafts.filter((d) => d.week > opts.currentWeek).map((d) => d.week);
+  const { data: existing, error: e1 } = await sb.from("program_weeks").select("week, status").eq("program_id", programId).in("week", weeks.length ? weeks : [-1]);
+  if (e1) throw /program_weeks|status|column/i.test(e1.message ?? "") ? need : e1;
+  const live = new Set((existing ?? []).filter((r: { status?: string }) => r.status === "live").map((r: { week: number }) => r.week));
+  const saved: number[] = [];
+  const skipped: number[] = [];
+  for (const d of drafts) {
+    if (d.week <= opts.currentWeek || live.has(d.week)) { skipped.push(d.week); continue; }
+    const { error } = await sb.from("program_weeks").upsert(
+      { user_id: uid, program_id: programId, week: d.week, plan_kind: opts.kind ?? "home", items: d.items, status: "draft", note: opts.note.slice(0, 300) },
+      { onConflict: "program_id,week" },
+    );
+    if (error) throw /program_weeks|status|note|column/i.test(error.message ?? "") ? need : error;
+    saved.push(d.week);
+  }
+  return { saved, skipped };
+}
+
+/** The week has arrived: make its draft the plan you're following. */
+export async function adoptDraftWeek(sb: SupabaseClient, data: AppData, p: Program, week: number) {
+  const row = storedWeek(data, p.id, week);
+  if (!row || (row.status ?? "live") !== "draft") throw new Error("There's no draft for that week.");
+  const kind = row.plan_kind ?? "home";
+  await writeLivePlan(sb, data.state.user_id, { existing: data.plans.find((pl) => pl.kind === kind), kind, items: row.items, program_id: p.id, program_week: week, note: row.note ?? "" });
+}
+
+/** Put an earlier version of a week back. If it's the week you're following, the live plan changes too. */
+export async function restoreWeekRevision(sb: SupabaseClient, data: AppData, p: Program, week: number, v: ProgramWeekVersion) {
+  const row = storedWeek(data, p.id, week);
+  if (!row) throw new Error("That week isn't saved.");
+  const note = `Restored revision ${v.revision}`;
+  if ((row.status ?? "live") === "live" && week === programPosition(p, todayISO()).week) {
+    const kind = row.plan_kind ?? "home";
+    await writeLivePlan(sb, data.state.user_id, { existing: data.plans.find((pl) => pl.kind === kind), kind, items: v.items, program_id: p.id, program_week: week, note });
+    return;
+  }
+  const { error } = await sb.from("program_weeks").update({ items: v.items, note }).eq("id", row.id);
+  if (error) throw error;
+}

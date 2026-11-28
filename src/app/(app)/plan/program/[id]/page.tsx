@@ -5,15 +5,16 @@ import { useApp } from "@/components/AppProvider";
 import PhaseBar from "@/components/PhaseBar";
 import { CriteriaList, programHref, useProgramActions } from "@/components/Programs";
 import { PageHeader, SectionCard, Tag } from "@/components/ui";
-import { effectivePhases, evaluateCriteria, phaseAtWeek, positionLabel, programPosition, weekRange } from "@/lib/programs";
+import { WeekStatusTag } from "@/components/WeekStatus";
 import { dateRange, shortDate } from "@/lib/format";
-import { activePlan } from "@/lib/rules";
+import { effectivePhases, evaluateCriteria, phaseAtWeek, positionLabel, programPosition, weekRange } from "@/lib/programs";
+import { planAheadPrompt, programHealth, remainingWeeks, replanPrompt, storedWeek, weekPlan, weekStatus } from "@/lib/programWeeks";
 import type { ProgramStatus } from "@/lib/types";
 
 const STATUS: Record<ProgramStatus, string> = { active: "Active", paused: "Paused", idea: "Idea", done: "Done" };
 const KIND = { event: "Event (a date to be ready for)", ongoing: "Ongoing", milestone: "Milestone (done when the body proves it)" } as const;
 
-/** A program: the overview, its phases (click in to a phase's first week) and every week. */
+/** A program: the overview and how it's going, its phases (click in to a phase's first week) and every week. */
 export default function ProgramPage() {
   const { id } = useParams<{ id: string }>();
   const { data, today, askCoach } = useApp();
@@ -35,10 +36,12 @@ export default function ProgramPage() {
   const crit = p.kind === "milestone" ? evaluateCriteria(p, data) : null;
   const phaseTotal = phases.reduce((a, x) => a + x.weeks, 0);
   const total = pos.totalWeeks ?? Math.max(phaseTotal, isActive ? pos.week : 1);
-  const saved = new Set(data.programWeeks.filter((w) => w.program_id === p.id).map((w) => w.week));
-  const hasLive = !!activePlan(data)?.items.length;
   const state = (w: number) => (!isActive ? null : w < pos.week ? "past" : w === pos.week ? "now" : "future");
   const weeks = Array.from({ length: total }, (_, i) => i + 1);
+  const health = isActive && data.weekPlansReady ? programHealth(data, p, today) : null;
+  const ahead = isActive ? remainingWeeks(p, today).filter((w) => w <= total) : [];
+  const undrafted = ahead.filter((w) => !storedWeek(data, p.id, w));
+  const drafted = ahead.filter((w) => storedWeek(data, p.id, w));
 
   return (
     <div className="page">
@@ -48,6 +51,12 @@ export default function ProgramPage() {
           <SectionCard title="Overview" aside={<Tag>{STATUS[p.status]}</Tag>}>
             {p.goal && <p className="m0">{p.goal}</p>}
             <span className="note">{positionLabel(p, pos, crit ?? undefined)}</span>
+            {health && health.state !== "unknown" && (
+              <div className="grid-6">
+                <span className="row nowrap gap-6"><strong>How it's going</strong><Tag tone={health.tone}>{health.label}</Tag></span>
+                {health.reasons.length > 0 && <ul className="reasons small">{health.reasons.map((r, i) => <li key={i}>{r}</li>)}</ul>}
+              </div>
+            )}
             {isActive && pos.totalWeeks && (
               <div className="meter" role="progressbar" aria-label="Weeks done" aria-valuemin={0} aria-valuemax={pos.totalWeeks} aria-valuenow={Math.min(pos.week - 1, pos.totalWeeks)}>
                 <span style={{ width: `${Math.min(100, ((pos.week - 1) / pos.totalWeeks) * 100)}%` }} />
@@ -64,10 +73,12 @@ export default function ProgramPage() {
             {p.notes && <p className="note m0">{p.notes}</p>}
             {p.status === "done" && p.outcome && <p className="m0"><strong>How it went:</strong> {p.outcome}</p>}
             {crit && <CriteriaList crit={crit} />}
-            <div className="row">
+            <div className="row actions">
               {isActive ? (
                 <>
                   {!pos.over && <button className="primary" onClick={() => askCoach(`Build week ${pos.week} of my "${p.title}" program.`)}>Build this week</button>}
+                  {data.weekPlansReady && undrafted.length > 0 && <button onClick={() => askCoach(planAheadPrompt(p, undrafted))}>Plan ahead</button>}
+                  {data.weekPlansReady && drafted.length > 0 && <button onClick={() => askCoach(replanPrompt(p, ahead, health?.reasons ?? []))}>Re-plan the rest</button>}
                   <button onClick={() => askCoach(`I want to change my "${p.title}" program: `, false)}>Change program</button>
                   <button onClick={() => setStatus(p, "paused")}>Pause</button>
                   {(pos.over || crit?.allMet) && <button onClick={() => setStatus(p, "done")}>Mark done</button>}
@@ -77,6 +88,7 @@ export default function ProgramPage() {
                 <button className="primary" onClick={() => setStatus(p, "active")}>{p.status === "paused" ? "Resume" : "Start"}</button>
               )}
             </div>
+            {isActive && !data.weekPlansReady && <span className="note">Planning ahead and re-planning need a database update (migration 0009).</span>}
           </SectionCard>
 
           {phases.length > 0 && (
@@ -112,13 +124,18 @@ export default function ProgramPage() {
               const st = state(w);
               const ph = phaseAtWeek(p, w, phases).phase;
               const r = weekRange(p, w);
-              const kept = saved.has(w) ? "Planned" : st === "now" && hasLive ? "Current plan" : null;
+              const wp = weekPlan(data, p, w, today);
+              const ws = weekStatus({ program: p, week: w, items: wp.items, log: data.log, workouts: data.workouts, today });
               return (
                 <li key={w}>
                   <Link href={programHref(p.id, w)}>
                     <span className="wk">Wk {w}</span>
-                    <span>{ph?.name ?? "-"}<br /><span className="meta">{r ? dateRange(r.start, r.end) : ""}{kept ? `${r ? " · " : ""}${kept}` : ""}</span></span>
-                    {st && <Tag>{st === "now" ? "This week" : st === "past" ? "Done" : "Upcoming"}</Tag>}
+                    <span>{ph?.name ?? "-"}<br /><span className="meta">{r ? dateRange(r.start, r.end) : ""}{wp.items.length ? `${r ? " · " : ""}${wp.items.length} days planned` : ""}</span></span>
+                    <span className="tags">
+                      {wp.source === "draft" && <Tag tone="accent">Draft</Tag>}
+                      {st === "now" && <Tag>This week</Tag>}
+                      {ws && ws.state !== "upcoming" ? <WeekStatusTag status={ws} /> : st === "past" ? <Tag>Done</Tag> : st === "future" && wp.source !== "draft" ? <Tag>Upcoming</Tag> : null}
+                    </span>
                   </Link>
                 </li>
               );

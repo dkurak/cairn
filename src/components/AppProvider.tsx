@@ -2,10 +2,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
-import { canResumeTravel, creditUpNext, loadAll, logEntries, markDone, patchState, setTravel } from "@/lib/actions";
+import { canResumeTravel, creditUpNext, loadAll, logEntries, markDone, saveWeekDrafts, setTravel, writeLivePlan, writeRow } from "@/lib/actions";
+import { programPosition } from "@/lib/programs";
 import { todayISO } from "@/lib/rules";
-import { workoutSaveTarget, type PlanProposal, type Proposal } from "@/lib/proposals";
-import type { AppData, TravelInfo } from "@/lib/types";
+import { workoutSaveTarget, type PlanProposal, type Proposal, type WorkoutProposal } from "@/lib/proposals";
+import type { AppData, PlanItem, TravelInfo } from "@/lib/types";
 import LogSheet, { type SheetSpec } from "./LogSheet";
 import TravelSheet from "./TravelSheet";
 import CoachDrawer from "./CoachDrawer";
@@ -37,23 +38,6 @@ export const useApp = () => {
   return c;
 };
 
-/**
- * Insert or update a row. Newer columns (change_note from 0005, program_id/program_week from 0007) may not
- * exist yet if a migration hasn't run: drop the column the database complains about and try again.
- */
-async function writeRow(sb: SupabaseClient, table: string, row: Record<string, unknown>, id?: string) {
-  let r = { ...row };
-  for (let tries = 0; tries < 4; tries++) {
-    const res = await (id ? sb.from(table).update(r).eq("id", id).select("id").single() : sb.from(table).insert(r).select("id").single());
-    if (!res.error) return res.data as { id: string };
-    const col = res.error.message.match(/'(\w+)' column|column "?(?:\w+\.)?(\w+)"? does not exist/);
-    const name = col?.[1] ?? col?.[2];
-    if (!name || !(name in r)) throw res.error;
-    const { [name]: _, ...rest } = r;
-    r = rest;
-  }
-  throw new Error(`Couldn't save to ${table}`);
-}
 const programError = (e: { message?: string }) =>
   new Error(/programs|program_id/.test(e?.message ?? "") ? "Goal programs need a database update (migration 0007) first." : e?.message ?? "Couldn't save");
 const writeWorkout = (sb: SupabaseClient, row: Record<string, unknown>, id?: string) => writeRow(sb, "workouts", row, id);
@@ -76,6 +60,7 @@ export default function AppProvider({ initial, children }: { initial: AppData; c
       setData(await loadAll(sb, uid));
       return true;
     } catch (e) {
+      console.error("save failed:", e);
       // a missing database update is worth saying plainly
       setStatus(e instanceof Error && /migration/.test(e.message) ? e.message : fail);
       return false;
@@ -116,6 +101,14 @@ export default function AppProvider({ initial, children }: { initial: AppData; c
       }
     } else if (p.type === "plan") {
       await savePlan(p);
+    } else if (p.type === "program_weeks") {
+      // drafts for later weeks: never the plan being followed now
+      const prog = data.programs.find((x) => x.id === p.program_id);
+      if (!prog) throw new Error("That program isn't here any more.");
+      if (!data.weekPlansReady) throw new Error("Planning ahead needs a database update (migration 0009) first.");
+      const ids = await createWorkouts(p.new_workouts);
+      const { saved } = await saveWeekDrafts(sb, uid, prog.id, p.weeks.map((w) => ({ week: w.week, items: remap(w.items, ids) })), { currentWeek: programPosition(prog, todayISO()).week, note: p.reason });
+      if (!saved.length) throw new Error("Those weeks have already started, so nothing was saved.");
     } else if (p.type === "program_update") {
       // in place: start date and progress are untouched
       await writeRow(sb, "programs", { ...p.after }, p.program_id).catch((e) => { throw programError(e); });
@@ -134,27 +127,25 @@ export default function AppProvider({ initial, children }: { initial: AppData; c
       if (p.activate && p.first_week) await savePlan({ ...p.first_week, program_id: row.id, program_week: 1 });
     }
 
-    async function savePlan(p: PlanProposal) {
-      // workouts designed for this plan get saved first (as this person's own), then the plan points at them
-      const newIds = new Map<string, string>();
-      for (const w of p.new_workouts ?? []) {
+    /** workouts designed for a plan are saved first (as this person's own); returns "new:<name>" -> real id */
+    async function createWorkouts(list: WorkoutProposal[] | undefined) {
+      const ids = new Map<string, string>();
+      for (const w of list ?? []) {
         let name = w.name;
         for (let n = 2; workouts.some((x) => x.owner_id === uid && x.name === name); n++) name = `${w.name} (${n})`;
         const row = await writeWorkout(sb, { owner_id: uid, name, category: w.category, steps: w.steps ?? [], rundown: w.blocks, notes: w.notes, change_note: w.reason, updated_by: uid });
-        newIds.set(`new:${w.name}`, row.id);
+        ids.set(`new:${w.name}`, row.id);
       }
-      const items = p.items.map((it) => ({ ...it, workout_ids: it.workout_ids.map((id) => newIds.get(id) ?? id).filter((id) => !id.startsWith("new:")) }));
-      const link = p.kind === "home" ? { program_id: p.program_id ?? null, program_week: p.program_week ?? null } : {};
-      const existing = plans.find((pl) => pl.kind === p.kind);
-      const row = existing
-        ? await writeRow(sb, "plans", { items, ...link }, existing.id)
-        : await writeRow(sb, "plans", { owner_id: uid, name: p.kind === "travel" ? "Travel" : "My week", kind: p.kind, items, ...link });
-      await patchState(sb, uid, p.kind === "home" ? { active_home_plan_id: row.id, done: {} } : { active_travel_plan_id: row.id, travel_done: {} });
-      // keep a copy of every program week as it was planned (table arrives with migration 0008; skip quietly until then)
-      if (p.program_id && p.program_week) {
-        const { error: ew } = await sb.from("program_weeks").upsert({ user_id: uid, program_id: p.program_id, week: p.program_week, plan_kind: p.kind, items }, { onConflict: "program_id,week" });
-        if (ew && !/program_weeks/.test(ew.message ?? "")) throw ew;
-      }
+      return ids;
+    }
+    /** swap "new:<name>" ids for the real ids of the workouts just created (a function declaration: it's used above, before this point) */
+    function remap(items: PlanItem[], ids: Map<string, string>): PlanItem[] {
+      return items.map((it) => ({ ...it, workout_ids: it.workout_ids.map((id) => ids.get(id) ?? id).filter((id) => !id.startsWith("new:")) }));
+    }
+
+    async function savePlan(p: PlanProposal) {
+      const ids = await createWorkouts(p.new_workouts);
+      await writeLivePlan(sb, uid, { existing: plans.find((pl) => pl.kind === p.kind), kind: p.kind, items: remap(p.items, ids), program_id: p.program_id, program_week: p.program_week, note: p.reason });
     }
   }), [data, run, sb, uid]);
 
