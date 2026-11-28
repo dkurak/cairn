@@ -160,6 +160,7 @@ export default function DayView({ date }: { date: string }) {
               {(next.type === "item" || next.type === "calm") && (
                 <div className="row"><button onClick={doNext}>Do {first(todayTitle) || "the next one"} today anyway</button></div>
               )}
+              <LogShortcuts inline />
             </section>
           )}
 
@@ -174,6 +175,7 @@ export default function DayView({ date }: { date: string }) {
                     <div>Latest {primary.name} check: <Chip p={checksFor(checks, primary.id)[0].pain} /> <span className="note">({md(checksFor(checks, primary.id)[0].date)}) · need 3 or less to start</span></div>
                   )}
                   <div className="row"><button className="primary" onClick={doNext}>Done - log it</button></div>
+                  <LogShortcuts inline />
                   <WorkoutRundowns workouts={todayWorkouts} />
                   <div className="row"><button className="link" onClick={() => run(() => setPhase(sb, state, "build"), undefined, optPhase("build"))}>Everyday pain is 3/10 or less - start the plan</button></div>
                 </>
@@ -187,6 +189,7 @@ export default function DayView({ date }: { date: string }) {
                     <button className="primary" onClick={doNext}>Done - log it</button>
                     <button onClick={() => run(() => skipUpNext(sb, data))}>Skip</button>
                   </div>
+                  <LogShortcuts inline />
                   <WorkoutRundowns workouts={todayWorkouts} />
                   <div className="row"><button className="link" onClick={() => askCoach(`Can you make today's workout (${todayTitle}) easier or swap something? `, false)}>Change this workout with the coach</button></div>
                 </>
@@ -197,6 +200,7 @@ export default function DayView({ date }: { date: string }) {
                   <div className="title">No plan yet</div>
                   <div className="note">Tell the Cairn coach your goal, any pain, your equipment and how many days a week. It will suggest a week you can save.</div>
                   <div className="row"><button className="primary" onClick={() => askCoach("Help me build a weekly plan.")}>Build my plan with the coach</button></div>
+                  <LogShortcuts inline />
                 </>
               )}
               {next.type === "complete" && (
@@ -204,6 +208,7 @@ export default function DayView({ date }: { date: string }) {
                   <div className="label">{state.travel ? "Travel set done" : `Week ${state.week} done`}</div>
                   <div className="title">Nice work</div>
                   <div className="row"><button className="primary" onClick={() => run(() => startNextWeek(sb, state))}>{state.travel ? "Run the travel set again" : "Start next week"}</button></div>
+                  <LogShortcuts inline />
                 </>
               )}
             </section>
@@ -273,7 +278,6 @@ export default function DayView({ date }: { date: string }) {
           <QuickCheck date={date} disabled={isFuture} />
           {isToday ? (
             <>
-              <LogShortcuts />
               <Recap />
             </>
           ) : (
