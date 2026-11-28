@@ -69,6 +69,7 @@ Same layout for past, today and future; only the contents change. Future days gr
 | Planned card (disabled Done / Skip, rundown) | `DayView` | future days |
 | Program week banner ("Use the draft" / "Adjust it first" / "Build this week") | `ProgramWeekBanner` in `Programs.tsx` | today |
 | Plan-ahead / re-plan suggestion (reasons, button to the coach, "Not now") | `ProgramNudge.tsx` | today |
+| "You're set" tile: weeks mapped out (dots) + a peek at the next week | `ProgramAhead.tsx` | today, when a plan is in place and no suggestion is showing |
 | Tour green light | `DayView` + `rules.greenLight` | today, only when a tour is close |
 | After-tour check-in banner | `DayView` | morning after a tour |
 | Quick check-in (overall feel + one tap per pain area, exact 0-10, add area) | `QuickCheck.tsx` | all days (disabled in the future) |
@@ -83,6 +84,7 @@ What you're working toward, this week, and the two switches. Everything you've d
 |---|---|---|
 | Program week banner | `ProgramWeekBanner` | only when the active program has moved to a week with no plan (or a drafted one) |
 | Plan-ahead / re-plan suggestion | `ProgramNudge` | only when the app thinks it helps (see Program planning rules) |
+| "You're set" tile | `ProgramAhead` | instead of the suggestion, when weeks ahead are planned |
 | Programs (active program, phase bar, Check in / Pause / This week, saved bank) | `Programs.tsx`, `PhaseBar.tsx` | the title and each phase link into the program and its weeks |
 | This week / Travel set (checklist, tap a number to mark done) + link to History | `plan/page.tsx` | left column |
 | Next-tour banner | `plan/page.tsx` | right column, only when relevant |
@@ -90,7 +92,7 @@ What you're working toward, this week, and the two switches. Everything you've d
 | **Right now**: where you're training (home or trip details, edit, start over) and the rehab mode for the primary pain area ("Flared? Back to calm-down" / "Start the plan") | `RightNow.tsx` | the rehab row only shows for someone with a primary pain area (or in calm-down) |
 
 ### Program `/plan/program/[id]`
-Overview (goal, progress meter, "How it's going" status with reasons, facts; "done when" checks for milestones; Build this week / Plan ahead (when later weeks aren't drafted) / Re-plan the rest (when drafts exist) / Change program / Pause / Mark done) - Phases (the clickable phase bar, then one tile per phase with its focus and week links) - Weeks (every week with dates, a Draft tag for weeks planned ahead, and its status: On track / Behind / Ahead / Done / Partly done / Missed).
+Overview (goal, progress meter, "How it's going" status with reasons, facts; "done when" checks for milestones; Build this week (only when this week has no plan) / Use the draft / Check in / Adjust this week / Plan ahead (when later weeks aren't drafted) / Re-plan the rest (when drafts exist) / Change program / Pause / Mark done) - Phases (the clickable phase bar, then one tile per phase with its focus and week links) - Weeks (every week with dates, a Draft tag for weeks planned ahead, and its status: On track / Behind / Ahead / Done / Partly done / Missed).
 
 ### Program week `/plan/program/[id]/week/[n]`
 Where the week sits (phase, focus, dates, status tag with reasons, planned sessions logged, sessions, average pain, tour vert) - Logged this week (links to each day) - The plan: one block per planned day with a `WorkoutTile` for each workout (tap to open the workout) and a "Logged" tag when a session was logged for it. Each logged session counts for one planned day. A drafted week shows a Draft tag, the coach's "Why" note and "Redraft this week"; the current week with a draft offers "Use this draft" / "Adjust it first"; later weeks offer "Draft this week" and "Plan all remaining weeks"; past weeks offer "Talk about this week". A saved live week shows "as planned"; this week with no saved copy shows the current plan with "Keep this week in the program". A **Versions** card (`WeekHistory`) lists each revision with the days that changed and "Restore revision N". Weeks past the program's length say so. Prev / next week arrows.
@@ -137,6 +139,7 @@ Account: signed-in line, sign out, set a password. Login: password form, or "ema
 | `PlanItems` | `PlanDayTile` (one planned day: workouts, logged tag) and `PlanItemsCompact` (days list with Changed tags) | Program week, ProposalCard |
 | `WeekStatus` | `WeekStatusTag` (On track / Behind / Done ...) and `WeekSourceTag` (Draft / Current plan / As planned) | Program pages |
 | `ProgramNudge` | the "plan ahead" / "re-plan" suggestion banner | Today, Plan |
+| `ProgramAhead` | the celebratory "plan is in place" tile (`programAhead` in `programWeeks.ts`) | Today, Plan |
 | `Chat` / `CoachDrawer` / `voice.ts` | saved conversation, thinking indicator, voice in and out | AppProvider |
 | `charts/*` | `StatTile`, `WeeklyBars`, `MixBars`, `PainTrend`, `PainLine`, `Heatmap`, `Spark`, tooltip | History, Body |
 
@@ -171,6 +174,7 @@ Library modules (`src/lib`): `actions.ts` (all writes, shared by browser and coa
 - **Drafts never touch the live plan.** The coach plans later weeks only (after the current one) as `draft` rows; a draft becomes the plan when its week arrives ("Use the draft") or when the person adopts it early. Re-planning replaces drafts and bumps the revision; nothing is deleted.
 - **Week status.** Finished week: 80%+ of planned days logged = Done, 50%+ = Partly done, less = Missed. Current week: compared with how much should be done by now - more than one day behind = Behind, more than one ahead = Ahead, else On track. Pain over 3 during a session adds a flag. Each logged session counts for one planned day.
 - **Suggestions.** `programNudge` offers "plan ahead" when no later week is planned, and "re-plan" when the program is behind or flagged and the drafts weren't redone since. Re-plan is always the person's tap (or the coach's offer); never automatic. "Not now" is remembered on the device.
+- **Tone.** The person is fluid: a plan in place is good news. Show it (`ProgramAhead`), never nag about a built week, and the coach celebrates wins and nudges one small step without guilt for misses or changes.
 - Without migration 0009 (`weekPlansReady` false) the planning features hide and the program pages say a database update is needed.
 
 ## 7. UI conventions
@@ -209,3 +213,4 @@ Still open:
 - 2026-11-28 - Shared components (`ui.tsx`, `format.ts`, `WorkoutTile`); new routes `/library/[id]`, `/plan/program/[id]`, `/plan/program/[id]/week/[n]`; clickable phases; migration 0008 `program_weeks`; Dave-specific defaults removed; backlog updated.
 - 2026-11-28 - Plan page slimmed to 4 tiles (new `RightNow`; Past tab and duplicate log shortcuts removed); inline styles 90 to 7 via utility classes, verified identical by pixel diff; backlog updated.
 - 2026-11-28 - Plan ahead / re-plan / week status / week versions: migration 0009, `programWeeks.ts` rules, `propose_program_weeks` tool, `ProgramNudge`, `PlanItems`, `WeekStatus`, `VersionList`, `WeekHistory`; program and week pages updated; recap mentions the suggestion.
+- 2026-11-28 - Program with a planned week no longer offers "Build this week" (Check in / Adjust this week / Use the draft instead); new `ProgramAhead` "you're set" tile; gentler re-plan copy; coach and recap encourage.

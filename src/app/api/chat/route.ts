@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { addPainArea, creditUpNext, loadAll, setGoals, logEntries, markDone, savePainCheck, setPhase, setTravel, skipUpNext, startNextWeek, clampPain } from "@/lib/actions";
 import { activePlan, checksFor, doneMap, itemWorkoutIds, primaryArea, sortedLog, todayISO, tours, upNext } from "@/lib/rules";
 import type { PlanProposal, ProgramProposal, ProgramWeeksProposal, Proposal, WorkoutProposal } from "@/lib/proposals";
-import { nudgeLine, programHealth, programNudge, storedWeek } from "@/lib/programWeeks";
+import { nudgeLine, programAhead, programHealth, programNudge, storedWeek } from "@/lib/programWeeks";
 import { digest, digestLine } from "@/lib/review";
 import { activeProgram, needsNewWeek, programLine, programPosition } from "@/lib/programs";
 import { parseCriteria, parsePhases, parsePrefs, programChanges } from "@/lib/programInput";
@@ -84,12 +84,13 @@ ${(() => {
   return `Home plan is ${hp?.program_id === ap.id ? `week ${hp.program_week} of "${ap.title}"` : `not written for "${ap.title}"`}.${due ? ` It's now week ${due.pos.week} (${due.pos.phase ?? "-"}): ${draft && (draft.status ?? "live") === "draft" ? "a draft for this week exists (offer to use it or adjust it), " : ""}offer to build this week's plan.` : ""}
 Program weeks kept: ${data.weekPlansReady ? (rows.length ? rows.map((w) => `wk ${w.week} ${w.status ?? "live"}${w.revision && w.revision > 1 ? ` (rev ${w.revision})` : ""}: ${w.items.map((i) => i.title).join(" / ")}`).join("; ") : "none yet") : "not available yet (needs a database update)"}.
 How the program is going: ${health ? `${health.label}${health.reasons.length ? " - " + health.reasons.join("; ") : ""}` : "n/a"}.
-${nudgeLine(programNudge(data, ap, todayISO()))}`;
+${nudgeLine(programNudge(data, ap, todayISO()), programAhead(data, ap, todayISO()))}`;
 })()}
 Training summary:
 - ${[5, 14, 28].map((d) => digestLine(digest(data, d))).join("\n- ")}
 
 How to work:
+- Encourage. Notice wins (a plan mapped out, sessions done, a streak, pain staying low) and say so in a few words. This person is fluid: missed or changed sessions are normal, never guilt them - just offer the next small step or a re-plan. Nudge gently when something is worth doing (a check-in, a look at next week), once, not repeatedly.
 - Reports of something done or a pain number: call the matching tool, then confirm in one line. If a number is missing, log what you have and ask for it. Never invent numbers.
 - When they mention pain somewhere new, call add_pain_area, then ask for today's 0-10 (call pain_check once they answer). Ask how it's trending when it helps.
 - Workouts: answer questions about any workout from the library above - never guess its content. To change one, call propose_workout with base_workout set to its exact name and the FULL new rundown: copy every row you are not changing word for word (same exercise, sets_reps and tip text, same block labels and order) so the diff only shows real changes. Keep its notes unless the change is to the notes. Use save_as 'copy' only when they want a separate variant. For a brand new workout, omit base_workout. The person sees a diff card and taps Save; nothing saves until they do, so never say it's saved. Base changes on their pain trend and log. To change the weekly plan, call propose_plan_change (new workouts proposed in this conversation can be named and are bundled in). Explain why in one line.

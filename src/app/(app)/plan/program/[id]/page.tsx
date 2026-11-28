@@ -9,6 +9,7 @@ import { WeekStatusTag } from "@/components/WeekStatus";
 import { dateRange, shortDate } from "@/lib/format";
 import { effectivePhases, evaluateCriteria, phaseAtWeek, positionLabel, programPosition, weekRange } from "@/lib/programs";
 import { planAheadPrompt, programHealth, remainingWeeks, replanPrompt, storedWeek, weekPlan, weekStatus } from "@/lib/programWeeks";
+import { adoptDraftWeek } from "@/lib/actions";
 import type { ProgramStatus } from "@/lib/types";
 
 const STATUS: Record<ProgramStatus, string> = { active: "Active", paused: "Paused", idea: "Idea", done: "Done" };
@@ -17,7 +18,7 @@ const KIND = { event: "Event (a date to be ready for)", ongoing: "Ongoing", mile
 /** A program: the overview and how it's going, its phases (click in to a phase's first week) and every week. */
 export default function ProgramPage() {
   const { id } = useParams<{ id: string }>();
-  const { data, today, askCoach } = useApp();
+  const { data, today, askCoach, sb, run } = useApp();
   const { setStatus, finish } = useProgramActions();
   const p = data.programs.find((x) => x.id === id);
   const back = <Link href="/plan">‹ Plan</Link>;
@@ -40,6 +41,9 @@ export default function ProgramPage() {
   const weeks = Array.from({ length: total }, (_, i) => i + 1);
   const health = isActive && data.weekPlansReady ? programHealth(data, p, today) : null;
   const ahead = isActive ? remainingWeeks(p, today).filter((w) => w <= total) : [];
+  const thisWeek = isActive ? weekPlan(data, p, pos.week, today) : null;
+  const planned = !!thisWeek && thisWeek.source !== "none" && thisWeek.items.length > 0;
+  const isDraft = thisWeek?.source === "draft";
   const undrafted = ahead.filter((w) => !storedWeek(data, p.id, w));
   const drafted = ahead.filter((w) => storedWeek(data, p.id, w));
 
@@ -76,7 +80,10 @@ export default function ProgramPage() {
             <div className="row actions">
               {isActive ? (
                 <>
-                  {!pos.over && <button className="primary" onClick={() => askCoach(`Build week ${pos.week} of my "${p.title}" program.`)}>Build this week</button>}
+                  {!pos.over && !planned && <button className="primary" onClick={() => askCoach(`Build week ${pos.week} of my "${p.title}" program.`)}>Build this week</button>}
+                  {!pos.over && isDraft && <button className="primary" onClick={() => run(() => adoptDraftWeek(sb, data, p, pos.week), "Couldn't start that week. Try again.")}>Use the draft</button>}
+                  {!pos.over && planned && !isDraft && <button className="primary" onClick={() => askCoach(`Check in on my "${p.title}" program - am I on track?`)}>Check in</button>}
+                  {!pos.over && planned && <button onClick={() => askCoach(`Adjust week ${pos.week} of my "${p.title}" program: `, false)}>Adjust this week</button>}
                   {data.weekPlansReady && undrafted.length > 0 && <button onClick={() => askCoach(planAheadPrompt(p, undrafted))}>Plan ahead</button>}
                   {data.weekPlansReady && drafted.length > 0 && <button onClick={() => askCoach(replanPrompt(p, ahead, health?.reasons ?? []))}>Re-plan the rest</button>}
                   <button onClick={() => askCoach(`I want to change my "${p.title}" program: `, false)}>Change program</button>
