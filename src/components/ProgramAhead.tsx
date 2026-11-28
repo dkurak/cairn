@@ -17,11 +17,12 @@ export default function ProgramAhead() {
   const weeks = Array.from({ length: a.total }, (_, i) => i + 1);
   return (
     <div className="banner good" role="status">
-      <strong>{a.allPlanned ? "You're set - the whole program is mapped out" : `${a.planned.length} of ${a.total} weeks are mapped out`}</strong>
-      <div className="weekdots" role="img" aria-label={`${a.planned.length} of ${a.total} weeks planned`}>
-        {weeks.map((w) => <span key={w} className={w < pos.week ? "past" : w === pos.week ? "now" : a.planned.includes(w) ? "planned" : ""} title={`Week ${w}`} />)}
-      </div>
+      <strong><Link href={programHref(p.id)}>{a.allPlanned ? "You're set - the whole program is mapped out" : `${a.planned.length} of ${a.total} weeks are mapped out`}</Link></strong>
+      <nav className="weekdots" aria-label="Jump to a week">
+        {weeks.map((w) => <Link key={w} href={programHref(p.id, w)} className={w < pos.week ? "past" : w === pos.week ? "now" : a.planned.includes(w) ? "planned" : ""} title={`Week ${w}`} aria-label={`Week ${w}`} />)}
+      </nav>
       <span>Coming up: <Link href={programHref(p.id, a.next.week)}>Week {a.next.week}{a.next.phase ? ` · ${a.next.phase}` : ""}{a.next.start && a.next.end ? ` · ${dateRange(a.next.start, a.next.end)}` : ""}</Link>{a.next.titles.length ? ` - ${a.next.titles.slice(0, 4).join(", ")}${a.next.titles.length > 4 ? "..." : ""}` : ""}. Change it any time - the plan bends with you.</span>
+      <div className="row"><Link href={programHref(p.id)}>See the whole plan ›</Link></div>
     </div>
   );
 }

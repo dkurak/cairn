@@ -91,11 +91,12 @@ What you're working toward, this week, and the two switches. Everything you've d
 | Goals | `plan/page.tsx` | text the coach keeps (`profiles.goals`) |
 | **Right now**: where you're training (home or trip details, edit, start over) and the rehab mode for the primary pain area ("Flared? Back to calm-down" / "Start the plan") | `RightNow.tsx` | the rehab row only shows for someone with a primary pain area (or in calm-down) |
 
-### Program `/plan/program/[id]`
-Overview (goal, progress meter, "How it's going" status with reasons, facts; "done when" checks for milestones; Build this week (only when this week has no plan) / Use the draft / Check in / Adjust this week / Plan ahead (when later weeks aren't drafted) / Re-plan the rest (when drafts exist) / Change program / Pause / Mark done) - Phases (the clickable phase bar, then one tile per phase with its focus and week links) - Weeks (every week with dates, a Draft tag for weeks planned ahead, and its status: On track / Behind / Ahead / Done / Partly done / Missed).
-
-### Program week `/plan/program/[id]/week/[n]`
-Where the week sits (phase, focus, dates, status tag with reasons, planned sessions logged, sessions, average pain, tour vert) - Logged this week (links to each day) - The plan: one block per planned day with a `WorkoutTile` for each workout (tap to open the workout) and a "Logged" tag when a session was logged for it. Each logged session counts for one planned day. A drafted week shows a Draft tag, the coach's "Why" note and "Redraft this week"; the current week with a draft offers "Use this draft" / "Adjust it first"; later weeks offer "Draft this week" and "Plan all remaining weeks"; past weeks offer "Talk about this week". A saved live week shows "as planned"; this week with no saved copy shows the current plan with "Keep this week in the program". A **Versions** card (`WeekHistory`) lists each revision with the days that changed and "Restore revision N". Weeks past the program's length say so. Prev / next week arrows.
+### Program `/plan/program/[id]` and week `/plan/program/[id]/week/[n]`
+One layout (`program/[id]/layout.tsx`) so the top never changes while you move around; only the week below swaps.
+1. **Program** card: status, how it's going (with reasons), progress, goal, actions (Build this week / Use the draft / Check in, Adjust this week, Plan ahead, Re-plan the rest, Change program, Pause, ...) and a "Program details" fold (type, dates, equipment, notes, "done when" checks).
+2. **Phases** (`PhaseExplorer`): the phase bar (the phase you're viewing is highlighted), then that phase's goal, "Coming out" (how you should feel), its week chips (dot = drafted ahead) and chips for the workouts planned in it (library ones link to the workout).
+3. **Week** (`WeekView`, the landing is the current week): heading with prev/next; "This week" (status, stats, the redraft / adjust buttons - the coach does the rebuilding), Logged this week, Versions; and **The plan**: one short row per day, tap a day to open its workout tiles. A drafted week shows a Draft tag and the coach's "Why".
+The "You're set" tile on Today and Plan is the way in: its title, each week dot and "See the whole plan" link here.
 
 ### Body `/body`
 Pain check per area (0-10, trend, "mostly better" to stop tracking) - `PainCard.tsx` + `PainChart.tsx`; Recent notes; How you've felt; Resolved areas (track again).
@@ -136,7 +137,8 @@ Account: signed-in line, sign out, set a password. Login: password form, or "ema
 | `VersionList` | one version list (revision, date, note, changed rows, restore); shared by workout and week history | WorkoutHistory, WeekHistory |
 | `WorkoutHistory` | workout versions and restore | Library |
 | `WeekHistory` | program-week revisions, changed days marked, restore | Program week |
-| `PlanItems` | `PlanDayTile` (one planned day: workouts, logged tag) and `PlanItemsCompact` (days list with Changed tags) | Program week, ProposalCard |
+| `WeekView` / `PhaseExplorer` | the week below the program header; the phases + their workouts | program pages |
+| `PlanItems` | `PlanDayRow` (a day on one short row, tap for tiles), `PlanDayTile` (a day with a tile per workout) and `PlanItemsCompact` (days list with Changed tags) | Program week, ProposalCard |
 | `WeekStatus` | `WeekStatusTag` (On track / Behind / Done ...) and `WeekSourceTag` (Draft / Current plan / As planned) | Program pages |
 | `ProgramNudge` | the "plan ahead" / "re-plan" suggestion banner | Today, Plan |
 | `ProgramAhead` | the celebratory "plan is in place" tile (`programAhead` in `programWeeks.ts`) | Today, Plan |
@@ -214,3 +216,4 @@ Still open:
 - 2026-11-28 - Plan page slimmed to 4 tiles (new `RightNow`; Past tab and duplicate log shortcuts removed); inline styles 90 to 7 via utility classes, verified identical by pixel diff; backlog updated.
 - 2026-11-28 - Plan ahead / re-plan / week status / week versions: migration 0009, `programWeeks.ts` rules, `propose_program_weeks` tool, `ProgramNudge`, `PlanItems`, `WeekStatus`, `VersionList`, `WeekHistory`; program and week pages updated; recap mentions the suggestion.
 - 2026-11-28 - Program with a planned week no longer offers "Build this week" (Check in / Adjust this week / Use the draft instead); new `ProgramAhead` "you're set" tile; gentler re-plan copy; coach and recap encourage.
+- 2026-11-28 - Program pages share one layout (program card + phases always on top; only the week changes); `PhaseExplorer` (goal, "coming out" feel, weeks, workouts per phase); short day rows; phases carry an optional `outcome`; program-row buttons one size; "You're set" tile is now an entry (links to each week).

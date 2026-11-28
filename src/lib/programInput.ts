@@ -19,6 +19,7 @@ export function parsePhases(raw: unknown): ProgramPhase[] {
     name: String(x?.name ?? "").slice(0, 24),
     weeks: num(x?.weeks, 1, 52, 1),
     focus: String(x?.focus ?? "").slice(0, 200),
+    ...(x?.outcome ? { outcome: String(x.outcome).slice(0, 140) } : {}),
   }));
 }
 

@@ -497,9 +497,35 @@ svg.viz text.t-good { fill: var(--good); }
 .planlist .pd { color: var(--muted); font-size: .85rem; }
 .reasons { margin: 0; padding-left: 18px; }
 .weekrows .tags { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-.row.actions > .primary { flex: none; }
 .weekdots { display: flex; gap: 4px; }
-.weekdots span { flex: 1; max-width: 36px; height: 8px; border-radius: 4px; background: var(--line); }
-.weekdots .past { background: var(--accent); }
-.weekdots .now { background: var(--accent); outline: 2px solid var(--accent); outline-offset: 1px; }
-.weekdots .planned { background: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.weekdots a { flex: 1; max-width: 36px; height: 12px; border-radius: 6px; background: var(--line); display: block; }
+.weekdots a:hover, .weekdots a:focus-visible { filter: brightness(.85); }
+.weekdots a.past { background: var(--accent); }
+.weekdots a.now { background: var(--accent); outline: 2px solid var(--accent); outline-offset: 1px; }
+.weekdots a.planned { background: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+/* buttons in a row are one size; primary only changes colour */
+.banner .row > button.primary, .row.actions > button.primary, .programs .row > button.primary { font-size: 1rem; padding: 10px 14px; flex: none; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips a, .chips span.chip { padding: 5px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); text-decoration: none; font-size: .88rem; line-height: 1.2; }
+.chips a:hover { border-color: var(--accent); }
+.chips .cat { color: var(--muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .03em; margin-left: 6px; }
+.weeklinks a { position: relative; }
+.weeklinks a.draft::after { content: ""; position: absolute; top: 3px; right: 4px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); opacity: .6; }
+.weeklinks a.here::after { background: var(--accent-ink); }
+.clamp2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.weekhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.weekhead h2 { margin: 0; font-family: var(--font-display); font-size: 1.4rem; }
+.phasedetail { display: grid; gap: 8px; margin-top: 10px; }
+.dayrows { display: grid; }
+.dayrow { border-top: 1px solid var(--line); }
+.dayrow:first-child { border-top: none; }
+.dr-head { display: grid; grid-template-columns: 44px 1fr auto; gap: 8px; align-items: baseline; padding: 9px 0; list-style: none; cursor: pointer; }
+.dr-head::-webkit-details-marker { display: none; }
+div.dayrow > .dr-head { cursor: default; }
+.dr-head .pd { color: var(--muted); font-weight: 600; }
+.dr-head .meta { margin-left: 4px; }
+.dayrow.k-rest .dr-main { color: var(--muted); }
+.dayrow.k-rest .dr-main strong { font-weight: 400; }
+.dr-body { display: grid; gap: 8px; padding: 0 0 12px 52px; }
+details.more > summary { cursor: pointer; color: var(--accent); }
+details.more { display: grid; gap: 8px; }
