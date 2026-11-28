@@ -103,8 +103,11 @@ export default function ProgramWeekPage() {
               </>
             )}
             <div className="row">
-              {status === "future" || status === "now" ? (
+              {status === "now" ? (
                 <button className="primary" onClick={() => askCoach(`${items.length ? "Rewrite" : "Build"} week ${week} of my "${p.title}" program.`)}>{items.length ? "Rewrite this week" : "Build this week"}</button>
+              ) : status === "future" ? (
+                // the coach only writes the current week, so a future week is a question, not a build
+                <button onClick={() => askCoach(`What should I expect from week ${week} of my "${p.title}" program? `, false)}>Ask the coach about this week</button>
               ) : (
                 <button onClick={() => askCoach(`How did week ${week} of my "${p.title}" program go? `, false)}>Talk about this week</button>
               )}
@@ -148,7 +151,7 @@ export default function ProgramWeekPage() {
             </>
           ) : (
             <>
-              <span className="empty">{status === "future" ? "Not planned yet. The coach writes each week when it comes up, or you can plan ahead with the button on the left." : status === "past" ? "No plan was kept for this week." : "No plan for this week yet - build it from the card on the left."}</span>
+              <span className="empty">{status === "future" ? "Not planned yet. Each week is built when it arrives, from what you've actually done by then." : status === "past" ? "No plan was kept for this week." : "No plan for this week yet - build it from the card on the left."}</span>
             </>
           )}
         </SectionCard>
