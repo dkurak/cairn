@@ -51,7 +51,8 @@ export default function Chat() {
 
   useEffect(() => {
     sb.from("coach_messages").select("id, role, content, proposal, proposal_status, created_at").eq("user_id", uid).order("created_at", { ascending: false }).limit(60)
-      .then(({ data: d }) => { setRows(((d ?? []) as CoachRow[]).reverse()); setLoaded(true); });
+      // older messages go in front of anything already sent while this was loading
+      .then(({ data: d }) => { const past = ((d ?? []) as CoachRow[]).reverse(); setRows((now) => [...past.filter((r) => !now.some((x) => x.id === r.id)), ...now]); setLoaded(true); });
   }, [sb, uid]);
 
   useEffect(() => { logRef.current?.scrollTo({ top: logRef.current.scrollHeight }); }, [rows, busy]);
@@ -111,7 +112,7 @@ export default function Chat() {
             <div key={m.id} className={`msg ${m.role === "user" ? "me" : m.role === "act" ? "act" : "ai"}`}>{m.role === "assistant" ? <Rich text={m.content} /> : m.content}</div>
           ),
         )}
-        {busy && <div className="msg ai">Thinking…</div>}
+        {busy && <Thinking />}
         {error && <div className="msg ai" role="alert">{error}</div>}
         {dictation.error && <div className="msg ai" role="alert">{dictation.error}</div>}
       </div>
@@ -155,3 +156,19 @@ const SpeakerIcon = ({ on }: { on: boolean }) => (
 const StopIcon = () => (
   <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2" /></svg>
 );
+
+/** Pulsing dots so it's clear the coach is working; a timer after a few seconds for the long ones (building a program). */
+function Thinking() {
+  const [secs, setSecs] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setSecs((x) => x + 1), 1000);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <div className="msg ai thinking" role="status" aria-label="The coach is thinking">
+      <span className="dots" aria-hidden="true"><i /><i /><i /></span>
+      <span>Thinking{secs >= 4 ? ` · ${secs}s` : ""}</span>
+      {secs >= 20 && <span className="note"> - big ones (a whole program) can take a minute</span>}
+    </div>
+  );
+}
