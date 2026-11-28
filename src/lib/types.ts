@@ -150,6 +150,9 @@ export type ProgramWeek = {
 /** An earlier version of a program week (0009). */
 export type ProgramWeekVersion = { id: string; program_week_id: string; revision: number; status: "draft" | "live"; items: PlanItem[]; note: string; changed_at: string };
 
+/** A watch activity (migration 0010). Gym strength sessions only live here, so History counts them from here. */
+export type Activity = { id: string; date: string; name: string; seconds: number | null; log_entry_id: string | null };
+
 export type AppData = {
   profile: Profile;
   workouts: Workout[];
@@ -162,6 +165,7 @@ export type AppData = {
   exports: GarminExport[];
   programs: Program[];
   programWeeks: ProgramWeek[];
+  activities: Activity[];
   /** false until migration 0009 is applied (no draft weeks or revisions yet) */
   weekPlansReady: boolean;
 };

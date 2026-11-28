@@ -102,7 +102,14 @@ The "You're set" tile on Today and Plan is the way in: its title, each week dot 
 Pain check per area (0-10, trend, "mostly better" to stop tracking) - `PainCard.tsx` + `PainChart.tsx`; Recent notes; How you've felt; Resolved areas (track again).
 
 ### History `/history` (range: 4 weeks default, Quarter, Year, Max; starts at the first tracked day)
-Four KPI tiles (`StatTile`: sessions, active days, green-zone %, tour vert or streak) - Sessions per week (`WeeklyBars`) - What you trained (`MixBars`) - Pain: sessions vs daily checks (`PainTrend`) - Activity heatmap (`Heatmap`) - Body areas with sparklines (`Spark`) - Tours table - Log (`RecentList`). Charts and tooltips: `charts/Charts.tsx`, `charts/Tip.tsx`; numbers: `lib/stats.ts`.
+Built around **versatility** (how varied your training is), with weekly bars on 4 weeks / Quarter and monthly bars on Year / Max.
+1. **This week**: Mon-Sun, a coloured square per session (tap a day to open it).
+2. **KPIs** (`StatTile`): sessions (vs the period before), active days, **Variety** (how many types, and the biggest one's share), green-zone %.
+3. **Sessions per week / month, stacked by activity type** (`StackedBars` + `TypeLegend`, with a table view) and a one-line read ("7 types; Gym is 57%; not done in 4 weeks: Run, Hike...").
+4. **By activity**: one row per type with count, share, "last done", tour vert and miles.
+5. **Activity calendar** (`TypeHeatmap`): each day coloured by type (two sessions = split square).
+6. Pain (`PainTrend`), Body areas (`Spark`), Tours table, **Recent log** (14 days, "Show 30 more days").
+Activity types come from `groupOf` in `lib/stats.ts`: Gym & strength (library workouts and watch gym sessions), Backcountry ski, Resort ski, Bike, Run, Hike, Swim, Other. Each has a fixed colour (`--g1`..`--g7`, the validated categorical palette). Watch gym sessions (`activities` table, migration 0010) count on days nothing gym-like was logged. Charts: `charts/Charts.tsx`; numbers: `lib/stats.ts`.
 
 ### Library `/library`
 Watch card (bundle the week's `.fit` files, "update watch" flags) - search + category pills - `WorkoutTile` rows that expand to the rundown with Change with coach, Download .fit, History and "Open the full page". Components: `WorkoutTile.tsx`, `Watch.tsx` (`WatchCard`, `WatchChip`, `useGarminDownload`), `WorkoutHistory.tsx`.
@@ -226,3 +233,4 @@ Still open:
 - 2026-11-28 - Instant taps: `run(fn, fail, optimistic)` and `lib/optimistic.ts`; check-ins, plan ticks, phase, At home, entry edit/delete, pain areas and program status update the screen immediately. Slower multi-step actions (log, skip, next week, use a draft) still wait for the save.
 - 2026-11-28 - Today: "Log something else" moved inside the workout tile (Up next and Done cards) as one quiet row; the separate tile is gone.
 - 2026-11-28 - Garmin history import: `scripts/garmin_sessions.py` (reads watch .fit session summaries), `scripts/garmin-import.mts`, migration 0010 `activities`; 83 activities (Jan-Nov 2026) imported as log entries.
+- 2026-11-28 - History redesigned around variety: This week strip, Variety KPI, stacked sessions by activity type (weekly or monthly), By activity rows with last-done, typed calendar, shorter recent log; activity groups and colours in `lib/stats.ts`; `activities` loaded in `loadAll`.
