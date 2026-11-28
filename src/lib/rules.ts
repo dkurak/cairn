@@ -114,3 +114,13 @@ export const addDays = (iso: string, n: number) => {
   d.setDate(d.getDate() + n);
   return d.toISOString().slice(0, 10);
 };
+
+/** What "Log a workout" should start on: the last workout they logged, else the first thing in their plan, else the first in the library. */
+export function defaultWorkoutName(data: Pick<AppData, "log" | "plans" | "state" | "workouts">): string {
+  const last = sortedLog(data.log).find((e) => e.kind === "workout");
+  if (last) return last.what;
+  const plan = activePlan(data);
+  const id = plan?.items.flatMap((i) => i.workout_ids)[0];
+  const w = data.workouts.find((x) => x.id === id) ?? data.workouts[0];
+  return w?.name ?? "Other";
+}

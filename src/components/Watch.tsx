@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useApp } from "./AppProvider";
 import { watchStatus, watchToDo } from "@/lib/garmin/status";
 import type { Workout } from "@/lib/types";
+import { Tag } from "./ui";
 
 /** Download from /api/garmin, then reload so the "Update watch" flags clear. */
 export function useGarminDownload() {
@@ -36,7 +37,7 @@ export function useGarminDownload() {
 export function WatchChip({ w }: { w: Workout }) {
   const { data } = useApp();
   const s = watchStatus(w, data);
-  if (s.kind === "update") return <span className="tag warn" title={`Watch has v${s.onWatch}, latest is v${s.latest}`}>Update watch</span>;
+  if (s.kind === "update") return <Tag tone="warn" title={`Watch has v${s.onWatch}, latest is v${s.latest}`}>Update watch</Tag>;
   return null;
 }
 

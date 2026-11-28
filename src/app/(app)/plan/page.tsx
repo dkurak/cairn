@@ -3,13 +3,10 @@ import { useState } from "react";
 import { useApp } from "@/components/AppProvider";
 import Programs, { ProgramWeekBanner } from "@/components/Programs";
 import RecentList from "@/components/RecentList";
+import { ConfirmButton, LogShortcuts, PageHeader, SectionCard } from "@/components/ui";
 import { canResumeTravel, deleteEntry, markDone, restartTravelSet, setPhase, startNextWeek, unmarkDone, updateEntry } from "@/lib/actions";
-import { activePlan, doneMap, greenLight, upNext } from "@/lib/rules";
-
-const fmt = (iso: string) => {
-  const [y, m, d] = iso.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-};
+import { activePlan, doneMap, greenLight, primaryArea, upNext } from "@/lib/rules";
+import { shortDate as fmt } from "@/lib/format";
 
 export default function Plan() {
   const { data, sb, run, askCoach, openLog, openTravel, today } = useApp();
@@ -19,43 +16,38 @@ export default function Plan() {
   const plan = activePlan(data);
   const dm = doneMap(state);
   const next = upNext(data);
+  const primary = primaryArea(data.areas);
   const wName = (id: string) => workouts.find((w) => w.id === id)?.name ?? "?";
   const doneCount = (plan?.items ?? []).filter((i) => dm[i.key]).length;
 
   return (
     <div className="page">
-      <div className="page-head">
-        <h1>Plan</h1>
+      <PageHeader title="Plan" coach={{ text: "I want to plan my next week. Here's what I'd like to focus on: " }}>
         <div className="seg" role="group" aria-label="Upcoming or past">
           <button aria-pressed={tab === "upcoming"} onClick={() => setTab("upcoming")}>Upcoming</button>
           <button aria-pressed={tab === "past"} onClick={() => setTab("past")}>Past</button>
         </div>
-      </div>
+      </PageHeader>
 
       {tab === "upcoming" && <ProgramWeekBanner />}
       {tab === "upcoming" && <Programs />}
 
       {tab === "upcoming" && (
-        <section className="card goals">
-          <div className="top"><h2>Goals</h2>{data.profile.goals_updated_at ? <small>Updated {fmt(data.profile.goals_updated_at.slice(0, 10))}</small> : null}</div>
+        <SectionCard className="goals" title="Goals" aside={data.profile.goals_updated_at ? `Updated ${fmt(data.profile.goals_updated_at.slice(0, 10))}` : undefined}>
           {data.profile.goals ? <p className="goals-text">{data.profile.goals}</p> : <span className="empty">No goals yet. Tell the coach what you&apos;re training for and it&apos;ll check your weeks against it.</span>}
           <div className="row">
             <button className="primary" onClick={() => askCoach("Check in on my last 5 days - what have I been working on, and does it line up with my goals?")}>Check in</button>
             <button onClick={() => askCoach(data.profile.goals ? "My goals have changed: " : "Here's what I'm training for: ", false)}>{data.profile.goals ? "Update goals" : "Set goals"}</button>
           </div>
-        </section>
+        </SectionCard>
       )}
 
       {tab === "upcoming" ? (
         <div className="two">
-          <section className="card">
-            <div className="top">
-              <h2>{state.travel ? "Travel set" : `Week ${state.week}`}</h2>
-              <small>
-                {state.travel && state.travel_info?.returns ? `Back ${fmt(state.travel_info.returns)} · ` : ""}
-                {state.phase === "calm" && !state.travel ? "Starts after calm-down" : `${doneCount} of ${plan?.items.length ?? 0}`}
-              </small>
-            </div>
+          <SectionCard
+            title={state.travel ? "Travel set" : `Week ${state.week}`}
+            aside={`${state.travel && state.travel_info?.returns ? `Back ${fmt(state.travel_info.returns)} · ` : ""}${state.phase === "calm" && !state.travel ? "Starts after calm-down" : `${doneCount} of ${plan?.items.length ?? 0}`}`}
+          >
             {plan?.items.length ? (
               <ul className="week">
                 {plan.items.map((it, i) => {
@@ -80,56 +72,46 @@ export default function Plan() {
               <button className="primary" onClick={() => askCoach("I want to plan my next week. Here's what I'd like to focus on: ", false)}>Plan with the coach</button>
               {next.type === "complete" && <button onClick={() => run(() => startNextWeek(sb, state))}>{state.travel ? "Run the set again" : "Start next week"}</button>}
             </div>
-          </section>
+          </SectionCard>
 
-          <div style={{ display: "grid", gap: 14, alignContent: "start" }}>
+          <div className="stack">
             {(() => {
               // always findable here; Today only shows it when a tour is close
               const gl = state.travel ? null : greenLight(state, data.log, !!plan?.items.some((i) => i.kind === "tour"));
               return gl ? <div className={`banner ${gl.tone}`}><span className="note" style={{ color: "inherit" }}>Next tour</span><strong>{gl.title}</strong><span>{gl.body}</span></div> : null;
             })()}
-            <section className="card">
-              <h2>Where are you training?</h2>
+            <SectionCard title="Where are you training?">
               {state.travel ? (
                 <>
                   <span>Traveling{state.travel_info?.started ? ` since ${fmt(state.travel_info.started)}` : ""}{state.travel_info?.gear ? ` · ${state.travel_info.gear === "gym" ? "hotel gym" : "bodyweight"}` : ""}{state.travel_info?.jog ? " · jogging" : ""}{state.travel_info?.returns ? ` · back ${fmt(state.travel_info.returns)}` : ""}</span>
                   <div className="row">
                     <button onClick={openTravel}>Edit trip</button>
                     <button onClick={() => askCoach("Update my travel plan for this trip.", false)}>Tweak travel plan</button>
-                    <button onClick={() => { if (confirm("Start the travel set over from the first workout?")) void run(() => restartTravelSet(sb, state)); }}>New trip - start over</button>
+                    <ConfirmButton confirmLabel="Tap again to start over" onConfirm={() => void run(() => restartTravelSet(sb, state))}>New trip - start over</ConfirmButton>
                   </div>
                 </>
               ) : (
                 <div className="row"><button onClick={openTravel}>{canResumeTravel(state) ? "Back on the road - continue the trip" : "I'm traveling"}</button></div>
               )}
-            </section>
-            {state.phase === "build" && (
-              <section className="card">
-                <h2>Hip flared?</h2>
+            </SectionCard>
+            {/* rehab mode follows whatever area this person is protecting, not one specific injury */}
+            {state.phase === "build" && primary && (
+              <SectionCard title={`${primary.name} flared?`}>
                 <span className="note">Back to calm-down pauses tours and the weekly plan until the pain settles.</span>
                 <div className="row"><button onClick={() => run(() => setPhase(sb, state, "calm"))}>Back to calm-down</button></div>
-              </section>
+              </SectionCard>
             )}
             {state.phase === "calm" && (
-              <section className="card">
-                <h2>Calm-down</h2>
-                <span className="note">Wall march holds and EZ1 only until everyday pain is 3/10 or less.</span>
+              <SectionCard title="Calm-down">
+                <span className="note">Gentle days only{primary ? ` until ${primary.name.toLowerCase()} is 3/10 or less` : " until the pain settles"}.</span>
                 <div className="row"><button onClick={() => run(() => setPhase(sb, state, "build"))}>Start the plan</button></div>
-              </section>
+              </SectionCard>
             )}
-            <section className="card">
-              <h2>Log something else</h2>
-              <div className="row">
-                <button onClick={() => openLog({ whats: ["Tour"] })}>Log a tour</button>
-                <button onClick={() => openLog({ whats: ["SKI1 Hip Strength"] })}>Log a workout</button>
-                <button onClick={() => openLog({ whats: ["Rest"], rest: true })}>Rest day</button>
-              </div>
-            </section>
+            <LogShortcuts />
           </div>
         </div>
       ) : (
-        <section className="card">
-          <h2>History</h2>
+        <SectionCard title="History">
           <RecentList
             log={log}
             limit={400}
@@ -139,10 +121,10 @@ export default function Plan() {
             editingId={editingId}
             setEditingId={setEditingId}
             onSave={(id, patch) => run(() => updateEntry(sb, id, patch), "Couldn't save that. Try again.").then((ok) => ok && setEditingId(null))}
-          workouts={workouts}
+            workouts={workouts}
             onDelete={(id) => run(() => deleteEntry(sb, id), "Couldn't delete. Try again.")}
           />
-        </section>
+        </SectionCard>
       )}
     </div>
   );

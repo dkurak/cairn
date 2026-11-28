@@ -5,12 +5,12 @@ import RecentList from "@/components/RecentList";
 import { Heatmap, MixBars, PainTrend, Spark, StatTile, WeeklyBars } from "@/components/charts/Charts";
 import { areaSeries, computeStats, RANGES, weekStart, type RangeKey } from "@/lib/stats";
 import { deleteEntry, updateEntry } from "@/lib/actions";
-import { painClass, primaryArea, sortedLog } from "@/lib/rules";
-
-const md = (iso: string) => { const [y, m, d] = iso.split("-").map(Number); return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: "short", day: "numeric" }); };
+import { primaryArea, sortedLog } from "@/lib/rules";
+import { shortDate as md } from "@/lib/format";
+import { PageHeader, PainChip, SectionCard } from "@/components/ui";
 
 export default function History() {
-  const { data, sb, today, run, askCoach, openLog } = useApp();
+  const { data, sb, today, run, openLog } = useApp();
   const [range, setRange] = useState<RangeKey>("4w");
   const [editingId, setEditingId] = useState<string | null>(null);
   const st = useMemo(() => computeStats(data, range, today), [data, range, today]);
@@ -25,21 +25,20 @@ export default function History() {
 
   return (
     <div className="page">
-      <div className="page-head">
-        <h1>History</h1>
+      <PageHeader title="History" coach={{ text: "Looking at my training over this period, what do you notice and what should I change?" }}>
         <div className="seg" role="group" aria-label="Time range">
           {RANGES.map((r) => <button key={r.key} aria-pressed={range === r.key} onClick={() => setRange(r.key)}>{r.label}</button>)}
         </div>
-      </div>
+      </PageHeader>
 
       {st.win.clamped && (
         <p className="note" style={{ margin: 0 }}>Tracking started {md(st.win.start)}, so that&apos;s where this view begins. It fills out as you keep logging.</p>
       )}
 
       {!hasData && (
-        <section className="card">
+        <SectionCard>
           <span className="empty">Nothing in this range yet. Log a session or a check-in and it will show up here.</span>
-        </section>
+        </SectionCard>
       )}
 
       <div className="kpis">
@@ -64,8 +63,7 @@ export default function History() {
       </div>
 
       <div className="grid2">
-        <section className="card">
-          <h2>Sessions per week</h2>
+        <SectionCard title="Sessions per week">
           <WeeklyBars weekly={st.weekly} currentStart={weekStart(today)} from={st.win.start} />
           <details>
             <summary className="meta" style={{ cursor: "pointer" }}>View as table</summary>
@@ -74,25 +72,21 @@ export default function History() {
               <tbody>{[...st.weekly].reverse().map((w) => <tr key={w.start} style={{ borderTop: "1px solid var(--line)" }}><td>{md(w.start < st.win.start ? st.win.start : w.start)}</td><td align="right">{w.count}</td></tr>)}</tbody>
             </table>
           </details>
-        </section>
-        <section className="card">
-          <h2>What you trained</h2>
+        </SectionCard>
+        <SectionCard title="What you trained">
           <MixBars rows={st.mix} />
-        </section>
+        </SectionCard>
       </div>
 
-      <section className="card">
-        <h2>Pain</h2>
+      <SectionCard title="Pain">
         <PainTrend win={st.win} sessions={st.painSessions} checks={primaryChecks} checkLabel={primary?.name ?? "Daily check"} />
-      </section>
+      </SectionCard>
 
-      <section className="card">
-        <h2>Activity</h2>
+      <SectionCard title="Activity">
         <Heatmap win={st.win} perDay={st.perDay} today={today} />
-      </section>
+      </SectionCard>
 
-      <section className="card">
-        <div className="top"><h2>Body areas</h2><button className="askbtn" onClick={() => askCoach("Looking at my pain trends over the last few weeks, what do you notice and what should I change?")}>Ask coach</button></div>
+      <SectionCard title="Body areas">
         {activeAreas.length ? (
           <div className="areas">
             {activeAreas.map((a) => {
@@ -105,7 +99,7 @@ export default function History() {
                     <strong>{a.name}</strong><br />
                     {last ? (
                       <span className="meta">
-                        <span className={`chip ${painClass(last.pain)}`}>{last.pain}/10</span>{" "}
+                        <PainChip p={last.pain} />{" "}
                         {pts.length > 1 ? <>{d === 0 ? "no change" : `${d < 0 ? "down" : "up"} ${Math.abs(d)}`} since {md(first.date)}</> : "first check"}
                       </span>
                     ) : <span className="meta">no checks in this range</span>}
@@ -116,11 +110,10 @@ export default function History() {
             })}
           </div>
         ) : <span className="empty">Track an area on the Body tab to see its trend here.</span>}
-      </section>
+      </SectionCard>
 
       {st.tours.length > 0 && (
-        <section className="card">
-          <h2>Tours</h2>
+        <SectionCard title="Tours">
           <table style={{ width: "100%", fontSize: ".92rem", borderCollapse: "collapse" }}>
             <thead><tr><th align="left">Date</th><th align="right">Vert</th><th align="right">During</th><th align="right">Next AM</th></tr></thead>
             <tbody>
@@ -128,17 +121,16 @@ export default function History() {
                 <tr key={t.id} style={{ borderTop: "1px solid var(--line)" }}>
                   <td style={{ padding: "8px 0" }}>{md(t.date)}</td>
                   <td align="right">{t.vert_ft ? `${t.vert_ft.toLocaleString()} ft` : "-"}</td>
-                  <td align="right">{t.pain_during != null ? <span className={`chip ${painClass(t.pain_during)}`}>{t.pain_during}/10</span> : "-"}</td>
-                  <td align="right">{t.pain_next_am != null ? <span className={`chip ${painClass(t.pain_next_am)}`}>{t.pain_next_am}/10</span> : "-"}</td>
+                  <td align="right">{t.pain_during != null ? <PainChip p={t.pain_during} /> : "-"}</td>
+                  <td align="right">{t.pain_next_am != null ? <PainChip p={t.pain_next_am} /> : "-"}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </section>
+        </SectionCard>
       )}
 
-      <section className="card">
-        <h2>Log</h2>
+      <SectionCard title="Log">
         <RecentList
           log={inWin}
           limit={400}
@@ -151,7 +143,7 @@ export default function History() {
           workouts={data.workouts}
           onDelete={(id) => run(() => deleteEntry(sb, id), "Couldn't delete. Try again.")}
         />
-      </section>
+      </SectionCard>
     </div>
   );
 }

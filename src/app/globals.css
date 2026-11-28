@@ -381,3 +381,12 @@ button.danger { color: var(--bad); border-color: var(--bad-bg); background: var(
 .dots i:nth-child(3) { animation-delay: .4s; }
 @keyframes dotpulse { 0%, 80%, 100% { opacity: .25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
 @media (prefers-reduced-motion: reduce) { .dots i { animation-duration: 2.4s; transform: none !important; } }
+
+/* ---------- workout tiles ---------- */
+.search { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; width: 100%; }
+.wrow { display: grid; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.wtile { display: grid; gap: 6px; align-content: start; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); text-decoration: none; }
+.wtile:hover, .wtile:focus-visible { border-color: var(--accent); }
+.wtile-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+a.wtile:visited { color: var(--ink); }

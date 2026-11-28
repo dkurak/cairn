@@ -5,21 +5,17 @@ import { useApp } from "./AppProvider";
 import QuickCheck from "./QuickCheck";
 import Recap from "./Recap";
 import { ProgramWeekBanner } from "./Programs";
-import Rundown from "./Rundown";
+import { WorkoutRundowns } from "./WorkoutTile";
 import RecentList from "./RecentList";
-import Collapsible from "./Collapsible";
 import FeelPill, { VertPill } from "./FeelPill";
+import { LogShortcuts, PainChip as Chip, SectionCard } from "./ui";
+import { parseISO as parse, weekday as dow, shortDate as md } from "@/lib/format";
 import { deleteEntry, setPhase, skipUpNext, startNextWeek, updateEntry } from "@/lib/actions";
 import { firstTrackedDay } from "@/lib/stats";
 import { activeProgram } from "@/lib/programs";
-import { activePlan, addDays, checksFor, greenLight, itemWorkoutIds, painClass, primaryArea, projectedItems, sortedLog, tours, upNext } from "@/lib/rules";
+import { activePlan, addDays, checksFor, defaultWorkoutName, greenLight, itemWorkoutIds, painClass, primaryArea, projectedItems, sortedLog, tours, upNext } from "@/lib/rules";
 
-const parse = (iso: string) => { const [y, m, d] = iso.split("-").map(Number); return new Date(y, m - 1, d); };
-const dow = (iso: string) => parse(iso).toLocaleDateString(undefined, { weekday: "short" });
-const md = (iso: string) => parse(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 const first = (t: string) => t.replace(/ .*/, "");
-const Chip = ({ p, label }: { p: number | null; label?: string }) =>
-  p == null ? null : <span className={`chip ${painClass(p)}`}>{label ? `${label} ` : ""}{p}/10</span>;
 
 /** One layout for every day: past, today and future. Only the contents change. */
 export default function DayView({ date }: { date: string }) {
@@ -167,7 +163,7 @@ export default function DayView({ date }: { date: string }) {
                     <div>Latest {primary.name} check: <Chip p={checksFor(checks, primary.id)[0].pain} /> <span className="note">({md(checksFor(checks, primary.id)[0].date)}) · need 3 or less to start</span></div>
                   )}
                   <div className="row"><button className="primary" onClick={doNext}>Done - log it</button></div>
-                  <Collapsible>{todayWorkouts.map((w, i) => <Rundown key={i} workout={w} />)}</Collapsible>
+                  <WorkoutRundowns workouts={todayWorkouts} />
                   <div className="row"><button className="link" onClick={() => run(() => setPhase(sb, state, "build"))}>Everyday pain is 3/10 or less - start the plan</button></div>
                 </>
               )}
@@ -180,7 +176,7 @@ export default function DayView({ date }: { date: string }) {
                     <button className="primary" onClick={doNext}>Done - log it</button>
                     <button onClick={() => run(() => skipUpNext(sb, data))}>Skip</button>
                   </div>
-                  <Collapsible>{todayWorkouts.map((w, i) => <Rundown key={i} workout={w} />)}</Collapsible>
+                  <WorkoutRundowns workouts={todayWorkouts} />
                   <div className="row"><button className="link" onClick={() => askCoach(`Can you make today's workout (${todayTitle}) easier or swap something? `, false)}>Change this workout with the coach</button></div>
                 </>
               )}
@@ -216,7 +212,7 @@ export default function DayView({ date }: { date: string }) {
                       </li>
                     ))}
                   </ul>
-                  {loggedWorkouts.length > 0 && <Collapsible>{loggedWorkouts.map((w, i) => <Rundown key={i} workout={w} />)}</Collapsible>}
+                  {loggedWorkouts.length > 0 && <WorkoutRundowns workouts={loggedWorkouts} />}
                 </>
               ) : (
                 tracked(date) ? (
@@ -232,7 +228,7 @@ export default function DayView({ date }: { date: string }) {
                 )
               )}
               <div className="row">
-                <button className="primary" onClick={() => openLog({ whats: ["SKI1 Hip Strength"], date })}>Log something for this day</button>
+                <button className="primary" onClick={() => openLog({ whats: [defaultWorkoutName(data)], date })}>Log something for this day</button>
               </div>
             </section>
           )}
@@ -245,7 +241,7 @@ export default function DayView({ date }: { date: string }) {
                   <div className="title">{plannedItem.title}</div>
                   <div className="note">{plannedItem.note}</div>
                   <div className="row"><button className="primary" disabled>Done - log it</button><button disabled>Skip</button></div>
-                  <Collapsible>{itemWorkoutIds(plannedItem, workouts, log).map((id) => <Rundown key={id} workout={wById(id)} />)}</Collapsible>
+                  <WorkoutRundowns workouts={itemWorkoutIds(plannedItem, workouts, log).map(wById)} />
                   <div className="row"><button className="link" onClick={() => askCoach(`Can you change what I have planned for ${head} (${plannedItem.title})? `, false)}>Change this with the coach</button></div>
                 </>
               ) : (
@@ -268,18 +264,10 @@ export default function DayView({ date }: { date: string }) {
           {isToday ? (
             <>
               <Recap />
-              <section className="card">
-                <h2>Log something else</h2>
-                <div className="row">
-                  <button onClick={() => openLog({ whats: ["Tour"] })}>Log a tour</button>
-                  <button onClick={() => openLog({ whats: ["SKI1 Hip Strength"] })}>Log a workout</button>
-                  <button onClick={() => openLog({ whats: ["Rest"], rest: true })}>Rest day</button>
-                </div>
-              </section>
+              <LogShortcuts />
             </>
           ) : (
-            <section className="card">
-              <h2>Notes</h2>
+            <SectionCard title="Notes">
               {dayEntries.some((e) => e.notes) ? (
                 <RecentList
                   log={dayEntries}
@@ -291,7 +279,7 @@ export default function DayView({ date }: { date: string }) {
                   onDelete={(id) => run(() => deleteEntry(sb, id), "Couldn't delete. Try again.")}
                 />
               ) : <span className="empty">{isFuture ? "Nothing to note yet." : "No notes for this day. Tap an entry to add one."}</span>}
-            </section>
+            </SectionCard>
           )}
         </div>
       </div>

@@ -1,7 +1,9 @@
 "use client";
 import { useApp } from "./AppProvider";
 import PhaseBar from "./PhaseBar";
-import { activeProgram, effectivePhases, evaluateCriteria, fmtDate, needsNewWeek, positionLabel, programPosition } from "@/lib/programs";
+import { activeProgram, effectivePhases, evaluateCriteria, needsNewWeek, positionLabel, programPosition } from "@/lib/programs";
+import { shortDate as fmtDate } from "@/lib/format";
+import { ConfirmButton, SectionCard, Tag } from "./ui";
 import { activePlan } from "@/lib/rules";
 import type { Program, ProgramStatus } from "@/lib/types";
 
@@ -36,11 +38,10 @@ export default function Programs() {
       const { error } = await sb.from("programs").update({ status, ...(restart ? { start_date: new Date().toISOString().slice(0, 10) } : {}) }).eq("id", p.id);
       if (error) throw error;
     });
-  const remove = (p: Program) => { if (confirm(`Delete "${p.title}"?`)) void run(async () => { const { error } = await sb.from("programs").delete().eq("id", p.id); if (error) throw error; }); };
+  const remove = (p: Program) => void run(async () => { const { error } = await sb.from("programs").delete().eq("id", p.id); if (error) throw error; });
 
   return (
-    <section className="card programs">
-      <div className="top"><h2>Programs</h2><small>{data.programs.length ? `${data.programs.length} saved` : ""}</small></div>
+    <SectionCard className="programs" title="Programs" aside={data.programs.length ? `${data.programs.length} saved` : ""}>
       {active ? (() => {
         const pos = programPosition(active);
         const crit = active.kind === "milestone" ? evaluateCriteria(active, data) : null;
@@ -49,7 +50,7 @@ export default function Programs() {
           : `All my "${active.title}" checks are met - let's call it done. How it went: `, false);
         return (
           <>
-            <div className="program-head"><span className="title">{active.title}</span><span className="tag">{active.kind === "milestone" ? "Milestone" : "Active"}</span></div>
+            <div className="program-head"><span className="title">{active.title}</span><Tag>{active.kind === "milestone" ? "Milestone" : "Active"}</Tag></div>
             <span className="note">{positionLabel(active, pos, crit ?? undefined)}</span>
             {active.goal && <span>{active.goal}</span>}
             <PhaseBar phases={effectivePhases(active)} current={pos.phaseIndex} week={pos.week} />
@@ -83,18 +84,18 @@ export default function Programs() {
           {bank.map((p) => (
             <li key={p.id}>
               <span>
-                <strong>{p.title}</strong> <span className="tag">{STATUS[p.status]}</span>
+                <strong>{p.title}</strong> <Tag>{STATUS[p.status]}</Tag>
                 <br /><span className="meta">{p.status === "done" ? `Done${p.completed_at ? ` ${fmtDate(p.completed_at.slice(0, 10))}` : ""}${p.outcome ? ` - ${p.outcome}` : ""}` : `${p.kind === "event" && p.target_date ? `Event ${fmtDate(p.target_date)}` : p.kind === "milestone" ? "Done when checks are met" : "Ongoing"}${p.weeks ? ` · ${p.weeks} wk` : ""}${p.days_per_week ? ` · ${p.days_per_week} days/wk` : ""}`}</span>
               </span>
               <span className="row" style={{ flexWrap: "nowrap" }}>
                 {p.status !== "done" && <button onClick={() => setStatus(p, "active")}>{p.status === "paused" ? "Resume" : "Start"}</button>}
-                <button aria-label={`Delete ${p.title}`} onClick={() => remove(p)}>✕</button>
+                <ConfirmButton ariaLabel={`Delete ${p.title}`} confirmLabel="Delete?" onConfirm={() => remove(p)}>✕</ConfirmButton>
               </span>
             </li>
           ))}
         </ul>
       )}
       <div className="row"><button onClick={() => askCoach("I have a new goal: ", false)}>New goal program</button></div>
-    </section>
+    </SectionCard>
   );
 }
