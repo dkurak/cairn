@@ -150,6 +150,11 @@ export default function AppProvider({ initial, children }: { initial: AppData; c
         ? await writeRow(sb, "plans", { items, ...link }, existing.id)
         : await writeRow(sb, "plans", { owner_id: uid, name: p.kind === "travel" ? "Travel" : "My week", kind: p.kind, items, ...link });
       await patchState(sb, uid, p.kind === "home" ? { active_home_plan_id: row.id, done: {} } : { active_travel_plan_id: row.id, travel_done: {} });
+      // keep a copy of every program week as it was planned (table arrives with migration 0008; skip quietly until then)
+      if (p.program_id && p.program_week) {
+        const { error: ew } = await sb.from("program_weeks").upsert({ user_id: uid, program_id: p.program_id, week: p.program_week, plan_kind: p.kind, items }, { onConflict: "program_id,week" });
+        if (ew && !/program_weeks/.test(ew.message ?? "")) throw ew;
+      }
     }
   }), [data, run, sb, uid]);
 

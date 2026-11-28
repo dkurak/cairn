@@ -1,5 +1,5 @@
 // Goal programs: where you are in one (week, phase, days to go) and what to show the coach.
-import type { AppData, Criterion, Plan, Program, ProgramPhase } from "./types";
+import type { AppData, Criterion, LogEntry, Plan, Program, ProgramPhase } from "./types";
 import { addDays, checksFor, primaryArea, todayISO } from "./rules";
 
 const days = (a: string, b: string) => Math.round((+new Date(b + "T12:00:00") - +new Date(a + "T12:00:00")) / 86400000);
@@ -44,6 +44,29 @@ export function effectivePhases(p: Program, from = p.start_date ?? todayISO()): 
   return phases;
 }
 
+/** Which phase a program week falls in. Ongoing programs repeat their phases; otherwise the last phase holds past the end. */
+export function phaseAtWeek(p: Program, week: number, phases = effectivePhases(p)) {
+  const cycle = phases.reduce((a, x) => a + x.weeks, 0);
+  let w = p.kind === "ongoing" && !p.weeks && cycle ? ((week - 1) % cycle) + 1 : week; // milestones: the last phase holds until it's done
+  let index = -1;
+  let startWeek = week - w + 1; // absolute week the cycle started on
+  for (let i = 0; i < phases.length; i++) {
+    if (w <= phases[i].weeks) { index = i; break; }
+    w -= phases[i].weeks;
+    startWeek += phases[i].weeks;
+  }
+  if (index < 0 && phases.length) { index = phases.length - 1; startWeek = week - (w - 1); }
+  const phase = index >= 0 ? phases[index] : null;
+  return { index, phase, startWeek, endWeek: phase ? startWeek + phase.weeks - 1 : startWeek };
+}
+
+/** First and last day of a program week (null until the program has a start date). */
+export function weekRange(p: Program, week: number): { start: string; end: string } | null {
+  if (!p.start_date) return null;
+  const start = addDays(p.start_date, 7 * (week - 1));
+  return { start, end: addDays(start, 6) };
+}
+
 export function programPosition(p: Program, today = todayISO()): ProgramPosition {
   const start = p.start_date ?? today;
   const week = Math.max(1, Math.floor(days(start, today) / 7) + 1);
@@ -51,18 +74,24 @@ export function programPosition(p: Program, today = todayISO()): ProgramPosition
   const daysToTarget = p.target_date ? days(today, p.target_date) : null;
   // ongoing programs repeat their phases as a cycle; event/fixed programs run once
   const phases = effectivePhases(p, start);
-  const cycle = phases.reduce((a, x) => a + x.weeks, 0);
-  let w = p.kind === "ongoing" && !p.weeks && cycle ? ((week - 1) % cycle) + 1 : week; // milestones: the last phase holds until it's done
-  let phaseIndex = -1;
-  for (let i = 0; i < phases.length; i++) {
-    if (w <= phases[i].weeks) { phaseIndex = i; break; }
-    w -= phases[i].weeks;
-  }
-  if (phaseIndex < 0 && phases.length) phaseIndex = phases.length - 1;
-  const phase = phaseIndex >= 0 ? phases[phaseIndex] : null;
+  const { index: phaseIndex, phase } = phaseAtWeek(p, week, phases);
   return {
     week, totalWeeks, phase: phase?.name ?? null, phaseFocus: phase?.focus ?? null, phaseIndex, daysToTarget,
     over: p.kind === "event" && ((daysToTarget != null && daysToTarget < 0) || (totalWeeks != null && week > totalWeeks)),
+  };
+}
+
+/** What actually happened in a program week (up to today): the entries, the sessions among them, average pain, tour vert. */
+export function weekActivity(log: LogEntry[], range: { start: string; end: string } | null, today = todayISO()) {
+  if (!range) return { entries: [] as LogEntry[], sessions: [] as LogEntry[], avgPain: null as number | null, vert: 0 };
+  const end = range.end < today ? range.end : today;
+  const entries = log.filter((e) => e.date >= range.start && e.date <= end).sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.created_at < b.created_at ? -1 : 1));
+  const sessions = entries.filter((e) => e.kind === "workout" || e.kind === "tour");
+  const painted = sessions.filter((e) => e.pain_during != null);
+  return {
+    entries, sessions,
+    avgPain: painted.length ? painted.reduce((a, e) => a + (e.pain_during as number), 0) / painted.length : null,
+    vert: sessions.reduce((a, e) => a + (e.vert_ft ?? 0), 0),
   };
 }
 

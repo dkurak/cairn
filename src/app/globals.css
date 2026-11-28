@@ -390,3 +390,29 @@ button.danger { color: var(--bad); border-color: var(--bad-bg); background: var(
 .wtile:hover, .wtile:focus-visible { border-color: var(--accent); }
 .wtile-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 a.wtile:visited { color: var(--ink); }
+
+/* ---------- program pages ---------- */
+.phasebar a.phase { text-decoration: none; color: var(--ink); }
+.phasebar a.phase:hover, .phasebar a.phase:focus-visible { border-color: var(--accent); }
+.phasebar a.phase.here { color: var(--accent-ink); }
+.meter { height: 8px; border-radius: 4px; background: var(--bg); border: 1px solid var(--line); overflow: hidden; }
+.meter > span { display: block; height: 100%; background: var(--accent); }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px 16px; margin: 0; }
+.facts dt { color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; }
+.facts dd { margin: 0; font-weight: 600; }
+.phasetiles { display: grid; gap: 10px; }
+.ptile { display: grid; gap: 6px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.ptile.here { border: 2px solid var(--accent); }
+.ptile.past { opacity: .75; }
+.ptile-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.weeklinks { display: flex; flex-wrap: wrap; gap: 6px; }
+.weeklinks a { padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; text-decoration: none; font-size: .88rem; background: var(--bg); }
+.weeklinks a.here { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
+.weekrows { list-style: none; margin: 0; padding: 0; display: grid; }
+.weekrows li a { display: grid; grid-template-columns: 64px 1fr auto; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); text-decoration: none; color: var(--ink); }
+.weekrows li:first-child a { border-top: none; }
+.weekrows .wk { font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; }
+.daytile { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--line); }
+.daytile:first-of-type { border-top: none; padding-top: 0; }
+.daytile.k-rest .daytitle { color: var(--muted); }
+.daytitle { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
