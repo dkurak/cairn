@@ -10,7 +10,7 @@ export const PainChip = ({ p, label }: { p: number | null; label?: string }) =>
   p == null ? null : <span className={`chip ${painClass(p)}`}>{label ? `${label} ` : ""}{p}/10</span>;
 
 /** A label: a category, a status, "On watch". */
-export const Tag = ({ children, tone, title }: { children: ReactNode; tone?: "warn"; title?: string }) =>
+export const Tag = ({ children, tone, title }: { children: ReactNode; tone?: "good" | "warn" | "bad" | "accent"; title?: string }) =>
   <span className={`tag${tone ? ` ${tone}` : ""}`} title={title}>{children}</span>;
 
 /** A card with the standard header: title on the left, an optional note on the right. */

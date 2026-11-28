@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useApp } from "@/components/AppProvider";
+import ProgramNudge from "@/components/ProgramNudge";
 import Programs, { ProgramWeekBanner } from "@/components/Programs";
 import RightNow from "@/components/RightNow";
 import { PageHeader, SectionCard } from "@/components/ui";
@@ -25,6 +26,7 @@ export default function Plan() {
       <PageHeader title="Plan" coach={{ text: "I want to plan my next week. Here's what I'd like to focus on: " }} />
 
       <ProgramWeekBanner />
+      <ProgramNudge />
       <Programs />
 
       <div className="two">

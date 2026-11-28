@@ -486,3 +486,15 @@ svg.viz text.t-good { fill: var(--good); }
 .rundown li.added { background: var(--good-bg); margin: 0 -6px; padding: 9px 6px; }
 .note.changed { background: var(--good-bg); }
 .card.off { opacity: .55; }
+
+/* tag tones, plan lists, version list */
+.tag.good { color: var(--good); background: var(--good-bg); border-color: var(--good); }
+.tag.bad { color: var(--bad); background: var(--bad-bg); border-color: var(--bad); }
+.tag.accent { color: var(--accent); border-color: var(--accent); }
+.planlist { list-style: none; margin: 0; padding: 0; display: grid; }
+.planlist li { display: grid; grid-template-columns: 46px 1fr auto; gap: 8px; align-items: baseline; padding: 6px 0; border-top: 1px solid var(--line); }
+.planlist li:first-child { border-top: none; }
+.planlist .pd { color: var(--muted); font-size: .85rem; }
+.reasons { margin: 0; padding-left: 18px; }
+.weekrows .tags { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.row.actions > .primary { flex: none; }

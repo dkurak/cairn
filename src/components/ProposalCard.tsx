@@ -1,8 +1,10 @@
 "use client";
 import { useState } from "react";
-import { SAVE_TARGET_NOTE, workoutSaveTarget, type PlanProposal, type ProgramProposal, type ProgramUpdateProposal, type Proposal, type WorkoutProposal } from "@/lib/proposals";
+import { SAVE_TARGET_NOTE, workoutSaveTarget, type PlanProposal, type ProgramProposal, type ProgramUpdateProposal, type ProgramWeeksProposal, type Proposal, type WorkoutProposal } from "@/lib/proposals";
 import type { Criterion, Program, ProgramPrefs } from "@/lib/types";
-import { effectivePhases, fmtDate } from "@/lib/programs";
+import { effectivePhases, fmtDate, phaseAtWeek } from "@/lib/programs";
+import { changedItemKeys, storedWeek } from "@/lib/programWeeks";
+import { PlanItemsCompact } from "./PlanItems";
 import PhaseBar from "./PhaseBar";
 import type { AppData, RundownBlock } from "@/lib/types";
 
@@ -67,6 +69,36 @@ function PlanBody({ p, data }: { p: PlanProposal; data: AppData }) {
           <WorkoutDiff p={w} data={data} />
         </details>
       ))}
+    </>
+  );
+}
+
+/** Plan ahead / re-plan: a block per week; on a re-plan the days that changed are marked. */
+function ProgramWeeksBody({ p, data }: { p: ProgramWeeksProposal; data: AppData }) {
+  const prog = data.programs.find((x) => x.id === p.program_id);
+  return (
+    <>
+      <div className="grid-8">
+        {p.weeks.map((w) => {
+          const existing = storedWeek(data, p.program_id, w.week);
+          const changed = existing ? changedItemKeys(existing.items, w.items) : undefined;
+          const phase = prog ? phaseAtWeek(prog, w.week).phase?.name : undefined;
+          const note = !existing ? "new" : changed && changed.size ? `${changed.size} of ${w.items.length} days changed` : "no change";
+          return (
+            <details key={w.week} className="block" open={p.weeks.length === 1}>
+              <summary className="block-label">Week {w.week}{phase ? ` · ${phase}` : ""} <span className="meta">{note}</span></summary>
+              <PlanItemsCompact items={w.items} workouts={data.workouts} changed={changed} />
+            </details>
+          );
+        })}
+      </div>
+      {p.new_workouts?.map((w) => (
+        <details key={w.name} className="block">
+          <summary className="block-label">New: {w.name}</summary>
+          <WorkoutDiff p={w} data={data} />
+        </details>
+      ))}
+      <span className="note">Saved as drafts: the plan you&apos;re following now isn&apos;t touched. A draft becomes your plan when its week arrives.</span>
     </>
   );
 }
@@ -170,11 +202,12 @@ function ProgramUpdateBody({ p, data }: { p: ProgramUpdateProposal; data: AppDat
 export default function ProposalCard({ proposal, data, status = "open", onSave, onStatus }: { proposal: Proposal; data: AppData; status?: "open" | "saved" | "discarded" | null; onSave: (p: Proposal) => Promise<boolean>; onStatus?: (s: "saved" | "discarded") => void }) {
   const [state, setState] = useState<"open" | "saving" | "saved" | "discarded" | "error">(status ?? "open");
   const oldPlan = proposal.type === "plan" ? data.plans.find((pl) => pl.kind === proposal.kind) : undefined;
-  const nNew = proposal.type === "plan" ? proposal.new_workouts?.length ?? 0 : 0;
+  const nNew = proposal.type === "plan" || proposal.type === "program_weeks" ? proposal.new_workouts?.length ?? 0 : 0;
   const heading =
     proposal.type === "workout" ? "Suggested workout"
     : proposal.type === "program" ? "Suggested program"
     : proposal.type === "program_update" ? "Suggested program change"
+    : proposal.type === "program_weeks" ? `${proposal.mode === "replan" ? "Suggested re-plan" : "Plan ahead"} · ${proposal.weeks.length === 1 ? `week ${proposal.weeks[0].week}` : `weeks ${proposal.weeks[0].week}-${proposal.weeks[proposal.weeks.length - 1].week}`}${nNew ? ` + ${nNew} new workout${nNew > 1 ? "s" : ""}` : ""}`
     : `Suggested ${proposal.kind === "travel" ? "travel" : "weekly"} plan${proposal.program_week ? ` · program week ${proposal.program_week}` : ""}${nNew ? ` + ${nNew} new workout${nNew > 1 ? "s" : ""}` : ""}`;
 
   return (
@@ -187,6 +220,8 @@ export default function ProposalCard({ proposal, data, status = "open", onSave, 
         <ProgramBody p={proposal} data={data} />
       ) : proposal.type === "program_update" ? (
         <ProgramUpdateBody p={proposal} data={data} />
+      ) : proposal.type === "program_weeks" ? (
+        <ProgramWeeksBody p={proposal} data={data} />
       ) : (
         <>
           <PlanBody p={proposal} data={data} />
@@ -195,7 +230,7 @@ export default function ProposalCard({ proposal, data, status = "open", onSave, 
       )}
       {state === "open" || state === "saving" || state === "error" ? (
         <div className="row">
-          <button className="primary" disabled={state === "saving"} onClick={async () => { setState("saving"); const ok = await onSave(proposal); setState(ok ? "saved" : "error"); if (ok) onStatus?.("saved"); }}>{proposal.type === "program" ? (proposal.activate ? "Start program" : "Save program") : "Save"}</button>
+          <button className="primary" disabled={state === "saving"} onClick={async () => { setState("saving"); const ok = await onSave(proposal); setState(ok ? "saved" : "error"); if (ok) onStatus?.("saved"); }}>{proposal.type === "program" ? (proposal.activate ? "Start program" : "Save program") : proposal.type === "program_weeks" ? (proposal.mode === "replan" ? "Save the re-plan" : "Save drafts") : "Save"}</button>
           <button disabled={state === "saving"} onClick={() => { setState("discarded"); onStatus?.("discarded"); }}>Discard</button>
           {state === "error" && <span className="status">Couldn&apos;t save. Try again.</span>}
         </div>
