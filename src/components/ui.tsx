@@ -84,8 +84,18 @@ export function FeelPicker({ value, onChange, allowClear = true, label = "How yo
 }
 
 /** The "Log something else" card (today, and anywhere you want a quick log). */
-export function LogShortcuts({ date }: { date?: string }) {
+export function LogShortcuts({ date, inline }: { date?: string; inline?: boolean }) {
   const { data, openLog } = useApp();
+  if (inline) {
+    return (
+      <div className="row logelse" role="group" aria-label="Log something else">
+        <span className="note">Or log something else:</span>
+        <button className="link" onClick={() => openLog({ whats: ["Tour"], date })}>a tour</button>
+        <button className="link" onClick={() => openLog({ whats: [defaultWorkoutName(data)], date })}>a workout</button>
+        <button className="link" onClick={() => openLog({ whats: ["Rest"], rest: true, date })}>rest day</button>
+      </div>
+    );
+  }
   return (
     <SectionCard title="Log something else">
       <div className="row">

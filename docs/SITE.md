@@ -74,7 +74,7 @@ Same layout for past, today and future; only the contents change. Future days gr
 | After-tour check-in banner | `DayView` | morning after a tour |
 | Quick check-in (overall feel + one tap per pain area, exact 0-10, add area) | `QuickCheck.tsx` | all days (disabled in the future) |
 | AI recap with next steps | `Recap.tsx` -> `/api/recap` | today |
-| Log something else (tour / workout / rest) | `DayView` | today |
+| Log something else (a tour / a workout / rest day): a row inside the Up next / Done card (`LogShortcuts inline`) | `DayView` | today |
 | Notes (that day's entries, editable) | `RecentList.tsx` | other days |
 
 ### Plan `/plan`
@@ -221,3 +221,4 @@ Still open:
 - 2026-11-28 - Today: right column is Quick check-in > program tiles (banner / suggestion / "You're set") > Recap > Log something else; the "You're set" tile is slimmer.
 - 2026-11-28 - Today: program tiles are full width right under the day strip, then the workout; right column is Quick check-in > Log something else > Recap. Quick check-in says "all set - update any time" (one per day, the last answer wins).
 - 2026-11-28 - Instant taps: `run(fn, fail, optimistic)` and `lib/optimistic.ts`; check-ins, plan ticks, phase, At home, entry edit/delete, pain areas and program status update the screen immediately. Slower multi-step actions (log, skip, next week, use a draft) still wait for the save.
+- 2026-11-28 - Today: "Log something else" moved inside the workout tile (Up next and Done cards) as one quiet row; the separate tile is gone.

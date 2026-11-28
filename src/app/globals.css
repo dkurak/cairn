@@ -529,3 +529,5 @@ div.dayrow > .dr-head { cursor: default; }
 .dr-body { display: grid; gap: 8px; padding: 0 0 12px 52px; }
 details.more > summary { cursor: pointer; color: var(--accent); }
 details.more { display: grid; gap: 8px; }
+.logelse { gap: 4px 14px; }
+.logelse .note { margin-right: -4px; }
