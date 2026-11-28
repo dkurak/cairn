@@ -88,3 +88,10 @@ Owner/admin: Dave. Other users (family, friends) can sign up and log their own w
 - Keep the prototype's palette, fonts (Barlow Condensed + Source Sans 3), light/dark themes and layout.
 - Hip-risk swaps stay in workout notes (e.g. "R hip >3/10: swap to dead bug").
 - Coach tone: brief, practical, not a doctor. Red flags (pain at rest/night, catching/clicking, limping that won't settle) -> suggest PT/sports med.
+
+## Keep docs/SITE.md current
+`docs/SITE.md` is the map of the app: routes, the tiles on each screen, shared components, coach tools and APIs, migrations, UI conventions and the cleanup backlog. It is only useful if it matches the code.
+- In the same change as any of these, update it: add/remove/rename a route or nav item, add/remove/move a tile on a screen, add/rename/delete a shared component, add a coach tool or API route, add a migration, change a UI convention.
+- Edit the matching section (screens table, shared components table, data table, etc.) and add one dated line to the Changelog at the bottom.
+- When a cleanup-backlog item is done, tick it. When you spot a new inconsistency or duplicated component, add it to the backlog instead of leaving it unrecorded.
+- If you changed code but the doc was not touched, say so in your summary rather than leaving it silently stale.
