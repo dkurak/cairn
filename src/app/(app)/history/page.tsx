@@ -25,11 +25,10 @@ export default function History() {
 
   return (
     <div className="page">
-      <PageHeader title="History" coach={{ text: "Looking at my training over this period, what do you notice and what should I change?" }}>
-        <div className="seg" role="group" aria-label="Time range">
-          {RANGES.map((r) => <button key={r.key} aria-pressed={range === r.key} onClick={() => setRange(r.key)}>{r.label}</button>)}
-        </div>
-      </PageHeader>
+      <PageHeader title="History" coach={{ text: "Looking at my training over this period, what do you notice and what should I change?" }} />
+      <div className="seg" role="group" aria-label="Time range" style={{ justifySelf: "start", maxWidth: "100%" }}>
+        {RANGES.map((r) => <button key={r.key} aria-pressed={range === r.key} onClick={() => setRange(r.key)}>{r.label}</button>)}
+      </div>
 
       {st.win.clamped && (
         <p className="note" style={{ margin: 0 }}>Tracking started {md(st.win.start)}, so that&apos;s where this view begins. It fills out as you keep logging.</p>
