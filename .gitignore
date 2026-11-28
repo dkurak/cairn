@@ -6,3 +6,7 @@ __pycache__/
 next-env.d.ts
 .vercel
 garmin/out/
+
+# private health data (Garmin watch + export files): never commit
+data/garmin-watch/
+data/garmin-export/
